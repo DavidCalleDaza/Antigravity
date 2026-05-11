@@ -1,0 +1,236 @@
+/* ============================================
+   SERVINOW — Wall / Social Feed Styles
+   Gold Theme
+   ============================================ */
+.wall-header {
+  text-align: center;
+  padding: var(--space-12) var(--space-6) var(--space-8);
+  margin-bottom: var(--space-6);
+  position: relative;
+  background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+  border-radius: var(--radius-2xl);
+  border: var(--border);
+  overflow: hidden;
+}
+
+.wall-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(201, 165, 90, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.wall-quote {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-light);
+  font-style: italic;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--space-4);
+  line-height: var(--leading-relaxed);
+}
+.wall-quote-mark {
+  font-size: var(--text-4xl);
+  color: var(--premium);
+  line-height: 0.5;
+  display: block;
+  margin-bottom: var(--space-2);
+}
+.wall-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+/* Impact Counters */
+.wall-counters {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-10);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gold-subtle);
+}
+.wall-counter {
+  text-align: center;
+}
+.wall-counter-value {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--gold);
+}
+.wall-counter-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-top: var(--space-1);
+}
+/* Post Composer */
+.post-composer {
+  background: var(--surface-raised);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  margin-bottom: var(--space-6);
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+.post-composer-input {
+  flex: 1;
+}
+.post-composer textarea {
+  width: 100%;
+  min-height: 60px;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  outline: none;
+}
+.post-composer textarea::placeholder { color: var(--text-tertiary); }
+.post-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border);
+}
+.post-composer-tools {
+  display: flex;
+  gap: var(--space-2);
+}
+.post-composer-tool {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+}
+.post-composer-tool:hover {
+  background: var(--primary-50);
+  color: var(--primary);
+}
+/* Feed Posts */
+.wall-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 680px;
+  margin: 0 auto;
+}
+.wall-post {
+  background: var(--surface-raised);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+.wall-post:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--gold);
+}
+.wall-post-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) 0;
+}
+.wall-post-author {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+.wall-post-meta {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.wall-post-type {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-medium);
+}
+.wall-post-type.donation { background: var(--accent-50); color: var(--gold); }
+.wall-post-type.testimony { background: var(--primary-50); color: var(--gold); }
+.wall-post-type.impact { background: var(--premium-subtle); color: var(--premium); }
+.wall-post-body {
+  padding: var(--space-4) var(--space-5);
+}
+.wall-post-text {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  line-height: var(--leading-relaxed);
+}
+.wall-post-image {
+  width: 100%;
+  height: 300px;
+  background: linear-gradient(135deg, var(--surface-raised), var(--gold-subtle));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+.wall-post-impact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--primary-50);
+  font-size: var(--text-xs);
+  color: var(--primary);
+  font-weight: var(--font-medium);
+}
+.wall-post-impact-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.wall-post-footer {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-5) var(--space-4);
+  gap: var(--space-4);
+}
+/* The "thanks" button - NOT a like */
+.thanks-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  border: var(--border);
+  transition: all var(--transition-fast);
+}
+.thanks-btn:hover {
+  border-color: var(--gold);
+  background: var(--primary-50);
+  color: var(--primary);
+}
+.thanks-btn.thanked {
+  border-color: var(--gold);
+  background: var(--primary-50);
+  color: var(--gold);
+}
+@media (max-width: 768px) {
+  .wall-counters { flex-direction: column; gap: var(--space-4); }
+  .wall-header { padding: var(--space-8) var(--space-4); }
+  .wall-quote { font-size: var(--text-lg); }
+}

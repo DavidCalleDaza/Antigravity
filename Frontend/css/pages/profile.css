@@ -1,0 +1,177 @@
+/* ============================================
+   SERVINOW — Profile Page Styles
+   Gold Theme
+   ============================================ */
+.profile-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 680px;
+}
+
+.profile-card {
+  background: var(--surface-raised);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+}
+
+
+.card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-6);
+}
+
+.profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.profile-avatar-wrapper .avatar {
+  width: 96px;
+  height: 96px;
+  font-size: var(--text-2xl);
+  border: 3px solid var(--primary);
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(12, 34, 32, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: var(--text-inverse);
+  font-size: var(--text-xs);
+}
+
+.profile-avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay span {
+  font-size: 10px;
+}
+
+.profile-name {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.danger-zone {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.danger-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--danger);
+  margin-bottom: var(--space-2);
+}
+
+.danger-description {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-6);
+}
+
+.danger-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.danger-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.danger-item-title {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.danger-item-desc {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  max-width: 300px;
+}
+
+.cropper-wrapper {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  background: var(--surface-dark);
+  overflow: hidden;
+}
+
+.cropper-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--surface-raised);
+  border-top: 1px solid var(--gold-subtle);
+}
+
+.cropper-zoom-slider {
+  flex: 1;
+  height: 4px;
+  appearance: none;
+  background: var(--gold-subtle);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.cropper-zoom-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .profile-avatar-section {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .profile-avatar-wrapper .avatar {
+    width: 80px;
+    height: 80px;
+    font-size: var(--text-xl);
+  }
+
+  .cropper-wrapper {
+    height: 420px;
+  }
+}

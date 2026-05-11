@@ -1,0 +1,23 @@
+/* ============================================
+   SERVINOW — Billing Page Styles
+   Gold Theme
+   ============================================ */
+.billing-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+.billing-summary-card {
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  border: var(--border);
+  background: var(--surface-raised);
+}
+.billing-summary-label { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+.billing-summary-value { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--font-bold); }
+.billing-summary-value.income { color: var(--success); }
+.billing-summary-value.expense { color: var(--danger); }
+.billing-summary-value.balance { color: var(--gold); }
+.invoice-status { display: inline-flex; }
+@media (max-width: 768px) { .billing-summary { grid-template-columns: 1fr; } }

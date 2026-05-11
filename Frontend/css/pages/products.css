@@ -1,0 +1,90 @@
+/* ============================================
+   SERVINOW — Products Page Styles
+   Aurora Borealis Theme
+   ============================================ */
+.products-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+.products-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.view-toggle {
+  display: flex;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.view-toggle-btn {
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+  border-right: var(--border);
+}
+.view-toggle-btn:last-child { border-right: none; }
+.view-toggle-btn.active {
+  background: var(--primary-50);
+  color: var(--primary);
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+.product-card {
+  background: var(--surface-raised);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+.product-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+.product-card-image {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, var(--surface-raised), var(--surface));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+}
+.product-card-category {
+  font-size: var(--text-xs);
+  color: var(--gold);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-bottom: var(--space-2);
+}
+.product-card-price {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--gold);
+}
+.product-card-stock {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+.product-card-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+@media (max-width: 768px) {
+  .products-toolbar { flex-direction: column; align-items: stretch; }
+  .product-grid { grid-template-columns: 1fr; }
+}

@@ -10,7 +10,9 @@ const LiquidDrawer = ({
   description,
   items = [],
   ctaText = 'Explorar más',
-  onCtaClick
+  onCtaClick,
+  usePush = false,
+  drawerWidth = 520
 }) => {
   useEffect(() => {
     const handleEscape = (e) => {
@@ -19,7 +21,7 @@ const LiquidDrawer = ({
       }
     };
 
-    if (isOpen) {
+    if (isOpen && !usePush) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
@@ -28,16 +30,26 @@ const LiquidDrawer = ({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, usePush]);
 
   if (!isOpen) return null;
 
   const positionClass = position === 'right' ? 'right' : 'left';
+  const containerStyle = usePush ? {
+    width: drawerWidth,
+    maxWidth: '95vw',
+    flexShrink: 0,
+  } : {};
 
   return (
     <>
-      <div className={`liquid-overlay ${isOpen ? 'active' : ''}`} onClick={onClose} />
-      <div className={`drawer-liquid-container ${positionClass} ${isOpen ? 'open' : ''}`}>
+      {!usePush && (
+        <div className={`liquid-overlay ${isOpen ? 'active' : ''}`} onClick={onClose} />
+      )}
+      <div
+        className={`drawer-liquid-container ${positionClass} ${isOpen ? 'open' : ''} ${usePush ? 'push-mode' : ''}`}
+        style={containerStyle}
+      >
         <svg className={`drawer-liquid-svg ${positionClass}`} viewBox="0 0 520 1100" preserveAspectRatio="none">
           <defs>
             <linearGradient id={`liquidGradient-${position}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -96,8 +108,8 @@ const LiquidDrawer = ({
                 <ul className="drawer-liquid-list">
                   {items.map((item, idx) => (
                     <li key={idx} className="drawer-liquid-item">
-                      <div className="drawer-liquid-item-icon">
-                        <ChevronRight width="16" height="16" />
+                      <div className="drawer-liquid-item-icon-minimal">
+                        <ArrowRight size={14} />
                       </div>
                       <div className="drawer-liquid-item-content">
                         <span className="drawer-liquid-item-name">{item.name}</span>

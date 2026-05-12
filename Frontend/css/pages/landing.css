@@ -66,6 +66,46 @@ body::before {
   pointer-events: none; z-index: 0;
 }
 
+.landing-push-wrapper {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+.landing-main-content {
+  flex: 1;
+  min-width: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.landing-push-wrapper.drawers-active .landing-main-content .container {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .landing-push-wrapper {
+    flex-direction: column;
+  }
+
+  .drawer-liquid-container.push-mode {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100vw;
+    height: 100vh;
+    z-index: var(--z-drawer, 9999);
+  }
+
+  .landing-main-content {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
 section { position: relative; z-index: 1; }
 .container { max-width: 1200px; margin: 0 auto; padding: 0 var(--pad-x); }
 
@@ -513,12 +553,22 @@ h2 em {
   pointer-events: none;
 }
 
+.drawer-liquid-container.push-mode {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  pointer-events: all;
+  z-index: 201;
+}
+
 .drawer-liquid-container.left {
   left: 0;
 }
 
 .drawer-liquid-container.right {
   right: 0;
+  order: 10; /* Ensure it's after main content in flex */
 }
 
 .drawer-liquid-svg {
@@ -527,6 +577,7 @@ h2 em {
   height: 100%;
   width: 100%;
   overflow: visible;
+  z-index: 1;
 }
 
 .drawer-liquid-svg.left {
@@ -562,11 +613,13 @@ h2 em {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  z-index: 2;
+  z-index: 20;
   pointer-events: all;
+  opacity: 1;
+  visibility: visible;
 }
 
 .drawer-liquid-gradient {
@@ -653,55 +706,62 @@ h2 em {
 }
 
 .drawer-liquid-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #3EB489 0%, #483d8b 100%);
-  border-radius: 16px;
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 8px 32px rgba(62, 180, 137, 0.3);
+  margin-bottom: 24px;
+  color: var(--gold);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .drawer-liquid-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  color: inherit;
 }
 
 .drawer-liquid-title {
   font-family: 'Outfit', sans-serif;
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
   margin: 0;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .drawer-liquid-close {
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 100;
+  pointer-events: all;
 }
 
 .drawer-liquid-close:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(212, 175, 55, 0.5);
-  color: #d4af37;
-  transform: rotate(90deg);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+  color: #ffffff;
+  transform: rotate(90deg) scale(1.1);
 }
 
 .drawer-liquid-body {
   flex: 1;
   overflow-y: auto;
+  min-height: 0; /* Important for flex scroll */
   padding: 32px;
   position: relative;
   z-index: 5;
@@ -722,7 +782,7 @@ h2 em {
 
 .drawer-liquid-description {
   font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
   line-height: 1.8;
   margin-bottom: 32px;
   padding: 20px;
@@ -799,6 +859,23 @@ h2 em {
   }
 }
 
+.drawer-liquid-item-icon-minimal {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff; /* Default for dark mode */
+  flex-shrink: 0;
+  margin-top: 6px;
+  opacity: 0.8;
+}
+
+[data-theme="light"] .drawer-liquid-item-icon-minimal {
+  color: #000000;
+}
+
+
 .drawer-liquid-item-icon {
   width: 36px;
   height: 36px;
@@ -824,13 +901,13 @@ h2 em {
 
 .drawer-liquid-item-name {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
 }
 
 .drawer-liquid-item-detail {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.6;
 }
 
@@ -848,10 +925,10 @@ h2 em {
   justify-content: center;
   gap: 8px;
   padding: 14px 24px;
-  background: linear-gradient(135deg, #3EB489 0%, #2d8a68 100%);
+  background: var(--gold);
   border-radius: 12px;
-  color: #ffffff;
-  font-weight: 600;
+  color: #000000;
+  font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -860,9 +937,9 @@ h2 em {
 }
 
 .drawer-liquid-footer-cta:hover {
-  background: linear-gradient(135deg, #5edeb3 0%, #3EB489 100%);
+  background: #ffdb58; /* Bright Gold */
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(62, 180, 137, 0.4);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
 }
 
 .drawer-liquid-footer-cta svg {
@@ -907,13 +984,20 @@ h2 em {
 }
 
 [data-theme="light"] .drawer-liquid-title {
-  color: #121212;
+  color: #000000;
+  text-shadow: none;
+}
+
+[data-theme="light"] .drawer-liquid-icon {
+  color: #000000;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .drawer-liquid-description {
-  color: rgba(18, 18, 18, 0.7);
-  background: rgba(0, 0, 0, 0.03);
-  border-color: rgba(0, 0, 0, 0.05);
+  color: #121212;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .drawer-liquid-item {
@@ -927,11 +1011,11 @@ h2 em {
 }
 
 [data-theme="light"] .drawer-liquid-item-name {
-  color: #121212;
+  color: #000000;
 }
 
 [data-theme="light"] .drawer-liquid-item-detail {
-  color: rgba(18, 18, 18, 0.5);
+  color: rgba(18, 18, 18, 0.8);
 }
 
 [data-theme="light"] .drawer-liquid-header {
@@ -939,14 +1023,24 @@ h2 em {
 }
 
 [data-theme="light"] .drawer-liquid-close {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.1);
-  color: rgba(18, 18, 18, 0.7);
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #121212;
 }
 
 [data-theme="light"] .drawer-liquid-close:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.12);
   color: #3EB489;
+}
+
+[data-theme="light"] .drawer-liquid-footer-cta {
+  background: #000000;
+  color: #ffffff;
+}
+
+[data-theme="light"] .drawer-liquid-footer-cta:hover {
+  background: #3EB489; /* Mint Green */
+  color: #000000;
 }
 
 [data-theme="light"] .liquid-overlay {

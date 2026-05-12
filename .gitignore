@@ -1,0 +1,48 @@
+# --- General ---
+files.txt
+*.log
+.DS_Store
+Thumbs.db
+
+# --- Environment Variables ---
+.env
+.env.*
+!.env.example
+Backend/.env
+Backend/.env.*
+Frontend/.env
+Frontend/.env.*
+
+# --- Node.js / Frontend ---
+node_modules/
+Frontend/node_modules/
+dist/
+Frontend/dist/
+build/
+.npm
+.eslintcache
+.stylelintcache
+
+# --- Python / Backend ---
+__pycache__/
+Backend/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env/
+Backend/venv/
+Backend/.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace

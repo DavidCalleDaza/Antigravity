@@ -42,7 +42,9 @@
   gap: var(--space-6);
 }
 .product-card {
-  background: var(--surface-raised);
+  background: var(--surface-overlay);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: var(--border);
   border-radius: var(--radius-xl);
   overflow: hidden;

@@ -251,7 +251,7 @@
   /* ── Semantic: Surface ── */
   --surface:          var(--page-bg);
   --surface-raised:   var(--sidebar-bg);
-  --surface-overlay:  rgba(255, 255, 255, 0.9);
+  --surface-overlay:  rgba(255, 255, 255, 0.25);
   --surface-dark:     var(--page-bg);
   --surface-darker:   #e8e4f0;
 

@@ -114,17 +114,13 @@ export default function ProductCard({
 
       <style>{`
         .product-card {
-          background: var(--card-bg);
+          background: var(--surface-overlay);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
           border: 1px solid var(--border-color);
           border-radius: var(--radius-xl);
           overflow: hidden;
           transition: all var(--transition-base);
-          backdrop-filter: blur(12px);
-          background: linear-gradient(
-            135deg,
-            rgba(28, 25, 36, 0.9) 0%,
-            rgba(28, 25, 36, 0.7) 100%
-          );
         }
 
         .product-card:hover {

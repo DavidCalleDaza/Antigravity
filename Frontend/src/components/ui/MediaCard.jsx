@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Pencil, Trash2, ShoppingCart, CalendarPlus, Play } from 'lucide-react';
+import { Pencil, Trash2, ShoppingCart, CalendarPlus, Play, Share2 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 import ServinowLogo from './ServinowLogo';
 
@@ -29,6 +29,7 @@ export default function MediaCard({
   onEdit,
   onDelete,
   onAction,
+  onShare,
   actionLabel = 'Añadir',
   actionIcon = ShoppingCart,
 }) {
@@ -113,13 +114,15 @@ export default function MediaCard({
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         const color = isLight ? '62, 180, 137' : (variant === 'product' ? '212, 175, 55' : '196, 168, 224');
         e.currentTarget.style.borderColor = `rgba(${color}, 0.4)`;
-        e.currentTarget.style.boxShadow = `var(--shadow-lg), 0 0 30px rgba(${color}, 0.1)`;
+        e.currentTarget.style.boxShadow = `0 8px 32px rgba(0, 0, 0, 0.12)`;
         e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.background = 'rgba(28, 25, 36, 0.65)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-color)';
-        e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.08)';
         e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.background = 'rgba(28, 25, 36, 0.5)';
       }}
     >
       <div className="media-card-media">{renderMedia()}</div>
@@ -178,6 +181,15 @@ export default function MediaCard({
                 >
                   <Trash2 width="16" height="16" />
                 </button>
+                {onShare && (
+                  <button
+                    className="btn btn-ghost btn-sm btn-icon-only"
+                    onClick={() => onShare(item)}
+                    title="Compartir"
+                  >
+                    <Share2 width="16" height="16" />
+                  </button>
+                )}
               </>
             ) : (
               <button
@@ -194,17 +206,19 @@ export default function MediaCard({
 
       <style>{`
         .media-card {
-          background: var(--card-bg);
-          border: 1px solid var(--border-color);
+          background: rgba(28, 25, 36, 0.35);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-xl);
           overflow: hidden;
           transition: all var(--transition-base);
-          backdrop-filter: blur(12px);
-          background: linear-gradient(
-            135deg,
-            rgba(28, 25, 36, 0.9) 0%,
-            rgba(28, 25, 36, 0.7) 100%
-          );
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        [data-theme="light"] .media-card {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.2);
         }
 
         .media-card-media {

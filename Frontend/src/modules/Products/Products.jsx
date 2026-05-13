@@ -4,6 +4,7 @@ import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
+import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
 import MediaUploader from '../../components/ui/MediaUploader';
@@ -11,6 +12,7 @@ import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
 import { productClient, ApiError } from '../../utils/apiClient';
+import ShareModal from '../../components/ShareModal';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -39,6 +41,8 @@ export default function Products() {
     description: '',
   });
   const [mediaError, setMediaError] = useState(null);
+  const [shareOnSave, setShareOnSave] = useState({ facebook: false, instagram: false, tiktok: false });
+  const [shareModal, setShareModal] = useState({ isOpen: false, item: null });
 
   const toast = useToast();
 
@@ -102,16 +106,26 @@ export default function Products() {
     e.preventDefault();
     try {
       const payload = { ...formData };
+      let savedItem;
       if (editingProduct) {
-        const updated = await productClient.update(editingProduct.id, payload);
-        setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
+        savedItem = await productClient.update(editingProduct.id, payload);
+        setProducts(products.map(p => p.id === editingProduct.id ? savedItem : p));
         toast.success('Producto actualizado correctamente.');
       } else {
-        const created = await productClient.create(payload);
-        setProducts([created, ...products]);
+        savedItem = await productClient.create(payload);
+        setProducts([savedItem, ...products]);
         toast.success('Producto creado exitosamente.');
       }
+      const hasShareSelected = Object.values(shareOnSave).some(Boolean);
       resetForm();
+      if (hasShareSelected) {
+        const networks = Object.entries(shareOnSave)
+          .filter(([, v]) => v)
+          .map(([k]) => k);
+        setTimeout(() => {
+          setShareModal({ isOpen: true, item: { ...savedItem, type: 'producto' } });
+        }, 100);
+      }
     } catch (err) {
       toast.error(editingProduct ? 'Error al actualizar' : 'Error al crear');
     }
@@ -141,6 +155,7 @@ export default function Products() {
       status: 'active',
       description: '',
     });
+    setShareOnSave({ facebook: false, instagram: false, tiktok: false });
     reset();
     setMediaError(null);
   };
@@ -277,6 +292,7 @@ export default function Products() {
                 onEdit={openEditModal}
                 onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
                 onAction={(product) => toast.success(`${product.name} añadido`)}
+                onShare={(item) => setShareModal({ isOpen: true, item })}
                 actionLabel="Añadir"
                 actionIcon={ShoppingCart}
               />
@@ -291,11 +307,11 @@ export default function Products() {
         />
       )}
 
-      <Modal
+      <Drawer
         isOpen={isModalOpen}
         onClose={resetForm}
+        position="right"
         title={editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-        size="lg"
       >
         <form className="d-flex flex-col gap-5" onSubmit={handleSaveProduct}>
           <MediaUploader
@@ -378,12 +394,37 @@ export default function Products() {
             />
           </div>
 
-          <div className="modal-footer" style={{ border: 'none', padding: 0, marginTop: 'var(--space-4)' }}>
+          <div className="share-on-save">
+            <label className="form-label">Publicar al guardar (opcional)</label>
+            <div className="share-networks-inline">
+              {[
+                { id: 'facebook', label: 'Facebook' },
+                { id: 'instagram', label: 'Instagram' },
+                { id: 'tiktok', label: 'TikTok' },
+              ].map(({ id, label }) => (
+                <label key={id} className="share-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={shareOnSave[id]}
+                    onChange={(e) => setShareOnSave(prev => ({ ...prev, [id]: e.target.checked }))}
+                    className="form-checkbox"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ border: 'none', padding: 0, marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)' }}>
             <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>
-            <button type="submit" className="btn btn-primary">{editingProduct ? 'Guardar Cambios' : 'Crear Producto'}</button>
+            <button type="submit" className="btn btn-primary">
+              {editingProduct
+                ? Object.values(shareOnSave).some(Boolean) ? 'Guardar y publicar' : 'Guardar Cambios'
+                : Object.values(shareOnSave).some(Boolean) ? 'Crear y publicar' : 'Crear Producto'}
+            </button>
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal
         isOpen={isConfirmOpen}
@@ -397,6 +438,12 @@ export default function Products() {
       >
         <p style={{ color: 'var(--text-secondary)' }}>¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.</p>
       </Modal>
+
+      <ShareModal
+        isOpen={shareModal.isOpen}
+        onClose={() => setShareModal({ isOpen: false, item: null })}
+        item={shareModal.item}
+      />
 
       <style>{`
         .loading-state, .error-state {
@@ -421,6 +468,30 @@ export default function Products() {
         .error-state-text {
           max-width: 400px;
           color: var(--text-secondary);
+        }
+
+        .share-on-save {
+          border-top: 1px solid var(--neutral-700);
+          padding-top: var(--space-4);
+          margin-top: var(--space-2);
+        }
+
+        .share-networks-inline {
+          display: flex;
+          gap: var(--space-4);
+          margin-top: var(--space-2);
+        }
+
+        .share-checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          cursor: pointer;
+          font-size: var(--text-sm);
+        }
+
+        .share-checkbox-label input {
+          accent-color: var(--gold);
         }
       `}</style>
     </div>

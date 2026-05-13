@@ -115,20 +115,49 @@ export default function ServiceCard({
       </div>
 
       <style>{`
-        .service-card {
-          background: var(--surface-overlay);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid var(--border-color);
+.service-card {
+          background: rgba(28, 25, 36, 0.35);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-xl);
           overflow: hidden;
           transition: all var(--transition-base);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
         }
 
         .service-card:hover {
-          box-shadow: var(--shadow-lg), 0 0 30px rgba(196, 168, 224, 0.1);
+          box-shadow: var(--shadow-lg), 0 0 30px rgba(196, 168, 224, 0.12);
+          transform: translateY(-4px);
+          border-color: rgba(196, 168, 224, 0.35);
+          background: rgba(28, 25, 36, 0.45);
+        }
+
+        [data-theme="light"] .service-card {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] .service-card:hover {
+          background: rgba(255, 255, 255, 0.12);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+
+        .service-card:hover {
+          box-shadow: var(--shadow-lg), 0 0 30px rgba(196, 168, 224, 0.15);
           transform: translateY(-4px);
           border-color: rgba(196, 168, 224, 0.4);
+          background: rgba(28, 25, 36, 0.65);
+        }
+
+        [data-theme="light"] .service-card {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        [data-theme="light"] .service-card:hover {
+          background: rgba(255, 255, 255, 0.2);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         }
 
         .service-card-media {

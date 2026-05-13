@@ -307,22 +307,24 @@
 }
 
 .card {
-  background: var(--surface-overlay);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: var(--border);
+  background: rgba(28, 25, 36, 0.35);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .card {
-  background: rgba(250, 248, 252, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-color: var(--border-color);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
 }
 
 .card::before {
@@ -343,15 +345,16 @@
 }
 
 .card-hover:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-  border-color: var(--primary-light);
-  background: var(--surface-raised);
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(28, 25, 36, 0.45);
 }
 
 [data-theme="light"] .card-hover:hover {
-  background: #f8f9fa;
-  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(62, 180, 137, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .card-header {
@@ -403,10 +406,10 @@
 }
 .kpi-icon svg { width: 24px; height: 24px; }
 
-.kpi-icon.primary { background: var(--primary-50); color: var(--primary); }
-.kpi-icon.accent  { background: var(--accent-50); color: var(--primary-light); }
-.kpi-icon.success { background: var(--success-50); color: var(--success); }
-.kpi-icon.danger  { background: var(--danger-50); color: var(--danger); }
+.kpi-icon.primary { background: rgba(212, 175, 55, 0.2); color: var(--primary); }
+.kpi-icon.accent  { background: rgba(196, 168, 224, 0.2); color: var(--accent); }
+.kpi-icon.success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+.kpi-icon.danger  { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
 
 
@@ -501,13 +504,21 @@
   line-height: 1.4;
 }
 
-.badge-primary  { background: var(--primary-50); color: var(--gold); }
-.badge-accent   { background: var(--accent-50); color: var(--purple); }
-.badge-success  { background: var(--success-50); color: var(--success); }
-.badge-danger   { background: var(--danger-50); color: var(--danger); }
-.badge-warning  { background: var(--warning-50); color: var(--warning); }
-.badge-info     { background: var(--info-50); color: var(--accent); }
-.badge-neutral  { background: var(--primary-50); color: var(--text-secondary); }
+.badge-primary  { background: rgba(212, 175, 55, 0.15); color: #e0c455; }
+.badge-accent   { background: rgba(196, 168, 224, 0.15); color: #d4c4ec; }
+.badge-success  { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.badge-danger   { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.badge-warning  { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.badge-info     { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.badge-neutral  { background: rgba(160, 152, 176, 0.15); color: #d1d5db; }
+
+[data-theme="light"] .badge-primary  { background: rgba(62, 180, 137, 0.12); color: #2d8a68; }
+[data-theme="light"] .badge-accent   { background: rgba(72, 61, 139, 0.12); color: #483d8b; }
+[data-theme="light"] .badge-success  { background: rgba(16, 185, 129, 0.12); color: #059669; }
+[data-theme="light"] .badge-danger   { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
+[data-theme="light"] .badge-warning  { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+[data-theme="light"] .badge-info     { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+[data-theme="light"] .badge-neutral  { background: rgba(107, 114, 128, 0.12); color: #4b5563; }
 
 .badge-compra     { background: var(--badge-compra-bg); color: var(--badge-compra-text); }
 .badge-donacion   { background: var(--badge-donacion-bg); color: var(--badge-donacion-text); }
@@ -880,7 +891,9 @@
   bottom: 0;
   width: 100%;
   max-width: 420px;
-  background: var(--surface-raised);
+  background: var(--surface-overlay);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-right: var(--border);
   z-index: var(--z-drawer, 9999);
   display: flex;

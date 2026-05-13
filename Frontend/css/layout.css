@@ -595,7 +595,11 @@
 }
 
 /* ── Bottom Navbar ── */
-/* ── Bottom Navbar ── */
+@media (min-width: 768px) {
+  .bottom-navbar {
+    display: none;
+  }
+}
 .bottom-navbar {
   position: fixed;
   bottom: 0;
@@ -727,7 +731,7 @@
 
 /* ── Bottom Navbar Light Theme ── */
 [data-theme="light"] .bottom-navbar {
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.25);
   border-top: 1px solid var(--border-color);
   box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.04);
 }
@@ -755,9 +759,9 @@
 }
 
 [data-theme="light"] .bottom-navbar-popover {
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-lg);
 }

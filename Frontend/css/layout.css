@@ -7,14 +7,16 @@
 .app {
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .app-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: var(--sidebar-width);
-  transition: margin-left var(--transition-slow);
+  margin-left: var(--sidebar-width) !important;
+  width: calc(100% - var(--sidebar-width)) !important;
+  transition: all var(--transition-slow);
   min-width: 0;
   background: var(--surface);
 }
@@ -525,6 +527,7 @@
 @media (max-width: 768px) {
   .app-main {
     margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .sidebar {

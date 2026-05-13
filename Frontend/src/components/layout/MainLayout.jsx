@@ -4,10 +4,12 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import BottomNavbar from './BottomNavbar';
 import DynamicBackground from './DynamicBackground';
+import { useStore } from '../../store/useStore';
 
 const MOBILE_BREAKPOINT = 768;
 
 const MainLayout = () => {
+  const { sidebarCollapsed } = useStore();
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -22,19 +24,18 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full text-gray-900 dark:text-gray-100 transition-colors duration-300 relative">
+    <div className={`app ${sidebarCollapsed ? 'sidebar-collapsed' : ''} min-h-screen w-full text-gray-900 dark:text-gray-100 transition-colors duration-300 relative`}>
       <DynamicBackground />
-      <Header/>
-      <main className="w-full pt-4 overflow-x-hidden relative z-10" style={{ paddingBottom: isMobile ? '100px' : '0' }}>
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Outlet/>
-        </div>
-      </main>
-      {isMobile ? (
-        <BottomNavbar />
-      ) : (
-        <Sidebar isOpen={sidebarOpen} closeMobile={() => setSidebarOpen(false)} />
-      )}
+      {!isMobile && <Sidebar isOpen={sidebarOpen} closeMobile={() => setSidebarOpen(false)} />}
+      
+      <div className="app-main">
+        <Header />
+        <main className="page-content pt-4 overflow-x-hidden relative z-10" style={{ paddingBottom: isMobile ? '100px' : '0' }}>
+          <Outlet />
+        </main>
+      </div>
+
+      {isMobile && <BottomNavbar />}
     </div>
   );
 };

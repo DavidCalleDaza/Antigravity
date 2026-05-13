@@ -151,3 +151,10 @@ export const serviceClient = {
   update: (id, data) => apiClient.patch(`/services/${id}`, data),
   delete: (id) => apiClient.delete(`/services/${id}`),
 };
+
+export const socialClient = {
+  listAccounts: () => apiClient.get('/social/accounts'),
+  publish: (data) => apiClient.post('/social/publish', data),
+  listPosts: () => apiClient.get('/social/posts'),
+  deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
+};

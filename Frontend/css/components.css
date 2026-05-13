@@ -307,24 +307,24 @@
 }
 
 .card {
-  background: rgba(28, 25, 36, 0.35);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--glass-shadow);
 }
 
 [data-theme="light"] .card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .card::before {
@@ -445,7 +445,9 @@
   overflow-x: auto;
   border: var(--border);
   border-radius: var(--radius-xl);
-  background: var(--surface-raised);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .table {
@@ -552,8 +554,10 @@
 }
 
 .modal {
-  background: var(--surface-raised);
-  border: var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
   border-radius: var(--radius-2xl);
   width: 100%;
   max-width: 560px;

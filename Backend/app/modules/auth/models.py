@@ -11,7 +11,7 @@ from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
 
@@ -73,6 +73,12 @@ class User(Base):
         String(500),
         nullable=True,
         default=None,
+    )
+
+    social_accounts = relationship(
+        "SocialAccount",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

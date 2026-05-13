@@ -34,6 +34,14 @@ export default function DynamicBackground() {
 
   return (
     <div className="dynamic-watercolor-bg">
+      {/* SVG Filters for Watercolor Effect */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <filter id="watercolor-filter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="50" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
+
       {/* Interactive Mouse Glow */}
       {isClient && (
         <div 
@@ -44,30 +52,11 @@ export default function DynamicBackground() {
         />
       )}
 
-      {/* Main Watercolor Blobs */}
+      {/* Main Aurora Blobs */}
       <div className="blob blob-1"></div>
       <div className="blob blob-2"></div>
       <div className="blob blob-3"></div>
-      <div className="blob blob-4"></div>
       
-      {/* Floating Gold Dust Particles */}
-      <div className="particles-container">
-        {particles.map(p => (
-          <div 
-            key={p.id} 
-            className="particle"
-            style={{
-              left: p.left,
-              width: p.size,
-              height: p.size,
-              animationDuration: p.animationDuration,
-              animationDelay: p.animationDelay,
-              opacity: p.opacity
-            }}
-          />
-        ))}
-      </div>
-
       {/* SVG Texture Noise */}
       <div className="noise-overlay"></div>
     </div>

@@ -20,6 +20,7 @@ from app.modules.auth.router import router as auth_router
 from app.modules.wall.router import router as wall_router
 from app.modules.products.router import router as products_router
 from app.modules.services.router import router as services_router
+from app.modules.social.router import router as social_router
 from app.api.uploads import router as uploads_router
 from app.db.base import Base
 from app.shared.schemas import HealthCheckResponse
@@ -101,6 +102,12 @@ app.include_router(
     services_router,
     prefix="/api/v1/services",
     tags=["Services"],
+)
+
+app.include_router(
+    social_router,
+    prefix="/api/v1/social",
+    tags=["Social Media"],
 )
 
 app.include_router(

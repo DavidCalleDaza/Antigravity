@@ -188,7 +188,7 @@ async def delete_me(
 
 
 ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-MAX_AVATAR_SIZE = 2 * 1024 * 1024
+MAX_AVATAR_SIZE = 10 * 1024 * 1024
 
 
 @router.post(

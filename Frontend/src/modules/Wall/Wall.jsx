@@ -328,7 +328,8 @@ export default function Wall() {
           <span className="wall-quote-mark">“</span>
           No buscamos aplausos. No buscamos vitrinas. Servinow existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
         </div>
-        <div className="wall-subtitle">Cada publicación aquí es evidencia de impacto real, no de popularidad.</div>
+        <div className="wall-subtitle">Evidencia de impacto real</div>
+        
         <div className="wall-counters">
           <div className="wall-counter">
             <div className="wall-counter-value">340</div>
@@ -351,24 +352,32 @@ export default function Wall() {
           {renderAvatarContent(currentUser)}
         </div>
         <form className="post-composer-input" onSubmit={handlePublish}>
-          <textarea name="text" placeholder="Comparte una historia de impacto..."></textarea>
+          <textarea 
+            name="text" 
+            placeholder="¿Qué historia de impacto quieres contar hoy?"
+            rows="1"
+            onInput={(e) => {
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+          ></textarea>
           
           {tempMedia && (
-            <div style={{ position: 'relative', marginTop: '10px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+            <div className="wall-post-media">
               {tempMedia.type.startsWith('image/') ? (
-                <img src={Helpers.resolveMediaUrl(tempMedia.url)} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }} />
+                <img src={Helpers.resolveMediaUrl(tempMedia.url)} alt="Preview" />
               ) : (
-                <div style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--neutral-100)' }}>
-                  <Paperclip size={20} />
-                  <span style={{ fontSize: '13px' }}>Documento adjunto</span>
+                <div style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface)' }}>
+                  <Paperclip size={20} className="text-primary" />
+                  <span className="text-sm">Documento adjunto</span>
                 </div>
               )}
               <button 
                 type="button" 
                 onClick={() => setTempMedia(null)}
-                style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer' }}
+                style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
           )}
@@ -376,13 +385,13 @@ export default function Wall() {
           <div className="post-composer-actions">
             <div className="post-composer-tools">
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} style={{ display: 'none' }} />
-              <button type="button" className="post-composer-tool" title="Agregar archivo" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                <ImageIcon width="18" height="18" />
+              <button type="button" className="post-composer-tool" title="Adjuntar imagen o archivo" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                <ImageIcon width="20" height="20" />
               </button>
-              <select name="type" className="form-select" style={{ width: 'auto', padding: '2px 8px', fontSize: '12px', borderRadius: '20px' }}>
+              <select name="type" className="form-select" style={{ width: 'auto', padding: '4px 12px', fontSize: '12px', borderRadius: '20px', border: 'none', background: 'var(--primary-50)', color: 'var(--primary)' }}>
+                <option value="impact">✨ Impacto</option>
                 <option value="donation">🤝 Donación</option>
                 <option value="testimony">💬 Testimonio</option>
-                <option value="impact">✨ Impacto</option>
               </select>
             </div>
             <button type="submit" className="btn btn-primary btn-sm" disabled={uploading}>
@@ -395,7 +404,9 @@ export default function Wall() {
       {/* Feed */}
       <div className="wall-feed">
         {loading && posts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Cargando...</div>
+          <div className="text-center p-12 text-tertiary">
+            <div className="animate-pulse">Cargando historias...</div>
+          </div>
         ) : (
           posts.map((post) => {
             const Icon = typeIcons[post.type] || Sparkles;
@@ -404,26 +415,28 @@ export default function Wall() {
             return (
               <div className="wall-post reveal" key={post.id}>
                 <div className="wall-post-header">
-                  <div className="avatar" style={{ background: 'var(--accent-50)', color: 'var(--accent-700)' }}>
+                  <div className="avatar">
                     {renderAvatarContent(post.author)}
                   </div>
                   <div className="flex-1">
-                    <div className="wall-post-author">{post.author?.full_name || post.author || '?'}</div>
-                    <div className="wall-post-meta">
-                      <span>{Helpers.formatDate(post.created_at, 'relative')}</span>
-                      {post.is_edited && <span style={{ fontStyle: 'italic', fontSize: '10px' }}>(editado)</span>}
+                    <div className="flex items-center gap-2">
+                      <span className="wall-post-author">{post.author?.full_name || post.author || '?'}</span>
                       <span className={`wall-post-type ${post.type}`}>
-                        <Icon width="12" height="12" style={{ marginRight: '4px' }} />
+                        <Icon width="10" height="10" />
                         {typeLabels[post.type] || post.type}
                       </span>
                     </div>
+                    <div className="wall-post-meta">
+                      {Helpers.formatDate(post.created_at, 'relative')}
+                      {post.is_edited && <span> • editado</span>}
+                    </div>
                   </div>
                   {isAuthor && editingPostId !== post.id && (
-                    <div style={{ display: 'flex', gap: '5px' }}>
-                      <button onClick={() => setEditingPostId(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                    <div className="flex gap-2">
+                      <button onClick={() => setEditingPostId(post.id)} className="btn-icon-only text-tertiary hover:text-primary">
                         <Edit2 size={14} />
                       </button>
-                      <button onClick={() => handleDeletePost(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                      <button onClick={() => handleDeletePost(post.id)} className="btn-icon-only text-tertiary hover:text-danger">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -432,31 +445,32 @@ export default function Wall() {
 
                 <div className="wall-post-body">
                   {editingPostId === post.id ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div className="flex flex-col gap-3">
                       <textarea 
                         defaultValue={post.content} 
                         id={`edit-post-${post.id}`}
-                        style={{ width: '100%', minHeight: '80px', padding: '10px', borderRadius: '8px', border: '1px solid var(--primary)', background: 'var(--surface-raised)', color: 'var(--text-primary)' }}
+                        className="form-textarea"
+                        style={{ minHeight: '100px' }}
                       />
-                      <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                        <button onClick={() => setEditingPostId(null)} className="btn btn-sm" style={{ background: 'var(--neutral-200)' }}>Cancelar</button>
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => setEditingPostId(null)} className="btn btn-ghost btn-sm">Cancelar</button>
                         <button 
                           onClick={() => handleUpdatePost(post.id, document.getElementById(`edit-post-${post.id}`).value)} 
                           className="btn btn-primary btn-sm"
-                        >Guardar</button>
+                        >Guardar Cambios</button>
                       </div>
                     </div>
                   ) : (
                     <>
                       <p className="wall-post-text">{post.content}</p>
                       {post.media_url && (
-                        <div style={{ marginTop: '10px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <div className="wall-post-media">
                           {post.media_type?.startsWith('image/') ? (
-                            <img src={Helpers.resolveMediaUrl(post.media_url)} alt="Post content" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
+                            <img src={Helpers.resolveMediaUrl(post.media_url)} alt="Impact" />
                           ) : (
-                            <a href={Helpers.resolveMediaUrl(post.media_url)} target="_blank" rel="noreferrer" style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'var(--primary)', background: 'var(--neutral-50)' }}>
+                            <a href={Helpers.resolveMediaUrl(post.media_url)} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-surface rounded-xl text-primary no-underline border border-dashed border-primary/20">
                               <Paperclip size={20} />
-                              <span>Ver documento adjunto</span>
+                              <span className="text-sm font-medium">Ver documento adjunto</span>
                             </a>
                           )}
                         </div>
@@ -465,46 +479,45 @@ export default function Wall() {
                   )}
                 </div>
 
-                {/* Comments */}
-                <div className="wall-post-comments" style={{ padding: '0 1rem 1rem' }}>
+                {/* Comments Section */}
+                <div className="wall-post-comments">
                   {post.comments?.map((comment) => {
                     const isCommentAuthor = currentUser?.id === comment.author_id || currentUser?.role === 'admin';
                     return (
-                      <div key={comment.id} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
-                        <div className="avatar" style={{ width: '28px', height: '28px', fontSize: '11px' }}>
+                      <div key={comment.id} className="comment-item">
+                        <div className="avatar" style={{ width: '32px', height: '32px' }}>
                           {renderAvatarContent(comment.author)}
                         </div>
-                        <div style={{ flex: 1, background: 'var(--surface)', padding: '8px 12px', borderRadius: '12px', color: 'var(--text-primary)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <strong style={{ fontSize: '12px' }}>{comment.author?.full_name || '?'}</strong>
+                        <div className="comment-bubble">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-xs font-bold text-primary">{comment.author?.full_name || '?'}</span>
                             {isCommentAuthor && (
-                              <div style={{ display: 'flex', gap: '5px' }}>
-                                <button onClick={() => setEditingCommentId(comment.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}>
+                              <div className="flex gap-2 opacity-0 hover:opacity-100 transition-opacity">
+                                <button onClick={() => setEditingCommentId(comment.id)} className="text-tertiary hover:text-primary">
                                   <Edit2 size={10} />
                                 </button>
-                                <button onClick={() => handleDeleteComment(post.id, comment.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', opacity: 0.5 }}>
+                                <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-tertiary hover:text-danger">
                                   <Trash2 size={10} />
                                 </button>
                               </div>
                             )}
                           </div>
                           {editingCommentId === comment.id ? (
-                            <div style={{ marginTop: '5px' }}>
-                              <input 
-                                defaultValue={comment.content} 
-                                id={`edit-comment-${comment.id}`}
-                                style={{ width: '100%', padding: '5px', borderRadius: '4px', border: '1px solid var(--primary)', fontSize: '13px', background: 'var(--surface-raised)', color: 'var(--text-primary)' }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleUpdateComment(post.id, comment.id, e.target.value);
-                                  if (e.key === 'Escape') setEditingCommentId(null);
-                                }}
-                              />
-                            </div>
+                            <input 
+                              defaultValue={comment.content} 
+                              id={`edit-comment-${comment.id}`}
+                              className="comment-input w-full"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleUpdateComment(post.id, comment.id, e.target.value);
+                                if (e.key === 'Escape') setEditingCommentId(null);
+                              }}
+                            />
                           ) : (
-                            <div style={{ fontSize: '13px' }}>
+                            <p className="text-sm text-secondary">
                               {comment.content}
-                              {comment.is_edited && <span style={{ fontStyle: 'italic', fontSize: '9px', marginLeft: '5px', opacity: 0.6 }}>(editado)</span>}
-                            </div>
+                              {comment.is_edited && <span className="text-[10px] italic opacity-50 ml-2">(editado)</span>}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -512,11 +525,14 @@ export default function Wall() {
                   })}
                   
                   {/* Comment Input */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <div className="comment-input-wrapper">
+                    <div className="avatar" style={{ width: '28px', height: '28px' }}>
+                      {renderAvatarContent(currentUser)}
+                    </div>
                     <input
                       type="text"
-                      placeholder="Comentar..."
-                      style={{ flex: 1, padding: '5px 12px', borderRadius: '20px', border: 'var(--border)', background: 'var(--surface)', color: 'var(--text-primary)', fontSize: '13px' }}
+                      placeholder="Escribe un comentario..."
+                      className="comment-input"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && e.target.value.trim()) {
                           handleComment(post.id, e.target.value);
@@ -542,19 +558,18 @@ export default function Wall() {
           { label: confirmModal.confirmLabel, onClick: () => confirmModal.onConfirm(confirmModal.inputValue), className: confirmModal.confirmClass }
         ]}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-secondary leading-relaxed">
             {confirmModal.message}
           </p>
           
           {confirmModal.canAddComment && !confirmModal.showInput && (
             <button 
               onClick={() => setConfirmModal(prev => ({ ...prev, showInput: true }))}
-              className="btn btn-ghost btn-sm" 
-              style={{ alignSelf: 'flex-start', color: 'var(--primary)', padding: 0, height: 'auto', background: 'none' }}
+              className="btn btn-ghost btn-sm text-primary p-0 h-auto self-start hover:bg-transparent"
             >
-              <MessageCircle size={14} style={{ marginRight: '5px' }} />
-              Agregar comentario
+              <MessageCircle size={14} className="mr-2" />
+              Agregar un comentario personal
             </button>
           )}
 
@@ -562,10 +577,10 @@ export default function Wall() {
             <textarea
               value={confirmModal.inputValue}
               onChange={(e) => setConfirmModal(prev => ({ ...prev, inputValue: e.target.value }))}
-              placeholder="Escribe tu comentario aquí..."
+              placeholder="Escribe tu mensaje aquí..."
               className="form-textarea"
               autoFocus
-              style={{ minHeight: '80px', fontSize: '14px' }}
+              style={{ minHeight: '100px' }}
             />
           )}
         </div>
@@ -573,3 +588,4 @@ export default function Wall() {
     </div>
   );
 }
+

@@ -6,7 +6,7 @@ import Landing from './modules/Landing/Landing';
 import Login from './modules/Auth/Login';
 import Register from './modules/Auth/Register';
 import Unauthorized from './modules/Auth/Unauthorized';
-import DashboardLayout from './components/layout/DashboardLayout';
+import MainLayout from './components/layout/MainLayout';
 import Dashboard from './modules/Dashboard/Dashboard';
 import Products from './modules/Products/Products';
 import Services from './modules/Services/Services';
@@ -32,7 +32,7 @@ function App() {
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route element={<DashboardLayout />}>
+          <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/services" element={<Services />} />

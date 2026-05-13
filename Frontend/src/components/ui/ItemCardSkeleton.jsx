@@ -25,10 +25,18 @@ export function ItemCardSkeleton({ variant = 'product' }) {
 
       <style>{`
         .card-skeleton {
-          background: var(--card-bg);
-          border: 1px solid var(--border-color);
+          background: var(--surface-overlay);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(212, 175, 55, 0.1);
           border-radius: var(--radius-xl);
           overflow: hidden;
+          position: relative;
+        }
+
+        [data-theme="light"] .card-skeleton {
+          background: rgba(250, 248, 252, 0.9);
+          border-color: rgba(0, 0, 0, 0.05);
         }
 
         .card-skeleton-media {
@@ -36,7 +44,11 @@ export function ItemCardSkeleton({ variant = 'product' }) {
           width: 100%;
           aspect-ratio: 16 / 9;
           overflow: hidden;
-          background: var(--sidebar-bg);
+          background: rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] .card-skeleton-media {
+          background: rgba(0, 0, 0, 0.05);
         }
 
         .skeleton-shimmer {
@@ -45,10 +57,19 @@ export function ItemCardSkeleton({ variant = 'product' }) {
           background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.03) 50%,
+            rgba(212, 175, 55, 0.15) 50%,
             transparent 100%
           );
-          animation: shimmer 1.5s infinite;
+          animation: shimmer 1.5s infinite linear;
+        }
+
+        [data-theme="light"] .skeleton-shimmer {
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(0, 0, 0, 0.08) 50%,
+            transparent 100%
+          );
         }
 
         @keyframes shimmer {
@@ -69,10 +90,14 @@ export function ItemCardSkeleton({ variant = 'product' }) {
 
         .skeleton-line {
           height: 12px;
-          background: var(--neutral-800);
+          background: rgba(255, 255, 255, 0.05);
           border-radius: var(--radius-sm);
           position: relative;
           overflow: hidden;
+        }
+
+        [data-theme="light"] .skeleton-line {
+          background: rgba(0, 0, 0, 0.05);
         }
 
         .skeleton-line::after {
@@ -82,25 +107,35 @@ export function ItemCardSkeleton({ variant = 'product' }) {
           background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.05) 50%,
+            rgba(212, 175, 55, 0.15) 50%,
             transparent 100%
           );
-          animation: shimmer 1.5s infinite;
+          animation: shimmer 1.5s infinite linear;
         }
 
-        .skeleton-category { width: 60px; }
-        .skeleton-badge { width: 50px; height: 18px; }
-        .skeleton-title { width: 80%; height: 18px; margin-bottom: var(--space-3); }
+        [data-theme="light"] .skeleton-line::after {
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(0, 0, 0, 0.08) 50%,
+            transparent 100%
+          );
+        }
+
+        .skeleton-category { width: 60px; height: 10px; }
+        .skeleton-badge { width: 50px; height: 18px; border-radius: var(--radius-full); }
+        .skeleton-title { width: 80%; height: 20px; margin-bottom: var(--space-3); }
         .skeleton-desc { width: 100%; margin-bottom: var(--space-2); }
         .skeleton-desc.short { width: 70%; margin-bottom: var(--space-4); }
-        .skeleton-price { width: 80px; height: 24px; margin-bottom: var(--space-1); }
-        .skeleton-stock { width: 60px; }
-        .skeleton-actions { width: 60px; height: 32px; border-radius: var(--radius-md); }
+        .skeleton-price { width: 80px; height: 24px; margin-bottom: var(--space-2); }
+        .skeleton-stock { width: 60px; height: 10px; }
+        .skeleton-actions { width: 70px; height: 32px; border-radius: var(--radius-lg); }
 
         .card-skeleton-footer {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
+          margin-top: var(--space-4);
         }
       `}</style>
     </div>

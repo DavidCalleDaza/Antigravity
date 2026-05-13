@@ -7,14 +7,6 @@ export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) 
   return (
     <header className="navbar" id="navbar">
       <div className="navbar-left">
-        <button 
-          className="navbar-toggle" 
-          id="sidebar-toggle" 
-          aria-label="Toggle sidebar"
-          onClick={toggleMobileSidebar}
-        >
-          <Menu width="20" height="20" />
-        </button>
         <div>
           <h1 className="navbar-title">{title}</h1>
           {breadcrumb.length > 0 && (

@@ -25,6 +25,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - POSTGRES_HOST=db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-servinow_user}:${POSTGRES_PASSWORD:-servinow_secret_password}@db:5432/${POSTGRES_DB:-servinow_db}
     ports:
       - "8000:8000"
     volumes:

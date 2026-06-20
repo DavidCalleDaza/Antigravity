@@ -71,22 +71,6 @@ const Table = ({
 
   return (
     <div className="table-wrapper">
-      {searchable && (
-        <div className="d-flex justify-between items-center gap-4 mb-4" style={{ flexWrap: 'wrap' }}>
-          <div className="input-group" style={{ maxWidth: '320px', flex: 1 }}>
-            <span className="input-icon"><Search width="16" height="16" /></span>
-            <input 
-              type="text" 
-              className="form-input search-input" 
-              placeholder="Buscar..." 
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            />
-          </div>
-          <small className="text-secondary">{filteredData.length} resultado{filteredData.length !== 1 ? 's' : ''}</small>
-        </div>
-      )}
-
       <div className="table-container">
         <table className="table">
           <thead>

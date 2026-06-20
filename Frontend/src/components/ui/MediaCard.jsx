@@ -214,6 +214,8 @@ export default function MediaCard({
           overflow: hidden;
           transition: all var(--transition-base);
           box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+          display: flex;
+          flex-direction: column;
         }
 
         [data-theme="light"] .media-card {
@@ -288,6 +290,9 @@ export default function MediaCard({
 
         .media-card-body {
           padding: var(--space-5);
+          flex: 1;
+          display: flex;
+          flex-direction: column;
         }
 
         .media-card-header {
@@ -344,7 +349,8 @@ export default function MediaCard({
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          gap: var(--space-4);
+          gap: var(--space-3);
+          margin-top: auto;
         }
 
         .media-card-price-group {
@@ -355,8 +361,9 @@ export default function MediaCard({
 
         .media-card-price {
           font-family: var(--font-display);
-          font-size: var(--text-2xl);
+          font-size: var(--text-xl);
           font-weight: var(--font-bold);
+          white-space: nowrap;
         }
 
         .media-card-stock {
@@ -367,6 +374,7 @@ export default function MediaCard({
         .media-card-actions {
           display: flex;
           gap: var(--space-2);
+          flex-shrink: 0;
         }
 
         .badge {

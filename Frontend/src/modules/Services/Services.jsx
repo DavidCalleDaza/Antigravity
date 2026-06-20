@@ -27,9 +27,10 @@ export default function Services() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
-    category: APP_CONFIG.CATEGORIES[0],
+    category_id: '',
     price: 0,
     duration: '',
     status: 'active',
@@ -54,7 +55,17 @@ export default function Services() {
 
   useEffect(() => {
     loadServices();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await serviceClient.listCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
+  };
 
   const loadServices = async () => {
     try {
@@ -131,7 +142,7 @@ export default function Services() {
     setEditingService(null);
     setFormData({
       name: '',
-      category: APP_CONFIG.CATEGORIES[0],
+      category_id: '',
       price: 0,
       duration: '',
       status: 'active',
@@ -146,7 +157,7 @@ export default function Services() {
     setEditingService(service);
     setFormData({
       name: service.name,
-      category: service.category,
+      category_id: service.category_id || '',
       price: service.price,
       duration: service.duration || '',
       status: service.status,
@@ -164,7 +175,7 @@ export default function Services() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category: APP_CONFIG.CATEGORIES[0], price: 0, duration: '', status: 'active', description: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Servicio
             </button>
@@ -183,10 +194,12 @@ export default function Services() {
         </div>
       ) : (
         <div className="product-grid">
-          {services.map(s => (
+          {services.map(s => {
+            const categoryName = categories.find(c => c.id === s.category_id)?.name || '';
+            return (
             <MediaCard
               key={s.id}
-              item={s}
+              item={{ ...s, category: categoryName }}
               variant="service"
               canManage={canManage}
               onEdit={openEditModal}
@@ -196,7 +209,7 @@ export default function Services() {
               actionLabel="Agendar"
               actionIcon={CalendarPlus}
             />
-          ))}
+          )})}
         </div>
       )}
 
@@ -232,10 +245,13 @@ export default function Services() {
               <label className="form-label">Categoría</label>
               <select
                 className="form-select"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={formData.category_id}
+                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
               >
-                {APP_CONFIG.CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="">Seleccionar categoría</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">

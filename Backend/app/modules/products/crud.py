@@ -20,6 +20,7 @@ async def get_products(
     limit: int = 50,
     category: str | None = None,
     status: str | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> list[Product]:
     """
     Retrieve paginated products with optional filtering.
@@ -30,6 +31,7 @@ async def get_products(
         limit: Maximum number of products to return.
         category: Optional category filter.
         status: Optional status filter.
+        user_id: Optional user ID filter to get products created by a specific user.
 
     Returns:
         List of ``Product`` instances ordered by created_at descending.
@@ -40,6 +42,8 @@ async def get_products(
         stmt = stmt.where(Product.category == category)
     if status:
         stmt = stmt.where(Product.status == status)
+    if user_id:
+        stmt = stmt.where(Product.user_id == user_id)
 
     result = await db.execute(stmt)
     return list(result.scalars().all())
@@ -52,13 +56,14 @@ async def get_product(db: AsyncSession, product_id: uuid.UUID) -> Product | None
     return result.scalar_one_or_none()
 
 
-async def create_product(db: AsyncSession, product_in: ProductCreate) -> Product:
+async def create_product(db: AsyncSession, product_in: ProductCreate, user_id: uuid.UUID) -> Product:
     """
     Create a new product.
 
     Args:
         db: Active async database session.
         product_in: Validated product creation payload.
+        user_id: ID of the user creating the product.
 
     Returns:
         The newly created ``Product`` instance.
@@ -72,6 +77,7 @@ async def create_product(db: AsyncSession, product_in: ProductCreate) -> Product
         status=product_in.status,
         image_url=product_in.image_url,
         video_url=product_in.video_url,
+        user_id=user_id,
     )
     db.add(db_product)
     await db.commit()

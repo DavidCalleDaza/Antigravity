@@ -40,11 +40,11 @@ async def list_products(
     category: Annotated[str | None, Query(description="Filtrar por categoría.")] = None,
     status: Annotated[str | None, Query(description="Filtrar por estado.")] = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[ProductResponse]:
     try:
-        logger.info(f"Fetching products: skip={skip}, limit={limit}, category={category}, status={status}")
-        products = await get_products(db, skip=skip, limit=limit, category=category, status=status)
+        logger.info(f"Fetching products: skip={skip}, limit={limit}, category={category}, status={status}, user_id={current_user.id}")
+        products = await get_products(db, skip=skip, limit=limit, category=category, status=status, user_id=current_user.id)
         logger.info(f"Found {len(products)} products")
         return [ProductResponse.model_validate(p) for p in products]
     except Exception as e:
@@ -64,7 +64,7 @@ async def create_new_product(
 ) -> ProductResponse:
     try:
         logger.info(f"Creating product: {product_in.name}, category={product_in.category}, price={product_in.price}")
-        product = await create_product(db, product_in)
+        product = await create_product(db, product_in, current_user.id)
         logger.info(f"Product created successfully with id={product.id}")
         return ProductResponse.model_validate(product)
     except Exception as e:

@@ -52,11 +52,11 @@ async def list_services(
     category_id: Annotated[uuid.UUID | None, Query(description="Filtrar por categoría ID.")] = None,
     status: Annotated[str | None, Query(description="Filtrar por estado.")] = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[ServiceResponse]:
     services = []
     try:
-        services = await get_services(db, skip=skip, limit=limit, category_id=category_id, status=status)
+        services = await get_services(db, skip=skip, limit=limit, category_id=category_id, status=status, user_id=current_user.id)
         return [ServiceResponse.model_validate(s) for s in services]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -68,7 +68,7 @@ async def create_new_service(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ServiceResponse:
-    service = await create_service(db, service_in)
+    service = await create_service(db, service_in, current_user.id)
     return ServiceResponse.model_validate(service)
 
 

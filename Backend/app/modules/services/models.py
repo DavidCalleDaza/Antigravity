@@ -92,6 +92,12 @@ class Service(Base):
     )
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     video_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        comment="Usuario que creó el servicio",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

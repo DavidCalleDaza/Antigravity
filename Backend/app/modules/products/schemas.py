@@ -70,6 +70,7 @@ class ProductResponse(ProductBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: Annotated[uuid.UUID, Field(description="Product UUID.")]
+    user_id: Annotated[uuid.UUID | None, Field(None, description="User UUID.")]
     image_url: Annotated[str | None, Field(None, description="Optional image URL.")]
     video_url: Annotated[str | None, Field(None, description="Optional video URL.")]
     created_at: Annotated[datetime, Field(description="Creation timestamp.")]

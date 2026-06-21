@@ -1,0 +1,726 @@
+/* ==========================================================================
+   Estructura Base del Modal (MODIFICADO: Solo dimensiones exteriores ancho/alto)
+   ========================================================================== */
+/** Estilos Generales del Modal **/    
+.modal-header {
+    padding-top: 6px !important;     /* Reduce el espacio superior interno */
+    padding-bottom: 10px !important;  /* Reduce el espacio inferior interno */
+    min-height: auto !important;     /* Cancela alturas mínimas heredadas */
+    height: 38px !important;         /* Define una altura fija compacta */
+    display: flex !important;
+    align-items: center !important;
+    width: auto !important;
+}
+
+/* Estilos para el modal de factura */
+.modal.modal-lg {
+    width: 90% !important;           /* Controla el ancho adaptativo */
+    min-width: auto !important;
+    max-width: 1180px !important;    /* MODIFICADO: Reducido de 1300px a 1180px para compactar el ancho */
+    height: 85vh !important;         /* MODIFICADO: Reducido de 92vh a 85vh para compactar el alto */
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--surface) !important; /* Se adapta al tema */
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-xl) !important;
+    overflow: hidden !important;
+    min-height: auto !important;
+    padding: 15px 15px; 
+}
+
+.modal-body {
+    flex: 1;
+    display: grid !important;
+    grid-template-columns: 1fr 300px !important; /* Sidebar a la derecha */
+    gap: 20px !important;
+    padding: 15px !important;
+    overflow: auto !important; /* Bloquea scroll general */
+}
+
+.modal-title {
+    font-size: 18px !important; /* Reducimos un poco el tamaño de la letra */
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* Botón de cerrar compacto */
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    transition: background 0.2s !important;
+}
+
+.modal-close:hover {
+    background: var(--border); /* Efecto sutil al pasar el mouse */
+    color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   Diseño de Inputs y Selects Unificados (Homogeneidad de bordes y hovers)
+   ========================================================================== */
+.modal-body .form-control,
+.modal-body .form-select {
+    width: 100% !important;
+    height: 36px !important;
+    padding: 4px 10px !important;
+    line-height: 1.4 !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important; /* Borde de 1px delgado unificado */
+    border-radius: 6px !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+/* Flecha personalizada unificada para todos los selectores del modal */
+.modal-body .form-select {
+    appearance: none !important;
+    padding-right: 28px !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 14px !important;
+}
+
+/* Estado Hover Unificado */
+.modal-body .form-control:hover,
+.modal-body .form-select:hover {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Estado Focus Unificado */
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--text-gold, #d4af37) !important;
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) !important;
+    outline: none !important;
+}
+
+/* ==========================================================================
+   Sección de Información del Cliente 
+   ========================================================================== */
+/* Contenedor de la información del cliente */   
+.customer-section {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 2px 12px 8px 12px!important;
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    gap: 20px !important;
+    align-items: flex-end !important;
+}
+
+/* Título de la sección */
+.customer-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+}
+
+/* --- BLOQUE DERECHO --- */
+.customer-fields-block {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+/* Label de los inputs */
+.customer-section .customer-fields-block label.form-label {
+    text-transform: none !important;
+    font-size: 12px !important;
+    font-family: 'Verdana', sans-serif !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 0 !important;
+    display: block !important;
+    line-height: 2 !important;
+}
+
+/* Fila de Inputs */
+.customer-inputs-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Contenedor del buscador y selector */
+.customer-inputs-row .input-group {
+    position: relative !important;
+    flex: 1 !important;
+}
+
+/* Icono de lupa */
+.customer-inputs-row .input-icon-left {
+    position: absolute !important;
+    left: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    pointer-events: none !important;
+    z-index: 5 !important;
+}
+
+/* Margen izquierdo para el campo que tiene buscador (lupa) */
+.customer-inputs-row .form-control {
+    padding-left: 32px !important; 
+}
+
+/* TÍTULO (Izquierda) */
+.customer-title-block {
+    display: flex !important;
+    align-items: center !important;
+    height: 45px !important;
+}
+
+/* BOTÓN DE ACCIÓN (Derecha) */
+.customer-button-block {
+    display: flex !important;
+    align-items: center !important;
+    height: 36px !important;
+}
+
+/* Botón para crear nuevo cliente */
+.btn-new-customer {
+    background: transparent !important;
+    font-family: 'Verdana', sans-serif !important;
+    text-transform: none !important;
+    border: none !important;
+    color: var(--text-gold, #d4af37) !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    transition: background 0.2s, border-color 0.2s !important;
+}
+
+/* Hover del botón */
+.btn-new-customer:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+}
+
+/* ==========================================================================
+   Sección: Detalles de Pago y Fechas 
+   ========================================================================== */
+
+/* 1. Contenedor principal: Sobrescribe 'flex-column' */
+.card-raised:has(> span.text-primary) {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 10px 12px 8px 12px !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    gap: 20px !important;
+    align-items: flex-end !important;
+    flex-direction: row !important;
+}
+
+/* 2. Título de la sección (Izquierda) */
+.card-raised:has(> span.text-primary) > span.text-primary {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 45px !important;
+    margin: 0 !important;
+}
+
+/* 3. Fila de Inputs (Derecha) */
+.card-raised:has(> span.text-primary) .grid.grid-3 {
+    display: flex !important;
+    gap: 12px !important;
+    width: 100% !important;
+}
+
+/* 4. Contenedores individuales de campos (.form-group) */
+.card-raised .form-group {
+    position: relative !important;
+    flex: 1 !important;
+    margin: 0 !important;
+}
+
+/* 5. Etiquetas de los inputs (Label) */
+.card-raised .form-group .form-label {
+    display: block !important;
+    text-transform: none !important;
+    font-size: 12px !important;
+    font-family: 'Verdana', sans-serif !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 0px !important;  
+    line-height: 1 !important;
+}
+
+/* ==========================================================================
+   Sección: Líneas de Detalle
+   ========================================================================== */
+
+/* 1. Contenedor principal de la sección de ítems */
+.card-raised.items-card-section {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 12px 8px 8px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0px !important;
+    margin-bottom: 0px !important;
+    overflow: hidden !important;
+    flex: 1 !important;           /* Crece para rellenar el espacio vacío restante */
+    min-height: 150px !important;  /* Altura mínima de seguridad */
+    height: auto !important;       /* Cancela el height anterior */
+    max-height: none !important;   /* Cancela el max-height anterior */
+}
+
+/* Título de la sección */
+.card-raised.items-card-section .text-primary {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+/* Botón "Agregar Línea" */
+.card-raised.items-card-section .btn.btn-outline {
+    background: transparent !important;
+    font-family: 'Verdana', sans-serif !important;
+    text-transform: none !important;
+    border: none !important;
+    color: var(--text-gold, #d4af37) !important;
+    margin-left: 30px !important;
+    letter-spacing: 0.05em !important;
+    border: 1px solid var(--border) !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    transition: background 0.2s, border-color 0.2s !important;   
+}
+
+.card-raised.items-card-section .btn.btn-outline:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+}
+
+/* 2. Contenedor responsivo de la tabla */
+.table-responsive-wrapper {
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    background: var(--surface) !important;
+    overflow: auto !important;
+    flex: 1 !important; 
+    height: auto !important; 
+    margin-bottom: 0px !important;
+}
+
+/* 3. Estructura de la Tabla */
+.table-invoice-items {
+    table-layout: auto !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 0px !important;
+}
+
+/* Cabeceras de columna (th) */
+.table-invoice-items th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: var(--surface-raised) !important;
+    font-family: 'Verdana', sans-serif !important;
+    font-size: 11px !important;
+    padding: 8px 10px 1px 6px !important;
+    border-bottom: 2px solid var(--border) !important;
+    letter-spacing: 0.05em !important; 
+}
+
+/* Filas */
+.table-invoice-items tr {
+    border-bottom: 1px solid var(--border) !important;
+    gap: 8px !important;
+}
+
+/* Celdas (td) */
+.table-invoice-items td {
+    padding: 4px 4px !important;
+    vertical-align: middle !important;
+}
+
+/* 4. Distribución de Anchos */
+.table-invoice-items th:nth-child(1),
+.table-invoice-items td:nth-child(1) {
+    width: 120px !important; 
+    min-width: 120px !important;
+}
+
+.table-invoice-items th:nth-child(2),
+.table-invoice-items td:nth-child(2) {
+    width: 120px !important; 
+    min-width: 120px !important;
+}
+
+.table-invoice-items th:nth-child(3),
+.table-invoice-items td:nth-child(3) {
+    width: 170px !important; 
+    min-width: 170px !important;
+}
+
+.table-invoice-items th:nth-child(4),
+.table-invoice-items td:nth-child(4) {
+    width: 65px !important;  
+    padding-left: 5px !important;  
+    padding-right: 5px !important;
+    min-width: 65px !important;
+}
+
+.table-invoice-items th:nth-child(5),
+.table-invoice-items td:nth-child(5) {
+    width: 100px !important; 
+    min-width: 100px !important;
+}
+
+.table-invoice-items th:nth-child(6),
+.table-invoice-items td:nth-child(6) {
+    width: 70px !important;  
+    min-width: 70px !important;  
+}
+
+.table-invoice-items th:nth-child(7),
+.table-invoice-items td:nth-child(7) {
+    width: auto !important;        
+    min-width: 90px !important;     
+    white-space: nowrap !important; 
+    text-align: right !important;   
+}
+
+.table-invoice-items th:nth-child(8),
+.table-invoice-items td:nth-child(8) {
+     width: 75px !important;      
+    min-width: 75px !important;   
+}
+
+/* Alineaciones numéricas */
+.table-invoice-items .text-right,
+.table-invoice-items input.text-right {
+    text-align: right !important;
+}
+
+/* Botón Eliminar (Basura) */
+.table-invoice-items .btn-ghost.text-danger {
+    color: var(--text-secondary) !important;
+    border-radius: 6px !important;
+    transition: color 0.2s, background-color 0.2s !important;
+    height: 35px !important;
+    width: 35px !important;
+}
+
+.table-invoice-items .btn-ghost.text-danger:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+}
+
+/* ==========================================================================
+   Sección: Observaciones
+   ========================================================================== */
+
+/* 1. Contenedor de la tarjeta de observaciones */
+.card-raised:has(textarea) {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 10px 12px 8px 12px !important; 
+    
+    display: grid !important;
+    grid-template-columns: auto 1fr !important; 
+    gap: 20px !important;
+    align-items: center !important; 
+}
+
+/* 2. Etiqueta / Texto superior */
+.card-raised:has(textarea) .form-label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 45px !important; 
+    margin: 0 !important;
+}
+
+/* 3. Campo de texto (textarea) */
+.card-raised:has(textarea) textarea.form-control {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    padding: 6px 10px 8px 10px !important;
+    line-height: 1.4 !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    
+    width: 100% !important; 
+    margin-left: 0px !important;
+    
+    height: 38px !important; 
+    min-height: 38px !important;
+    max-height: 54px !important; 
+    overflow-y: auto !important;
+    resize: none !important;
+}   
+
+/* ==========================================================================
+   1. Control de la Estructura de Columnas
+   ========================================================================== */
+
+/* Columna Izquierda: Secciones una debajo de otra */
+.invoice-form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden; 
+    height: 100%;
+    flex: 1 !important; 
+    min-width: 0 !important;
+}
+
+/* Tarjetas Originales Compactas */
+.card-raised {
+    background: var(--surface-raised) !important; 
+    border: 1px solid var(--border) !important; 
+    border-radius: var(--radius-lg) !important; 
+    padding: 16px !important; 
+    box-sizing: border-box !important; 
+}
+
+/* ==========================================================================
+   2. Ajuste Estricto del Sidebar de Totales
+   ========================================================================== */
+
+/* Contenedor de la Tarjeta */
+.totals-sidebar.card-raised {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+
+    /* Fuerza comportamiento vertical e ignora grids de otras tarjetas */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    grid-template-columns: none !important;
+
+    /* Ancho controlado para que quepan todos los textos */
+    width: 100% !important; 
+    min-width: 100% !important;
+    flex-shrink: 0 !important; 
+    height: 100% !important;
+    overflow-x: auto !important; 
+    flex: 1 !important;
+}
+
+/* 3. Reset Obligatorio para los Hijos del Sidebar */
+.totals-sidebar.card-raised > div,
+.totals-sidebar.card-raised .d-flex.flex-column {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+/* 4. Filas Internas de Importes */
+.totals-sidebar.card-raised .d-flex.justify-content-between {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important; 
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 16px !important; 
+}
+
+/* Forzar que los títulos y valores no se dividan ni se deformen */
+.totals-sidebar.card-raised .d-flex.justify-content-between > * {
+    white-space: nowrap !important; 
+    flex-shrink: 0 !important;      
+}
+
+/* El total de la factura en el sidebar */
+.totals-sidebar .text-gold {
+    color: var(--text-gold, #d4af37) !important;
+    white-space: nowrap !important; 
+}
+
+/* 5. Ajuste de los Botones de Acción */
+.totals-sidebar .btn {
+    height: 38px !important;
+    font-family: 'Verdana', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex-shrink: 0 !important; 
+}
+
+/* Botón Primario (Emitir) */
+.totals-sidebar .btn-primary {
+    background: var(--text-gold, #d4af37) !important;
+    color: #000000 !important;
+    border: none !important;
+}
+.totals-sidebar .btn-primary:hover {
+    background: #c5a02e !important;
+}
+
+/* Botón Outline (Borrador) */
+.totals-sidebar .btn-outline {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+}
+.totals-sidebar .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ==========================================================================
+   Sección: Formulario Nuevo Cliente (Ajustado estricto sin Scroll)
+   ========================================================================== */
+
+/* Contenedor del cuerpo del modal en modo cliente */
+.modal-body.customer-only {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important; /* Desactiva el grid general */
+    justify-content: center !important; /* Centrado vertical absoluto */
+    align-items: center !important; /* Centrado horizontal absoluto */
+    padding: 15px !important; 
+    overflow: hidden !important; /* Bloquea estrictamente cualquier barra de scroll */
+    box-sizing: border-box !important;
+    height: 100% !important;
+}
+
+.modal-body.customer-only .customer-form-container {
+    width: 100% !important;
+    max-width: 680px !important; 
+    margin: 0 auto !important; 
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+    box-sizing: border-box !important;
+}
+
+/* Tarjeta del Formulario (Optimizado para usar el alto disponible sin desbordar) */
+.customer-form-container {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 16px 24px !important; /* Espaciado interno perfectamente balanceado */
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+/* Distribución en Grid de los campos */
+.customer-form-container form.grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px 20px !important; /* Espaciado óptimo entre filas para evitar scroll */
+}
+
+/* Campos que ocupan todo el ancho */
+.customer-form-container .grid-col-2 {
+    grid-column: span 2 !important;
+}
+
+/* Contenedor de cada label+input */
+.customer-form-container .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px !important; /* Separación sutil y limpia entre label e input */
+}
+
+/* Labels pequeños */
+.customer-form-container .form-label {
+    font-size: 11px !important;
+    font-family: 'Verdana', sans-serif !important;
+    color: var(--text-secondary) !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+/* Inputs de altura cómoda */
+.customer-form-container .form-control,
+.customer-form-container .form-select {
+    height: 34px !important; /* Altura estándar profesional */
+    font-size: 13px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important; 
+}
+
+/* Control estricto para el Número de Documento y el DV */
+.customer-form-container .input-id-number {
+    flex: 1 !important;
+    width: auto !important; 
+}
+
+.customer-form-container .input-dv {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 34px !important;
+    flex: none !important;
+    background-color: var(--surface) !important;
+    color: var(--text-secondary) !important;
+    cursor: not-allowed !important;
+    opacity: 0.8;
+}
+
+/* Alineación de checkbox "Responsable de IVA" */
+.customer-form-container .d-flex.align-items-center,
+.customer-form-container .form-check {
+    display: flex !important;
+    align-items: center !important;
+    height: 34px !important; 
+}
+
+/* Fila de los botones de acción compacta */
+.customer-form-container .justify-content-end {
+    grid-column: span 2 !important;
+    padding-top: 14px !important; /* Separación limpia antes de los botones */
+    margin-top: 8px !important;
+    border-top: 1px solid var(--border) !important;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px !important;
+}
+
+/* Botones de acción */
+.customer-form-container .btn {
+    height: 34px !important; 
+    padding: 0 18px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    font-size: 12px !important;
+}

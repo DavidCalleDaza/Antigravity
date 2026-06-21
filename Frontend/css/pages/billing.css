@@ -1,23 +1,456 @@
-/* ============================================
+/* ==========================================================================
    SERVINOW — Billing Page Styles
    Gold Theme
-   ============================================ */
+   ========================================================================== */
+
+/* ==========================================================================
+   Sección: Tarjetas de Resumen (billing-summary)
+   ========================================================================== */
 .billing-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-6);
   margin-bottom: var(--space-6);
 }
+
 .billing-summary-card {
-  padding: var(--space-6);
+  padding: var(--space-5) var(--space-6);
   border-radius: var(--radius-xl);
   border: var(--border);
   background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.billing-summary-label { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
-.billing-summary-value { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--font-bold); }
-.billing-summary-value.income { color: var(--success); }
-.billing-summary-value.expense { color: var(--danger); }
-.billing-summary-value.balance { color: var(--gold); }
-.invoice-status { display: inline-flex; }
-@media (max-width: 768px) { .billing-summary { grid-template-columns: 1fr; } }
+
+.billing-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.billing-summary-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+}
+
+.billing-summary-value {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+}
+
+.billing-summary-value.income {
+  color: var(--success); /* Verde para Ingresos */
+}
+
+/* CORREGIDO: Tono ámbar/alerta uniforme para Cuentas por Cobrar */
+.billing-summary-value.pending-color {
+  color: var(--warning); 
+}
+
+/* CORREGIDO: Tono rojo sutil para Notas Crédito de Ajuste */
+.billing-summary-value.expense-color {
+  color: #ef4444 !important; 
+}
+
+.invoice-status {
+  display: inline-flex;
+}
+
+/* ==========================================================================
+   Sección: Barra de Filtros Compacta 
+   ========================================================================== */
+.billing-filters-bar.card-raised {
+  background: var(--surface-raised) !important;
+  border: var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: var(--space-3) var(--space-4) !important; /* Padding reducido para compactación */
+  box-sizing: border-box !important;
+  margin-bottom: var(--space-6) !important;
+  width: 100% !important;
+}
+
+/* Grid de Filtros */
+.billing-filters-grid {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr auto !important; /* Distribución optimizada */
+  gap: var(--space-4) !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+}
+
+/* Grupos individuales */
+.billing-filter-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--space-1) !important;
+  width: 100% !important;
+}
+
+/* Alineación vertical del botón */
+.billing-filter-group.action-align {
+  height: 32px !important;
+  justify-content: flex-end !important;
+}
+
+/* Etiquetas compactas */
+.billing-filter-label {
+  font-family: var(--font-display) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--font-semibold) !important;
+  letter-spacing: 0.03em !important;
+  color: var(--text-secondary) !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+/* Wrapper con posición relativa para iconos */
+.billing-input-wrapper {
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* Iconos integrados de Lucide */
+.billing-input-icon {
+  position: absolute !important;
+  left: var(--space-3) !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  pointer-events: none !important;
+  color: var(--text-secondary) !important;
+  z-index: 5 !important;
+}
+
+/* Controles de Entrada (Filtros a 32px de altura) */
+.billing-filter-control {
+  width: 100% !important;
+  height: 32px !important; /* Altura compacta y profesional */
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-8) !important; /* Margen para el icono */
+  line-height: 1.4 !important;
+  font-size: var(--text-sm) !important;
+  box-sizing: border-box !important;
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Hover & Focus de los inputs unificados al tema dorado */
+.billing-filter-control:hover {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.billing-filter-control:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+/* Botón Limpiar Filtros Compacto (32px de altura) */
+.billing-btn-clear {
+  height: 32px !important;
+  padding: 0 var(--space-4) !important;
+  font-family: var(--font-display) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--font-semibold) !important;
+  border-radius: var(--radius-md) !important;
+  border: var(--border) !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-transform: none !important;
+  transition: background 0.15s, border-color 0.15s !important;
+}
+
+.billing-btn-clear:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+}
+
+/* ==========================================================================
+   Botón de Limpiar para la Barra de Filtros 
+   ========================================================================== */
+
+/* Asegura el posicionamiento relativo para contener la X absoluta */
+.billing-input-wrapper {
+    position: relative !important;
+}
+
+/* Botón de limpiar posicionado a la derecha de forma compacta */
+.billing-input-wrapper .billing-filter-clear-btn {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 2px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--text-secondary) !important;
+    transition: color 0.15s ease !important;
+    z-index: 6 !important;
+}
+
+/* Hover con color sutil de alerta */
+.billing-input-wrapper .billing-filter-clear-btn:hover {
+    color: #ef4444 !important; 
+}
+/*Aumenta el tamaño del icono de limpiar */
+.billing-btn-clear svg {
+    width: 16px !important;  
+    height: 16px !important;
+    flex-shrink: 0 !important; 
+}
+
+
+/* ==========================================================================
+   Sección: Historial de Eventos DIAN (Timeline)
+   ========================================================================== */
+.timeline {
+  position: relative;
+  padding-left: var(--space-6);
+  border-left: 2px solid var(--border);
+  margin-left: var(--space-2);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: var(--space-4);
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-badge {
+  position: absolute;
+  left: calc(-1 * var(--space-6) - 8px);
+  top: 2px;
+  background: var(--surface);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  z-index: 2;
+}
+
+.timeline-content {
+  background: var(--surface-raised);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: var(--border);
+}
+
+/* ==========================================================================
+   Sección: Tabla de Listado de Facturas
+   ========================================================================== */
+
+/* 1. Contenedor que permite scroll horizontal si las columnas son muy anchas */
+.table-container {
+  width: 100% !important;
+  overflow-x: auto !important; /* Permite scroll horizontal fluido */
+  background: var(--surface) !important;
+  border-radius: var(--radius-lg, 8px) !important;
+}
+
+/* Tabla principal */
+.table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: auto !important;
+}
+
+/* 2. Cabeceras de la Tabla ( th ) compactas y sin saltos de línea */
+.table th {
+  padding: 5px 8px !important; /* Reducido: 5px arriba/abajo y solo 8px a los lados */
+  font-family: var(--font-display) !important;
+  font-size: 10px !important; /* Letra de cabecera pequeña de 10px */
+  font-weight: var(--font-semibold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  color: var(--text-secondary) !important;
+  white-space: nowrap !important;
+  background: var(--surface-raised) !important;
+  border-bottom: 2px solid var(--border) !important;
+  text-align: left;
+}
+
+/* 3. Celdas de Datos ( td ) ultra-compactas de una sola línea */
+.table td {
+  padding: 5px 8px !important; /* Reducido: 5px arriba/abajo y solo 8px a los lados */
+  font-size: 11.5px !important; /* Letra de datos reducida a 11.5px para máxima compresión */
+  color: var(--text-primary) !important;
+  white-space: nowrap !important; /* Mantiene todo en una sola línea */
+  vertical-align: middle !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+/* Hover suave en filas al pasar el mouse */
+.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Alinear columna de acciones (botones) a la derecha */
+.table td:last-child {
+  text-align: right !important;
+}
+
+
+/* ==========================================================================
+   Anexo: Estilos para Botones de Acción (ACCIONES)
+   ========================================================================== */
+
+/* Ajustar columna de acciones a solo 3 botones */
+.table td:last-child {
+  padding: 4px 6px !important;
+  width: 7px !important;    /* Ancho fijo para solo 3 botones */
+  min-width: 100px !important;
+}
+
+/* Asegurar que el contenedor flex se posicione correctamente en la celda */
+.table td:last-child .d-flex {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 2px !important;
+  vertical-align: middle !important;
+}
+
+/* Estilo para los botones de tipo icono (Ghost / Icon-only) */
+.btn-ghost.btn-icon-only {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 4px !important;
+  color: var(--text-secondary, #a0aec0) !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* Efecto hover sobre los botones */
+.btn-ghost.btn-icon-only:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-primary, #ffffff) !important;
+}
+
+/* Forzar tamaño y visibilidad de los iconos SVG dentro de los botones */
+.btn-ghost.btn-icon-only svg {
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+  stroke: currentColor !important; /* Para iconos basados en trazo como Lucide/Feather */
+}
+
+/* Definición de colores auxiliares para asegurar contraste en fondo oscuro */
+.text-primary {
+  color: #3b82f6 !important; /* Azul para editar */
+}
+
+.text-secondary {
+  color: #94a3b8 !important; /* Gris/azul para descargar */
+}
+
+.text-gold {
+  color: #fbbf24 !important; /* Dorado/Amarillo para transmitir */
+}
+
+/* ==========================================================================
+   Sección: Facturación - Pestañas de Estados
+   ========================================================================== */
+
+/* Cabecera del listado donde viven las pestañas */
+.card-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 16px !important; /* Padding vertical reducido */
+    min-height: auto !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+/* Contenedor de las pestañas */
+.card-header .tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important; /* Espaciado compacto y moderno entre botones */
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: visible !important; /* CORREGIDO: Elimina cualquier barra de scroll vertical */
+}
+
+/* Botón de Pestaña Normal (Estilo Píldora Elegante) */
+.card-header .tab {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-secondary) !important;
+    font-family: 'Verdana', sans-serif !important;
+    font-size: 11px !important; /* Fuente compacta y sutil */
+    font-weight: 500 !important;
+    padding: 4px 12px !important; /* Padding compacto */
+    border-radius: 20px !important; /* Forma redondeada de píldora */
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease !important;
+    outline: none !important;
+}
+
+/* Hover de la pestaña */
+.card-header .tab:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Pestaña Activa (Estilo Píldora Dorada Translúcida) */
+.card-header .tab.active {
+    color: var(--text-gold, #d4af37) !important;
+    background: rgba(212, 175, 55, 0.08) !important; /* Destacado ámbar translúcido */
+    font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   Responsividad y Utilidades
+   ========================================================================== */
+@media (max-width: 992px) {
+  .billing-filters-grid {
+    grid-template-columns: 1fr 1fr !important; /* Dos columnas si la pantalla es mediana */
+  }
+  .billing-filter-group.action-align {
+    grid-column: span 2 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-summary {
+    grid-template-columns: 1fr;
+  }
+  .billing-filters-grid {
+    grid-template-columns: 1fr !important; /* Una sola columna en pantallas móviles */
+  }
+  .billing-filter-group.action-align {
+    grid-column: span 1 !important;
+  }
+}

@@ -150,6 +150,7 @@ export const serviceClient = {
   create: (data) => apiClient.post('/services', data),
   update: (id, data) => apiClient.patch(`/services/${id}`, data),
   delete: (id) => apiClient.delete(`/services/${id}`),
+  listCategories: () => apiClient.get('/services/categories'),
 };
 
 export const socialClient = {
@@ -158,3 +159,39 @@ export const socialClient = {
   listPosts: () => apiClient.get('/social/posts'),
   deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
 };
+
+export const billingClient = {
+  // Customers
+  listCustomers: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/customers${query ? `?${query}` : ''}`);
+  },
+  createCustomer: (data) => apiClient.post('/billing/customers', data),
+  updateCustomer: (id, data) => apiClient.patch(`/billing/customers/${id}`, data),
+
+  // Invoices
+  listInvoices: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/invoices${query ? `?${query}` : ''}`);
+  },
+  createInvoice: (data) => apiClient.post('/billing/invoices', data),
+  getInvoice: (id) => apiClient.get(`/billing/invoices/${id}`),
+  updateInvoice: (id, data) => apiClient.patch(`/billing/invoices/${id}`, data),
+  cancelInvoice: (id) => apiClient.post(`/billing/invoices/${id}/cancel`),
+  markPaid: (id) => apiClient.post(`/billing/invoices/${id}/mark-paid`),
+
+  // PDF & DIAN
+  getInvoicePDFUrl: (id) => `${SERVER_BASE_URL}/api/v1/billing/invoices/${id}/pdf`,
+  sendToDian: (id) => apiClient.post(`/billing/invoices/${id}/send-dian`),
+  getDianStatus: (id) => apiClient.get(`/billing/invoices/${id}/dian-status`),
+
+  // Credit Notes
+  createCreditNote: (data) => apiClient.post('/billing/credit-notes', data),
+
+  // Summary
+  getSummary: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/summary${query ? `?${query}` : ''}`);
+  },
+};
+

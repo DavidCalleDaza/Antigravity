@@ -84,6 +84,14 @@ class Settings(BaseSettings):
     DIAN_RESOLUTION_RANGE_FROM: int = 1
     DIAN_RESOLUTION_RANGE_TO: int = 5000
 
+    # --- Social OAuth ---
+    META_APP_ID: str = ""
+    META_APP_SECRET: str = ""
+    META_REDIRECT_URI: str = ""
+    TIKTOK_CLIENT_KEY: str = ""
+    TIKTOK_CLIENT_SECRET: str = ""
+    TIKTOK_REDIRECT_URI: str = ""
+
 
 # Singleton instance — importable across the application.
 settings = Settings()

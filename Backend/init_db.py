@@ -34,6 +34,7 @@ async def init_database():
         from app.modules.wall.models import Comment, Post
         from app.modules.products.models import Product
         from app.modules.services.models import Service
+        from app.modules.social.models import SocialAccount, SocialPost
 
         from sqlalchemy import text
         from app.db.session import engine
@@ -58,7 +59,7 @@ async def init_database():
             logger.info(f"Tables after create_all: {tables}")
 
         missing = []
-        expected = ['comments', 'posts', 'products', 'services', 'users']
+        expected = ['comments', 'posts', 'products', 'services', 'users', 'social_accounts', 'social_posts']
         for tbl in expected:
             if tbl not in tables:
                 missing.append(tbl)

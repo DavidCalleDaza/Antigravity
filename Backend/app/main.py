@@ -80,6 +80,15 @@ app.add_middleware(
 register_exception_handlers(app)
 
 
+# ── Ngrok Skip Browser Warning Middleware ────────────────────────────────────
+
+@app.middleware("http")
+async def add_ngrok_skip_header(request, call_next):
+    response = await call_next(request)
+    response.headers["ngrok-skip-browser-warning"] = "true"
+    return response
+
+
 # ── Routers ──────────────────────────────────────────────────────────────────
 
 app.include_router(
@@ -126,6 +135,7 @@ app.include_router(
 
 
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
+app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")
 
 
 # ── Health Check ─────────────────────────────────────────────────────────────

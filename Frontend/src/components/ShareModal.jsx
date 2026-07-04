@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2 } from 'lucide-react';
 import { generateShareImage } from '../utils/generateShareImage';
+import { socialClient } from '../utils/apiClient';
 
 const NETWORKS = [
   { id: 'facebook', label: 'Facebook', Icon: Facebook },
@@ -20,50 +21,7 @@ function buildShareText(item) {
   return `✨ ${item.name} - ${item.category}${desc ? '\n\n' + desc : ''}\n\n💰 Precio: $${Number(item.price).toLocaleString('es-CO')}\n\n¡Contáctanos para más información!`;
 }
 
-async function handlePublish(selectedNetworks, text, item, imageBlob) {
-  if (navigator.share && isMobile()) {
-    try {
-      const files = imageBlob ? [new File([imageBlob], 'share-image.png', { type: 'image/png' })] : [];
-      await navigator.share({
-        title: item.name,
-        text: text,
-        url: window.location.href,
-        files,
-      });
-      return { success: true };
-    } catch (e) {
-      if (e.name === 'AbortError') return { success: true, cancelled: true };
-    }
-  }
-
-  const encodedText = encodeURIComponent(text);
-  const encodedUrl  = encodeURIComponent(window.location.href);
-
-  const urls = [];
-  if (selectedNetworks.includes('facebook')) {
-    urls.push({
-      network: 'facebook',
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
-    });
-  }
-  if (selectedNetworks.includes('instagram')) {
-    urls.push({ network: 'instagram', url: null });
-  }
-  if (selectedNetworks.includes('tiktok')) {
-    urls.push({
-      network: 'tiktok',
-      url: 'https://www.tiktok.com/upload',
-    });
-  }
-
-  for (const { network, url } of urls) {
-    if (url) {
-      window.open(url, '_blank', 'width=600,height=400');
-    }
-  }
-
-  return { success: true, needsInstagramInstructions: selectedNetworks.includes('instagram') };
-}
+// handlePublish ya no se utiliza directamente ya que ahora publicamos vía el backend.
 
 export default function ShareModal({
   isOpen,
@@ -78,6 +36,26 @@ export default function ShareModal({
   const [loadingImage, setLoadingImage] = useState(false);
   const [showInstagramPanel, setShowInstagramPanel] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [accounts, setAccounts] = useState([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      socialClient.listAccounts()
+        .then(res => setAccounts(res || []))
+        .catch(err => console.error("Failed to load accounts", err));
+    }
+  }, [isOpen]);
+
+  const handleConnect = async (platform) => {
+    try {
+      const res = await socialClient.getAuthorizeUrl(platform);
+      if (res && res.url) {
+        window.location.href = res.url;
+      }
+    } catch (err) {
+      console.error("Failed to get auth url", err);
+    }
+  };
 
   useEffect(() => {
     if (isOpen && item) {
@@ -151,12 +129,21 @@ export default function ShareModal({
   const handlePublishClick = async () => {
     setPublishing(true);
     try {
-      const result = await handlePublish(selectedNetworks, shareText, item, imageBlob);
-      if (result?.needsInstagramInstructions) {
-        setShowInstagramPanel(true);
-      } else if (onPublish) {
+      for (const platform of selectedNetworks) {
+        await socialClient.publish({
+          platform: platform,
+          caption: shareText,
+          media_url: item?.imageUrl || item?.image_url || '',
+          product_id: item?.id
+        });
+      }
+      if (onPublish) {
         onPublish({ networks: selectedNetworks, text: shareText, item });
       }
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Error al publicar: " + (err.detail || err.message || "Desconocido"));
     } finally {
       setPublishing(false);
     }
@@ -212,18 +199,33 @@ export default function ShareModal({
           <div className="form-group">
             <label className="form-label">Selecciona las redes</label>
             <div className="share-networks">
-              {NETWORKS.map(({ id, label, Icon }) => (
-                <label key={id} className="share-network-option">
-                  <input
-                    type="checkbox"
-                    checked={selectedNetworks.includes(id)}
-                    onChange={() => toggleNetwork(id)}
-                    className="form-checkbox"
-                  />
-                  <span className="share-network-icon"><Icon width="18" height="18" /></span>
-                  <span>{label}</span>
-                </label>
-              ))}
+              {NETWORKS.map(({ id, label, Icon }) => {
+                const isConnected = accounts.some(a => a.platform === id);
+                return (
+                  <div key={id} className="share-network-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}>
+                    <label className="share-network-option" style={{ flex: 1, opacity: isConnected ? 1 : 0.5 }}>
+                      <input
+                        type="checkbox"
+                        disabled={!isConnected}
+                        checked={selectedNetworks.includes(id)}
+                        onChange={() => toggleNetwork(id)}
+                        className="form-checkbox"
+                      />
+                      <span className="share-network-icon"><Icon width="18" height="18" /></span>
+                      <span>{label}</span>
+                    </label>
+                    {!isConnected && (
+                      <button 
+                        className="btn btn-outline btn-sm" 
+                        onClick={() => handleConnect(id)}
+                        style={{ whiteSpace: 'nowrap' }}
+                      >
+                        Conectar
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

@@ -34,3 +34,11 @@ async def test_health_check_db_connection_is_bool(client: AsyncClient) -> None:
     response = await client.get("/api/v1/health")
     data = response.json()
     assert isinstance(data["db_connection"], bool)
+
+
+@pytest.mark.asyncio
+async def test_ngrok_skip_browser_warning_header(client: AsyncClient) -> None:
+    """All responses should contain the ngrok-skip-browser-warning header."""
+    response = await client.get("/api/v1/health")
+    assert response.headers.get("ngrok-skip-browser-warning") == "true"
+

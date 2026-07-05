@@ -24,14 +24,16 @@ class ProductBase(BaseModel):
         ),
     ]
     description: Annotated[str | None, Field(None, description="Product description.")]
-    category: Annotated[
-        str,
+    
+    # Se reemplaza 'category' (str) por 'category_id' (UUID o None)
+    category_id: Annotated[
+        uuid.UUID | None,
         Field(
-            default="General",
-            description="Product category.",
-            max_length=50,
+            None,
+            description="Foreign key pointing to the category (UUID).",
         ),
     ]
+    
     price: Annotated[float, Field(..., description="Product price.", ge=0)]
     stock: Annotated[int, Field(default=0, description="Available stock.", ge=0)]
     status: Annotated[
@@ -56,7 +58,10 @@ class ProductUpdate(BaseModel):
 
     name: Annotated[str | None, Field(None, min_length=1, max_length=150)]
     description: Annotated[str | None, Field(None)]
-    category: Annotated[str | None, Field(None, max_length=50)]
+    
+    # Se reemplaza 'category' (str) por 'category_id' (UUID o None)
+    category_id: Annotated[uuid.UUID | None, Field(None, description="Product category ID (UUID).")]
+    
     price: Annotated[float | None, Field(None, ge=0)]
     stock: Annotated[int | None, Field(None, ge=0)]
     status: Annotated[str | None, Field(None, max_length=20)]

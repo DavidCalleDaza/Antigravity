@@ -88,6 +88,48 @@ class ApiClient {
     return data;
   }
 
+  /**
+   * Realiza una petición GET/POST y retorna un Blob (binario), enviando el
+   * header de autenticación igual que `request`. Pensado para descargas de
+   * archivos (PDF, etc.) donde no se puede depender de `window.open(url)`
+   * porque este último no adjunta el Authorization header.
+   */
+  async getBlob(endpoint, options = {}) {
+    const token = useStore.getState().currentUser?.token;
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    };
+
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      method: options.method || 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = { detail: `HTTP ${response.status}` };
+      }
+
+      if (response.status === 401) {
+        useStore.getState().logout();
+        window.location.href = '/login';
+      }
+
+      throw new ApiError(
+        data.detail || `HTTP ${response.status}`,
+        response.status,
+        data
+      );
+    }
+
+    return response.blob();
+  }
+
   get(endpoint, options = {}) {
     return this.request(endpoint, { ...options, method: 'GET' });
   }
@@ -110,6 +152,22 @@ class ApiClient {
 }
 
 export { ApiClient, ApiError };
+
+/**
+ * Dispara la descarga de un Blob en el navegador (crea un <a> temporal con
+ * un object URL). Usado para descargar el PDF de la factura obtenido vía
+ * billingClient.downloadInvoicePDF().
+ */
+export function triggerBlobDownload(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
 
 import { useStore } from '../store/useStore';
 export const apiClient = new ApiClient(API_BASE_URL);
@@ -150,6 +208,7 @@ export const serviceClient = {
   create: (data) => apiClient.post('/services', data),
   update: (id, data) => apiClient.patch(`/services/${id}`, data),
   delete: (id) => apiClient.delete(`/services/${id}`),
+  listCategories: () => apiClient.get('/services/categories'),
 };
 
 export const socialClient = {
@@ -157,4 +216,64 @@ export const socialClient = {
   publish: (data) => apiClient.post('/social/publish', data),
   listPosts: () => apiClient.get('/social/posts'),
   deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
+};
+
+export const billingClient = {
+  // Customers
+  listCustomers: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/customers${query ? `?${query}` : ''}`);
+  },
+  createCustomer: (data) => apiClient.post('/billing/customers', data),
+  updateCustomer: (id, data) => apiClient.patch(`/billing/customers/${id}`, data),
+
+  // Invoices
+  listInvoices: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/invoices${query ? `?${query}` : ''}`);
+  },
+  createInvoice: (data) => apiClient.post('/billing/invoices', data),
+  getInvoice: (id) => apiClient.get(`/billing/invoices/${id}`),
+  updateInvoice: (id, data) => apiClient.patch(`/billing/invoices/${id}`, data),
+  cancelInvoice: (id) => apiClient.post(`/billing/invoices/${id}/cancel`),
+  markPaid: (id) => apiClient.post(`/billing/invoices/${id}/mark-paid`),
+
+  // PDF & DIAN
+  // @deprecated: no envía el header de autenticación (window.open no lo permite).
+  // Se conserva solo por compatibilidad; usar downloadInvoicePDF() en su lugar.
+  getInvoicePDFUrl: (id) => `${SERVER_BASE_URL}/api/v1/billing/invoices/${id}/download`,
+  // Descarga el PDF autenticado como Blob, listo para guardar en disco.
+  downloadInvoicePDF: (id) => apiClient.getBlob(`/billing/invoices/${id}/download`),
+  sendToDian: (id) => apiClient.post(`/billing/invoices/${id}/send-dian`),
+  getDianStatus: (id) => apiClient.get(`/billing/invoices/${id}/dian-status`),
+
+  //Send Invoice Email
+  sendInvoiceEmail: (id) => apiClient.post(`/billing/invoices/${id}/send-email`),
+
+  // Credit Notes
+  createCreditNote: (data) => apiClient.post('/billing/credit-notes', data),
+
+  // Summary
+  getSummary: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/summary${query ? `?${query}` : ''}`);
+  },
+
+  // Medios de pago
+  getPaymentMeans: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/payment-means${query ? `?${query}` : ''}`);
+  },
+
+  // Top productos y servicios más vendidos (separados)
+  getTopSelling: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/top-selling${query ? `?${query}` : ''}`);
+  },
+};
+
+// 
+export const categoryClient = {
+  list: (entityType = 'product') =>
+    apiClient.get(`/categories?entity_type=${entityType}`),
 };

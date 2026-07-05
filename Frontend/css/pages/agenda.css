@@ -104,3 +104,23 @@
     margin: 2px auto 0;
   }
 }
+
+@media (max-width: 480px) {
+  .calendar-header-cell {
+    padding: var(--space-1) !important;
+    font-size: 9px !important;
+  }
+  .calendar-cell {
+    min-height: 48px !important;
+    padding: 2px !important;
+  }
+  .calendar-day {
+    font-size: var(--text-xs) !important;
+    text-align: center;
+  }
+  .calendar-cell.today .calendar-day {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+

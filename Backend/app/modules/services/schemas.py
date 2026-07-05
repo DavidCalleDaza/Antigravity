@@ -24,16 +24,15 @@ class ServiceBase(BaseModel):
         ),
     ]
     description: Annotated[str | None, Field(None, description="Service description.")]
-    category: Annotated[
-        str,
-        Field(
-            default="General",
-            description="Service category.",
-            max_length=50,
-        ),
+    category_id: Annotated[
+        uuid.UUID | None,
+        Field(default=None, description="Service category ID."),
     ]
     price: Annotated[float, Field(default=0, description="Service price.", ge=0)]
-    duration: Annotated[str | None, Field(None, description="Estimated duration.", max_length=50)]
+    
+    # Modificado de 'str | int | None' a 'int | None'
+    duration: Annotated[int | None, Field(None, description="Estimated duration.")]
+    
     status: Annotated[
         str,
         Field(
@@ -56,9 +55,12 @@ class ServiceUpdate(BaseModel):
 
     name: Annotated[str | None, Field(None, min_length=1, max_length=150)]
     description: Annotated[str | None, Field(None)]
-    category: Annotated[str | None, Field(None, max_length=50)]
+    category_id: Annotated[uuid.UUID | None, Field(None)]
     price: Annotated[float | None, Field(None, ge=0)]
-    duration: Annotated[str | None, Field(None, max_length=50)]
+    
+    # Modificado de 'str | None' (con max_length) a 'int | None'
+    duration: Annotated[int | None, Field(None)]
+    
     status: Annotated[str | None, Field(None, max_length=20)]
     image_url: Annotated[str | None, Field(None)]
     video_url: Annotated[str | None, Field(None)]

@@ -382,3 +382,26 @@
 
 .status-badge.connected { color: var(--primary); }
 .status-badge.disconnected { color: var(--text-tertiary); }
+
+/* ==========================================================================
+   Responsive: Mobile (≤ 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .profile-section-card {
+    padding: var(--space-5) !important;
+  }
+
+  .profile-tabs {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    display: inline-flex !important;
+  }
+
+  .profile-tab {
+    padding: var(--space-2) var(--space-4) !important;
+    flex-shrink: 0;
+  }
+}
+

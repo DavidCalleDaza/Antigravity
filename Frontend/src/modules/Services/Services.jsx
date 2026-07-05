@@ -10,10 +10,10 @@ import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import { serviceClient, ApiError } from '../../utils/apiClient';
+import { serviceClient, categoryClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 
-const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
+const { ADMIN, SELLER } = APP_CONFIG.ROLES;
 
 export default function Services() {
   const { currentUser } = useStore();
@@ -27,9 +27,10 @@ export default function Services() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
-    category: APP_CONFIG.CATEGORIES[0],
+    category_id: '',
     price: 0,
     duration: '',
     status: 'active',
@@ -54,7 +55,17 @@ export default function Services() {
 
   useEffect(() => {
     loadServices();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoryClient.list('service');
+      setCategories(data);
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
+  };
 
   const loadServices = async () => {
     try {
@@ -87,10 +98,24 @@ export default function Services() {
     upload(file);
   };
 
+  // Función handleSaveService unificada y corregida
   const handleSaveService = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...formData };
+      const payload = {
+        name: formData.name,
+        price: formData.price,
+        status: formData.status,
+        // Forzamos la conversión a String asegurando que nunca sea null o un número puro
+        description: String(formData.description || ''), 
+        duration: String(formData.duration || ''),
+        // Mantiene la conversión a null si está vacía
+        category_id: formData.category_id === '' ? null : formData.category_id,
+      };
+
+      if (formData.image_url) payload.image_url = formData.image_url;
+      if (formData.video_url) payload.video_url = formData.video_url;
+
       let savedItem;
       if (editingService) {
         savedItem = await serviceClient.update(editingService.id, payload);
@@ -101,6 +126,7 @@ export default function Services() {
         setServices([savedItem, ...services]);
         toast.success('Servicio creado exitosamente.');
       }
+
       const hasShareSelected = Object.values(shareOnSave).some(Boolean);
       resetForm();
       if (hasShareSelected) {
@@ -109,7 +135,35 @@ export default function Services() {
         }, 100);
       }
     } catch (err) {
-      toast.error(editingService ? 'Error al actualizar' : 'Error al crear');
+      // IMPORTANTE: Esto imprimirá el error real en la consola de su navegador (F12 -> pestaña Consola)
+      console.error("Error detallado al guardar el servicio:", err);
+
+      // Comprobación más segura que evita fallos de compilación de Vite
+      const isApiError = err && (err.name === 'ApiError' || typeof err.status === 'number');
+
+      if (isApiError) {
+        if (err.status === 422) {
+          const validationErrors = err.data?.detail;
+          if (Array.isArray(validationErrors)) {
+            const errorMessages = validationErrors.map(error => {
+              const field = error.loc[error.loc.length - 1];
+              return `"${field}": ${error.msg}`;
+            }).join(', ');
+            toast.error(`Error de validación en: ${errorMessages}`);
+          } else {
+            toast.error(err.message || 'Datos no procesables por el servidor.');
+          }
+        } else {
+          toast.error(err.message || `Error del servidor (Código ${err.status})`);
+        }
+      } else {
+        // Si el backend está apagado, fetch arroja un TypeError estándar "Failed to fetch"
+        if (err instanceof TypeError && err.message?.includes('fetch')) {
+          toast.error('No se pudo conectar con el servidor. ¿Está encendido el backend?');
+        } else {
+          toast.error('Error de conexión o fallo inesperado.');
+        }
+      }
     }
   };
 
@@ -131,7 +185,7 @@ export default function Services() {
     setEditingService(null);
     setFormData({
       name: '',
-      category: APP_CONFIG.CATEGORIES[0],
+      category_id: '',
       price: 0,
       duration: '',
       status: 'active',
@@ -146,11 +200,13 @@ export default function Services() {
     setEditingService(service);
     setFormData({
       name: service.name,
-      category: service.category,
+      category_id: service.category_id || '',
       price: service.price,
       duration: service.duration || '',
       status: service.status,
       description: service.description || '',
+      image_url: service.image_url || null,
+      video_url: service.video_url || null,
     });
     setIsModalOpen(true);
   };
@@ -164,7 +220,7 @@ export default function Services() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category: APP_CONFIG.CATEGORIES[0], price: 0, duration: '', status: 'active', description: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Servicio
             </button>
@@ -183,20 +239,23 @@ export default function Services() {
         </div>
       ) : (
         <div className="product-grid">
-          {services.map(s => (
-            <MediaCard
-              key={s.id}
-              item={s}
-              variant="service"
-              canManage={canManage}
-              onEdit={openEditModal}
-              onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
-              onAction={(service) => toast.success(`Cita para ${service.name} solicitada`)}
-              onShare={(item) => setShareModal({ isOpen: true, item })}
-              actionLabel="Agendar"
-              actionIcon={CalendarPlus}
-            />
-          ))}
+          {services.map(s => {
+            const categoryName = categories.find(c => c.id === s.category_id)?.name || '';
+            return (
+              <MediaCard
+                key={s.id}
+                item={{ ...s, category: categoryName }}
+                variant="service"
+                canManage={canManage}
+                onEdit={openEditModal}
+                onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
+                onAction={(service) => toast.success(`Cita para ${service.name} solicitada`)}
+                onShare={(item) => setShareModal({ isOpen: true, item })}
+                actionLabel="Agendar"
+                actionIcon={CalendarPlus}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -232,10 +291,15 @@ export default function Services() {
               <label className="form-label">Categoría</label>
               <select
                 className="form-select"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                value={formData.category_id}
+                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
               >
-                {APP_CONFIG.CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="">Seleccionar categoría</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {'-'.repeat(c.depth || 0)} {c.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">

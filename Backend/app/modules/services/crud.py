@@ -10,15 +10,15 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+#from app.modules.services.models import Service, ServiceCategory
 from app.modules.services.models import Service
 from app.modules.services.schemas import ServiceCreate, ServiceUpdate
-
 
 async def get_services(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 50,
-    category: str | None = None,
+    category_id: uuid.UUID | None = None,
     status: str | None = None,
 ) -> list[Service]:
     """
@@ -28,7 +28,7 @@ async def get_services(
         db: Active async database session.
         skip: Number of records to skip (offset).
         limit: Maximum number of services to return.
-        category: Optional category filter.
+        category_id: Optional category ID filter.
         status: Optional status filter.
 
     Returns:
@@ -36,8 +36,8 @@ async def get_services(
     """
     stmt = select(Service).order_by(Service.created_at.desc()).offset(skip).limit(limit)
 
-    if category:
-        stmt = stmt.where(Service.category == category)
+    if category_id:
+        stmt = stmt.where(Service.category_id == category_id)
     if status:
         stmt = stmt.where(Service.status == status)
 
@@ -66,7 +66,7 @@ async def create_service(db: AsyncSession, service_in: ServiceCreate) -> Service
     db_service = Service(
         name=service_in.name,
         description=service_in.description,
-        category=service_in.category,
+        category_id=service_in.category_id,
         price=service_in.price,
         duration=service_in.duration,
         status=service_in.status,

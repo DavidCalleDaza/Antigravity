@@ -1,23 +1,1012 @@
-/* ============================================
+/* ==========================================================================
    SERVINOW — Billing Page Styles
-   Gold Theme
-   ============================================ */
-.billing-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-6);
+   Gold Theme - Responsive Updated
+   ========================================================================== */
+
+/* ==========================================================================
+   Sección: Contenedores base y Encabezado adaptable
+   ========================================================================== */
+.page-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ==========================================================================
+   Sección: Tarjetas de Resumen (billing-summary)
+   ========================================================================== */
+.billing-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: var(--space-3) !important;
+  margin-bottom: var(--space-4);
+}
+
 .billing-summary-card {
-  padding: var(--space-6);
+  padding: 10px 14px !important;
   border-radius: var(--radius-xl);
   border: var(--border);
   background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  text-align: center !important; /* Centra todo el contenido de la tarjeta */
 }
-.billing-summary-label { font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
-.billing-summary-value { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--font-bold); }
-.billing-summary-value.income { color: var(--success); }
-.billing-summary-value.expense { color: var(--danger); }
-.billing-summary-value.balance { color: var(--gold); }
-.invoice-status { display: inline-flex; }
-@media (max-width: 768px) { .billing-summary { grid-template-columns: 1fr; } }
+
+.billing-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.billing-summary-label {
+  font-size: var(--text-xs) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  text-align: center !important;
+  color: var(--text-secondary)  !important;
+  margin-bottom: 14px !important;
+  font-family: var(--font-display) !important;
+}
+
+/* Clase base única para todos los valores (numéricos y textos) */
+.billing-summary-value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg) !important;     /* Mismo tamaño exacto de fuente para todos */
+  font-weight: var(--font-bold);
+  text-align: center !important;
+  line-height: 1.2 !important;              /* Misma altura de línea para evitar diferencias */
+  padding-bottom: 10px;
+  
+  /* Propiedades de recorte seguro (los números no las activan porque no se desbordan) */
+  white-space: nowrap !important;          
+  overflow: hidden !important;             
+  text-overflow: ellipsis !important;      
+  max-width: 100% !important;              
+  display: block !important;
+}
+
+/* Variaciones de colores de los valores numéricos */
+.billing-summary-value.income {
+  color: var(--success) !important; /* Verde para Ingresos */
+}
+
+.billing-summary-value.pending-color {
+  color: var(--warning) !important; 
+}
+
+.billing-summary-value.expense-color {
+  color: #ef4444 !important; 
+}
+
+/* Variaciones de colores de los valores destacados */
+.billing-summary-card .text-info {
+  color: #38bdf8 !important; /* Azul claro para producto */
+}
+
+.billing-summary-card .text-warning {
+  color: #fb923c !important; /* Naranja para servicio */
+}
+
+/* Subtexto unificado centrado */
+.billing-summary-subtext {
+  font-size: var(--text-xs) !important;
+  color: var(--text-secondary) !important;
+  margin-top: 2px !important;
+  font-family: var(--font-display) !important;
+  text-align: center !important; /* Mantiene la perfecta simetría horizontal */
+}
+
+/* ==========================================================================
+   Sección: Barra de Filtros Compacta 
+   ========================================================================== */
+.billing-filters-bar.card-raised {
+  background: var(--surface-raised) !important;
+  border: var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  padding: var(--space-4) !important;
+  box-sizing: border-box !important;
+  margin-bottom: var(--space-6) !important;
+  width: 100% !important;
+}
+
+.billing-filters-grid {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr auto !important;
+  gap: var(--space-4) !important;
+  align-items: flex-end !important;
+  width: 100% !important;
+}
+
+.billing-filter-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--space-1) !important;
+  width: 100% !important;
+}
+
+.billing-filter-group.action-align {
+  height: 32px !important;
+  justify-content: flex-end !important;
+}
+
+.billing-filter-label {
+  font-family: var(--font-display) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--font-semibold) !important;
+  letter-spacing: 0.03em !important;
+  color: var(--text-secondary) !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+.billing-input-wrapper {
+  position: relative !important;
+  width: 100% !important;
+}
+
+.billing-input-icon {
+  position: absolute !important;
+  left: var(--space-3) !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  pointer-events: none !important;
+  color: var(--text-secondary) !important;
+  z-index: 5 !important;
+}
+
+.billing-filter-control {
+  width: 100% !important;
+  height: 32px !important;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-8) !important;
+  line-height: 1.4 !important;
+  font-size: var(--text-sm) !important;
+  box-sizing: border-box !important;
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.billing-filter-control:hover {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.billing-filter-control:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  outline: none !important;
+}
+
+.billing-btn-clear {
+  height: 32px !important;
+  padding: 0 var(--space-4) !important;
+  font-family: var(--font-display) !important;
+  font-size: var(--text-xs) !important;
+  font-weight: var(--font-semibold) !important;
+  border-radius: var(--radius-md) !important;
+  border: var(--border) !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-transform: none !important;
+  transition: background 0.15s, border-color 0.15s !important;
+}
+
+.billing-btn-clear:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+}
+
+.billing-input-wrapper .billing-filter-clear-btn {
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 2px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--text-secondary) !important;
+  transition: color 0.15s ease !important;
+  z-index: 6 !important;
+}
+
+.billing-input-wrapper .billing-filter-clear-btn:hover {
+  color: #ef4444 !important; 
+}
+
+.billing-btn-clear svg {
+  width: 16px !important;  
+  height: 16px !important;
+  flex-shrink: 0 !important; 
+}
+
+/* ==========================================================================
+   Sección: Historial de Eventos DIAN (Timeline)
+   ========================================================================== */
+.timeline {
+  position: relative;
+  padding-left: var(--space-6);
+  border-left: 2px solid var(--border);
+  margin-left: var(--space-2);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: var(--space-4);
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-badge {
+  position: absolute;
+  left: calc(-1 * var(--space-6) - 8px);
+  top: 2px;
+  background: var(--surface);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  z-index: 2;
+}
+
+.timeline-content {
+  background: var(--surface-raised);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  border: var(--border);
+}
+
+/* ==========================================================================
+   Sección: Tabla de Listado de Facturas
+   ========================================================================== */
+
+/* 1. Contenedor de la tabla: se oculta el scroll por defecto en pantallas normales/grandes */
+.table-container {
+  width: 100% !important;
+  overflow-x: hidden !important; 
+  background: var(--surface) !important;
+  border-radius: var(--radius-lg, 8px) !important;
+}
+
+/* Tabla principal con diseño fijo para asegurar consistencia en anchos */
+.table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important; 
+}
+
+/* 2. Definición de anchos fijos de columnas */
+.table th:nth-child(1), .table td:nth-child(1) { width: 115px !important; } /* FACTURA */
+.table th:nth-child(2), .table td:nth-child(2) { width: auto !important; }  /* CLIENTE */
+.table th:nth-child(3), .table td:nth-child(3) { width: 55px !important; }  /* ITEMS */
+.table th:nth-child(4), .table td:nth-child(4) { width: 95px !important; }  /* TOTAL */
+.table th:nth-child(5), .table td:nth-child(5) { width: 115px !important; } /* FECHA EMISIÓN */
+.table th:nth-child(6), .table td:nth-child(6) { width: 85px !important; }  /* ESTADO */
+.table th:nth-child(7), .table td:nth-child(7) { width: 105px !important; } /* ESTADO DIAN */
+.table th:last-child, .table td:last-child     { width: 135px !important; } /* ACCIONES */
+
+/* 3. Cabeceras de la Tabla ( th ) */
+.table th {
+  padding: 5px 8px !important;
+  font-family: var(--font-display) !important;
+  font-size: 10px !important;
+  font-weight: var(--font-semibold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  color: var(--text-secondary) !important;
+  white-space: nowrap !important;
+  background: var(--surface-raised) !important;
+  border-bottom: 2px solid var(--border) !important;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 4. Celdas de Datos ( td ) */
+.table td {
+  padding: 5px 8px !important;
+  font-size: 11.5px !important;
+  color: var(--text-primary) !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid var(--border) !important;
+  white-space: nowrap !important; 
+}
+
+/* Truncado con puntos suspensivos */
+.table td:nth-child(1), /* FACTURA */
+.table td:nth-child(2)  /* CLIENTE */ {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Columna de acciones */
+.table td:last-child {
+  text-align: right !important;
+  padding-right: 16px !important; 
+  overflow: visible !important;   
+}
+
+/* Hover suave en filas */
+.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* ==========================================================================
+   Sección: Botones de Acción dentro de la celda
+   ========================================================================== */
+.table td:last-child .d-flex {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 4px !important;
+  vertical-align: middle !important;
+}
+
+/* Botón base tipo Icon-only */
+.btn-ghost.btn-icon-only {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 4px !important;
+  color: var(--text-secondary, #a0aec0);
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+.btn-ghost.btn-icon-only:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-primary, #ffffff) !important;
+}
+
+.btn-ghost.btn-icon-only svg {
+  width: 14px !important;
+  height: 14px !important;
+  display: block !important;
+  stroke: currentColor !important;
+}
+
+/* Colores para iconos */
+.text-primary { color: #3b82f6 !important; }
+.text-secondary { color: #94a3b8 !important; }
+.text-gold { color: #fbbf24 !important; }
+
+/* ==========================================================================
+   Sección: Facturación - Pestañas de Estados
+   ========================================================================== */
+.card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 10px 16px !important;
+  min-height: auto !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.card-header .tabs {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.card-header .tab {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-secondary) !important;
+  font-family: 'Verdana', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 4px 12px !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+.card-header .tab:hover {
+  color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.card-header .tab.active {
+  color: var(--text-gold, #d4af37) !important;
+  background: rgba(212, 175, 55, 0.08) !important;
+  font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   Sección: Tooltips para Botones Deshabilitados (billing-actions.css)
+   ========================================================================== */
+.billing-row-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+
+.billing-action-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.billing-action-tooltip .btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.billing-action-tooltip--disabled:focus {
+  outline: none;
+}
+
+/* Burbuja del Tooltip */
+.billing-action-tooltip--disabled:hover::after,
+.billing-action-tooltip--disabled:focus::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px); 
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text-primary, #1a1a1a);
+  color: var(--surface, #fff);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: normal;
+  width: max-content;
+  max-width: 190px;
+  text-align: center;
+  z-index: 9999 !important; 
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+  pointer-events: none;
+}
+
+/* Triángulo inferior del Tooltip */
+.billing-action-tooltip--disabled:hover::before,
+.billing-action-tooltip--disabled:focus::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--text-primary, #1a1a1a);
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Ajuste de Posición para los Tooltips de la Derecha
+   ========================================================================== */
+.billing-action-tooltip--disabled[data-tooltip*="editar" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="editar" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="transmitir" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="transmitir" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="dian" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="dian" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="descargar" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="descargar" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="pdf" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="pdf" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="generando" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="generando" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="correo" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="correo" i]:focus::after,
+.billing-action-tooltip--disabled[data-tooltip*="enviar" i]:hover::after,
+.billing-action-tooltip--disabled[data-tooltip*="enviar" i]:focus::after {
+  left: auto !important;
+  right: -10px !important;
+  transform: none !important;
+}
+
+.billing-action-tooltip--disabled[data-tooltip*="editar" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="editar" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="transmitir" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="transmitir" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="dian" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="dian" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="descargar" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="descargar" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="pdf" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="pdf" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="generando" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="generando" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="correo" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="correo" i]:focus::before,
+.billing-action-tooltip--disabled[data-tooltip*="enviar" i]:hover::before,
+.billing-action-tooltip--disabled[data-tooltip*="enviar" i]:focus::before {
+  left: auto !important;
+  right: 8px !important;
+  transform: none !important;
+}
+
+.billing-action-tooltip-portal {
+  background: #1e293b;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  max-width: 220px;
+  white-space: normal;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 99999;
+  pointer-events: none;
+}
+/* ==========================================================================
+   Forzar Colores de los Iconos de Acción
+   ========================================================================== */
+.btn-ghost.btn-icon-only.text-primary,
+.btn-ghost.btn-icon-only .text-primary,
+.btn-ghost.btn-icon-only svg.text-primary {
+  color: #3b82f6 !important;
+}
+
+.btn-ghost.btn-icon-only.text-gold,
+.btn-ghost.btn-icon-only .text-gold,
+.btn-ghost.btn-icon-only svg.text-gold {
+  color: #fbbf24 !important;
+}
+
+.btn-ghost.btn-icon-only.text-secondary,
+.btn-ghost.btn-icon-only .text-secondary,
+.btn-ghost.btn-icon-only svg.text-secondary {
+  color: #94a3b8 !important;
+}
+
+/* Hover suave en filas */
+.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+tr.table-footer-row {
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   Footer de Totales de la Tabla
+   ========================================================================== */
+tr.table-footer-row > td {
+  padding: 0 !important;
+  text-align: left !important;
+  border-top: 2px solid var(--gold, #d4af37) !important;
+  scrollbar-color: var(--neutral-100) transparent;
+  background: transparent !important; 
+  border-radius: 20px!important;
+  border-bottom-left-radius: 20px !important;
+  border-bottom-right-radius: 20px !important;
+}
+
+.billing-table-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 10px 10px 10px 10px!important;
+  background: transparent !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.billing-table-footer-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.billing-table-footer-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.billing-table-footer-label {
+  color: var(--text-secondary) !important;
+  font-size: var(--text-xs) !important;
+}
+
+.billing-table-footer-label strong {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-semibold) !important;
+}
+
+.billing-table-footer-value {
+  font-size: var(--text-sm) !important;
+  font-weight: var(--font-bold) !important;
+  color: var(--gold) !important;
+}
+
+
+/* ==========================================================================
+   Consultas de Medios (Media Queries) para Adaptabilidad
+   ========================================================================== */
+
+/* --------------------------------------------------------------------
+   Tablet (≤1024px): la barra de filtros pasa a 2 columnas
+   -------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .billing-filters-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .billing-filter-group.action-align {
+    grid-column: span 2 !important;
+  }
+  .billing-summary {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+}
+
+/* --------------------------------------------------------------------
+   Tablet pequeña / móvil horizontal (≤768px)
+   -------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* EN MÓVILES: Se habilita el scroll de forma controlada y segura */
+  .table-container {
+    overflow-x: auto !important; /* Habilita el scroll horizontal únicamente en móviles */
+    -webkit-overflow-scrolling: touch; /* Suavidad táctil en iOS */
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .page-actions {
+    width: 100%;
+  }
+
+  .page-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .billing-summary {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .billing-summary-value {
+    font-size: var(--text-2xl); 
+  }
+
+  .card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-3) !important;
+  }
+
+  .card-header .tabs {
+    width: 100% !important;
+    overflow-x: auto !important; /* Desplazamiento horizontal para las pestañas */
+    padding-bottom: var(--space-2) !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .card-header .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* IMPORTANTE: se elimina el esquema de anchos fijos por nth-child en
+     móvil. table-layout:fixed + min-width en px asume que SIEMPRE existen
+     8 columnas; si el HTML renderiza menos columnas en esta vista, el
+     navegador igual reserva el ancho total y el sobrante queda como un
+     rectángulo vacío. Con table-layout:auto + width:100%, el navegador
+     reparte el 100% del ancho solo entre las columnas que realmente
+     existen (sin importar cuántas sean), y si el contenido no cabe,
+     el scroll horizontal del .table-container se encarga. */
+  .table {
+    table-layout: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap !important;
+  }
+
+  /* Si existe una columna CLIENTE, se limita su ancho máximo para que no
+     empuje demasiado a las demás; si no existe, esta regla simplemente
+     no aplica a nada y no genera efectos secundarios. */
+  .table td:nth-child(2) {
+    max-width: 160px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Filtros: controles más altos y legibles en pantallas táctiles */
+  .billing-filters-bar.card-raised {
+    padding: var(--space-3) !important;
+  }
+
+  .billing-filter-control {
+    height: 40px !important;
+    /* font-size mínimo de 16px evita el zoom automático de iOS Safari al enfocar inputs */
+    font-size: 16px !important;
+  }
+
+  .billing-filter-group.action-align {
+    height: 40px !important;
+  }
+
+  .billing-btn-clear {
+    height: 40px !important;
+    width: 100% !important;
+  }
+
+  /* Botones de acción de la tabla: objetivo táctil ampliado (mín. 36px recomendado) */
+  .btn-ghost.btn-icon-only {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .btn-ghost.btn-icon-only svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .table td:last-child .d-flex,
+  .billing-row-actions {
+    gap: 2px !important;
+  }
+
+  .billing-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* --------------------------------------------------------------------
+   Móvil pequeño (≤640px): la tabla se convierte en tarjetas
+   ---------------------------------------------------------------------
+   En vez de obligar al usuario a hacer scroll horizontal para leer una
+   tabla de 8 columnas en una pantalla de ~360px, cada <tr> se muestra
+   como una tarjeta y cada <td> se lista como "etiqueta: valor". Las
+   etiquetas se generan por CSS (::before + nth-child), replicando el
+   texto de los <th> actuales — no requiere tocar el HTML ni el JS.
+   Los mismos datos y los mismos botones de acción siguen presentes,
+   solo cambia la disposición visual.
+   -------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .table-container {
+    overflow-x: visible !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  /* Se anula el ancho fijo en px de cada columna (misma especificidad
+     que la regla original, por eso gana al ir declarada después) */
+  .table th:nth-child(1), .table td:nth-child(1),
+  .table th:nth-child(2), .table td:nth-child(2),
+  .table th:nth-child(3), .table td:nth-child(3),
+  .table th:nth-child(4), .table td:nth-child(4),
+  .table th:nth-child(5), .table td:nth-child(5),
+  .table th:nth-child(6), .table td:nth-child(6),
+  .table th:nth-child(7), .table td:nth-child(7),
+  .table th:last-child, .table td:last-child {
+    width: 100% !important;
+  }
+
+  .table {
+    table-layout: auto !important;
+    min-width: 0 !important;
+  }
+
+  .table, .table tbody, .table tr, .table td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* El encabezado se oculta visualmente pero sigue disponible para
+     lectores de pantalla (no se usa display:none por accesibilidad) */
+  .table thead {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: -1px !important;
+  }
+
+  .table tbody tr {
+    background: var(--surface-raised) !important;
+    border: var(--border) !important;
+    border-radius: var(--radius-lg, 8px) !important;
+    padding: var(--space-3) var(--space-4) !important;
+    margin-bottom: var(--space-3) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .table tbody tr:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .table tbody tr:hover {
+    background-color: var(--surface-raised) !important; /* el hover de fila de escritorio ya no aplica en tarjetas */
+  }
+
+  .table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: var(--space-3) !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid var(--border) !important;
+    white-space: normal !important;
+    text-align: right !important;
+    overflow: visible !important;
+  }
+
+  .table td:first-child {
+    padding-top: 0 !important;
+  }
+
+  .table td:last-child {
+    border-bottom: none !important;
+    padding-top: var(--space-3) !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Etiquetas por columna, generadas por CSS a partir del orden real
+     de la tabla (FACTURA, CLIENTE, ITEMS, TOTAL, FECHA EMISIÓN,
+     ESTADO, ESTADO DIAN, ACCIONES) */
+  .table td::before {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: var(--font-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  .table td:nth-child(1)::before { content: "Factura"; }
+  .table td:nth-child(2)::before { content: "Cliente"; }
+  .table td:nth-child(3)::before { content: "Items"; }
+  .table td:nth-child(4)::before { content: "Total"; }
+  .table td:nth-child(5)::before { content: "Fecha emisión"; }
+  .table td:nth-child(6)::before { content: "Estado"; }
+  .table td:nth-child(7)::before { content: "Estado DIAN"; }
+  .table td:last-child::before { content: none; } /* la columna de acciones no necesita etiqueta */
+
+  /* Cliente ya no necesita truncarse: hay todo el ancho de la tarjeta */
+  .table td:nth-child(2) {
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    text-align: right !important;
+  }
+
+  /* Botonera de acciones: se expande a todo el ancho de la tarjeta */
+  .table td:last-child .d-flex,
+  .billing-row-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+  }
+}
+
+/* --------------------------------------------------------------------
+   Móvil (≤576px)
+   -------------------------------------------------------------------- */
+@media (max-width: 576px) {
+  .billing-filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .billing-filter-group.action-align {
+    grid-column: span 1 !important;
+  }
+}
+
+/* --------------------------------------------------------------------
+   Móvil pequeño (≤480px): ajustes finos de densidad y tipografía
+   -------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .billing-summary-card {
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .billing-summary-value {
+    font-size: var(--text-xl);
+  }
+
+  .btn-ghost.btn-icon-only {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* En este ancho la tabla ya está en modo tarjeta (ver breakpoint ≤640px);
+     estos ajustes solo afinan tamaño de fuente y espaciado dentro de ella. */
+  .table td {
+    font-size: 11px !important;
+    padding: 6px 0 !important;
+  }
+
+  .table td::before {
+    font-size: 9.5px !important;
+  }
+
+  .card-header .tab {
+    font-size: 10.5px !important;
+    padding: 4px 10px !important;
+  }
+
+  .billing-action-tooltip--disabled:hover::after,
+  .billing-action-tooltip--disabled:focus::after {
+    max-width: 150px;
+  }
+}
+
+/* --------------------------------------------------------------------
+   Dispositivos táctiles: los tooltips dependientes de :hover no son
+   accesibles al tacto, así que se anclan también a :active para que
+   un tap los muestre brevemente, sin afectar el comportamiento en
+   escritorio (donde :hover sigue funcionando igual que antes).
+   -------------------------------------------------------------------- */
+@media (hover: none) and (pointer: coarse) {
+  .billing-action-tooltip--disabled:active::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-primary, #1a1a1a);
+    color: var(--surface, #fff);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: normal;
+    width: max-content;
+    max-width: 190px;
+    text-align: center;
+    z-index: 9999 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .28);
+    pointer-events: none;
+  }
+}

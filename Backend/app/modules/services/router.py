@@ -37,13 +37,17 @@ logger = logging.getLogger(__name__)
 async def list_services(
     skip: Annotated[int, Query(description="Número de registros a omitir.", ge=0)] = 0,
     limit: Annotated[int, Query(description="Máximo de servicios a retornar.", ge=1, le=100)] = 50,
-    category: Annotated[str | None, Query(description="Filtrar por categoría.")] = None,
+    category_id: Annotated[uuid.UUID | None, Query(description="Filtrar por categoría ID.")] = None,
     status: Annotated[str | None, Query(description="Filtrar por estado.")] = None,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[ServiceResponse]:
-    services = await get_services(db, skip=skip, limit=limit, category=category, status=status)
-    return [ServiceResponse.model_validate(s) for s in services]
+    services = []
+    try:
+        services = await get_services(db, skip=skip, limit=limit, category_id=category_id, status=status)
+        return [ServiceResponse.model_validate(s) for s in services]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)

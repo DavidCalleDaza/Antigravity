@@ -17,7 +17,18 @@ from app.db.base_class import Base  # noqa: F401
 from app.modules.auth.models import User  # noqa: F401
 from app.modules.wall.models import Comment, Post  # noqa: F401
 from app.modules.products.models import Product  # noqa: F401
+from app.modules.categories.models import Category  # noqa: F401
 from app.modules.services.models import Service  # noqa: F401
+from app.modules.billing.models import (
+    Customer,
+    Invoice,
+    InvoiceItem,
+    InvoiceSequence,
+    CreditNote,
+    CreditNoteItem,
+    DianEvent,
+)  # noqa: F401
+
 
 # Future models — add imports here as modules are built:
 # from app.modules.products.models import Product  # noqa: F401

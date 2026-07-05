@@ -18,7 +18,7 @@ async def get_products(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 50,
-    category: str | None = None,
+    category_id: uuid.UUID | None = None,
     status: str | None = None,
 ) -> list[Product]:
     """
@@ -28,7 +28,7 @@ async def get_products(
         db: Active async database session.
         skip: Number of records to skip (offset).
         limit: Maximum number of products to return.
-        category: Optional category filter.
+        category_id: Optional category ID filter.
         status: Optional status filter.
 
     Returns:
@@ -36,8 +36,8 @@ async def get_products(
     """
     stmt = select(Product).order_by(Product.created_at.desc()).offset(skip).limit(limit)
 
-    if category:
-        stmt = stmt.where(Product.category == category)
+    if category_id:
+        stmt = stmt.where(Product.category_id == category_id)
     if status:
         stmt = stmt.where(Product.status == status)
 
@@ -66,7 +66,7 @@ async def create_product(db: AsyncSession, product_in: ProductCreate) -> Product
     db_product = Product(
         name=product_in.name,
         description=product_in.description,
-        category=product_in.category,
+        category_id=product_in.category_id,  # Se mapea el nuevo ID de la categoría
         price=product_in.price,
         stock=product_in.stock,
         status=product_in.status,

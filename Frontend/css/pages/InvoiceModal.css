@@ -1,0 +1,1016 @@
+/* ==========================================================================
+   Estructura Base del Modal de Facturación
+   ========================================================================== */
+
+/** Estilos Generales del Modal **/    
+.modal-header {
+    padding-top: 6px !important;     
+    padding-bottom: 10px !important;  
+    min-height: auto !important;     
+    height: 38px !important;         
+    display: flex !important;
+    align-items: center !important;
+    width: auto !important;
+}
+
+/* Estilos para el modal de factura */
+.modal.modal-lg {
+    width: 92% !important;           
+    min-width: auto !important;
+    max-width: 1250px !important;    
+    height: 88vh !important;         
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--surface) !important; 
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-xl) !important;
+    overflow: hidden !important;
+    min-height: auto !important;
+    padding: 15px 15px; 
+}
+
+.modal-body {
+    flex: 1;
+    display: grid !important;
+    grid-template-columns: 1fr 310px !important; /* Sidebar a la derecha */
+    gap: 20px !important;
+    padding: 15px !important;
+    overflow-y: auto !important; /* Asegura el scroll vertical del modal */
+}
+
+.modal-title {
+    font-size: 18px !important; 
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* Botón de cerrar compacto */
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    transition: background 0.2s !important;
+}
+
+.modal-close:hover {
+    background: var(--border); 
+    color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   Diseño de Inputs y Selects Unificados
+   ========================================================================== */
+.modal-body .form-control,
+.modal-body .form-select {
+    width: 100% !important;
+    height: 36px !important;
+    padding: 4px 10px !important;
+    line-height: 1.4 !important;
+    font-size: 13px !important;
+    box-sizing: border-box !important;
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important; 
+    border-radius: 6px !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+/* Flecha personalizada unificada para los selectores */
+.modal-body .form-select {
+    appearance: none !important;
+    padding-right: 28px !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 14px !important;
+}
+
+/* Estado Hover Unificado */
+.modal-body .form-control:hover,
+.modal-body .form-select:hover {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Estado Focus Unificado */
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--text-gold, #d4af37) !important;
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) !important;
+    outline: none !important;
+}
+
+/* ==========================================================================
+   Sección de Información del Cliente 
+   ========================================================================== */
+.customer-section {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 8px 12px !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    gap: 20px !important;
+    align-items: center !important;
+}
+
+.customer-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+}
+
+.customer-fields-block {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+.customer-section .customer-fields-block label.form-label {
+    text-transform: none !important;
+    font-size: 12px !important;
+    font-family: 'Verdana', sans-serif !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 0 !important;
+    display: block !important;
+    line-height: 2 !important;
+}
+
+.customer-inputs-row {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.customer-inputs-row .input-group {
+    position: relative !important;
+    flex: 1 !important; 
+}
+
+.customer-inputs-row .input-icon-left {
+    position: absolute !important;
+    left: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    pointer-events: none !important;
+    z-index: 5 !important;
+}
+
+.customer-inputs-row .form-control {
+    padding-left: 32px !important; 
+    padding-right: 32px !important; 
+}
+
+.customer-title-block {
+    align-self: center !important;
+    height: auto !important;
+}
+
+.customer-button-block {
+    align-self: center !important;
+    height: auto !important;
+}
+
+.btn-new-customer {
+    background: transparent !important;
+    font-family: 'Verdana', sans-serif !important;
+    text-transform: none !important;
+    border: none !important;
+    color: var(--text-gold, #d4af37) !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    transition: background 0.2s, border-color 0.2s !important;
+}
+
+.btn-new-customer:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+}
+
+.btn-new-customer svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+.customer-inputs-row .input-group .input-icon-right-btn {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--text-secondary) !important;
+    padding: 4px !important;
+    z-index: 10 !important;
+}
+
+.customer-selected-info {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    margin-top: 6px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.customer-selected-info span {
+    white-space: nowrap !important;
+}
+
+.customer-preferred-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    color: #f59e0b !important;
+    white-space: nowrap !important;
+    height: 36px !important; 
+    box-sizing: border-box !important;
+    align-self: center !important;
+}
+
+
+/* ==========================================================================
+   Sección: Detalles de Pago y Fechas 
+   ========================================================================== */
+
+.card-raised:has(> span.text-primary) {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 10px 12px 8px 12px !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    gap: 20px !important;
+    align-items: flex-end !important;
+    flex-direction: row !important;
+}
+
+.card-raised:has(> span.text-primary) > span.text-primary {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 45px !important;
+    margin: 0 !important;
+}
+
+.card-raised:has(> span.text-primary) .grid.grid-3 {
+    display: flex !important;
+    gap: 12px !important;
+    width: 100% !important;
+}
+
+.card-raised .form-group {
+    position: relative !important;
+    flex: 1 !important;
+    margin: 0 !important;
+}
+
+.card-raised .form-group .form-label {
+    display: block !important;
+    text-transform: none !important;
+    font-size: 12px !important;
+    font-family: 'Verdana', sans-serif !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 0px !important;  
+    line-height: 1 !important;
+}
+
+/* ==========================================================================
+   Sección: Líneas de Detalle
+   ========================================================================== */
+.card-raised.items-card-section {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 12px 8px 8px 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0px !important;
+    margin-bottom: 0px !important;
+    overflow: hidden !important;
+    flex: 1 !important;           
+    min-height: 150px !important;  
+    height: auto !important;       
+    max-height: none !important;   
+}
+
+.card-raised.items-card-section .text-primary {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+.card-raised.items-card-section .btn.btn-outline {
+    background: transparent !important;
+    font-family: 'Verdana', sans-serif !important;
+    text-transform: none !important;
+    border: none !important;
+    color: var(--text-gold, #d4af37) !important;
+    margin-left: 30px !important;
+    letter-spacing: 0.05em !important;
+    border: 1px solid var(--border) !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    transition: background 0.2s, border-color 0.2s !important;   
+}
+
+.card-raised.items-card-section .btn.btn-outline:hover {
+    background: rgba(212, 175, 55, 0.1) !important;
+}
+
+/* Contenedor de scroll horizontal optimizado para móviles */
+.table-responsive-wrapper {
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    background: var(--surface) !important;
+    overflow-x: auto !important;       
+    overflow-y: visible !important;
+    flex: 1 !important; 
+    height: auto !important; 
+    margin-bottom: 0px !important;
+    width: 100% !important;
+    -webkit-overflow-scrolling: touch; /* Scroll de inercia suave en iOS */
+}
+
+.table-invoice-items {
+    table-layout: auto !important;     
+    width: 100% !important;            
+    border-collapse: collapse !important;
+    margin-bottom: 0px !important;
+}
+
+.table-invoice-items th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: var(--surface-raised) !important;
+    font-family: 'Verdana', sans-serif !important;
+    font-size: 11px !important;
+    padding: 8px 4px 8px 9px !important; 
+    border-bottom: 2px solid var(--border) !important;
+    letter-spacing: 0.05em !important; 
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.table-invoice-items tr {
+    border-bottom: 1px solid var(--border) !important;
+    gap: 8px !important;
+}
+
+.table-invoice-items td {
+    padding: 8px 6px !important; 
+    vertical-align: middle !important;
+    overflow: visible !important;      
+}
+
+/* Distribución de columnas */
+.table-invoice-items th:nth-child(1), .table-invoice-items td:nth-child(1) { width: 16% !important; }
+.table-invoice-items th:nth-child(2), .table-invoice-items td:nth-child(2) { width: 18% !important; }
+.table-invoice-items th:nth-child(3), .table-invoice-items td:nth-child(3) { width: 24% !important; }
+.table-invoice-items th:nth-child(4), .table-invoice-items td:nth-child(4) { width: 4% !important; min-width: 4%!important; }
+.table-invoice-items th:nth-child(5), .table-invoice-items td:nth-child(5) { width: 7% !important; }
+.table-invoice-items th:nth-child(6), .table-invoice-items td:nth-child(6) { width: 10% !important; }
+.table-invoice-items th:nth-child(7), .table-invoice-items td:nth-child(7) { width: 9% !important; }
+.table-invoice-items th:nth-child(8), .table-invoice-items td:nth-child(8) { width: 9% !important; text-align: right !important; white-space: nowrap !important; }
+
+.table-invoice-items th:last-child,
+.table-invoice-items td:last-child {
+    width: 70px !important;
+    min-width: 70px !important;
+    text-align: center !important;
+    padding: 4px 2px !important;
+    white-space: nowrap !important;
+}
+
+.table-invoice-items td:last-child .d-flex {
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+.table-invoice-items .text-right,
+.table-invoice-items input.text-right {
+    text-align: right !important;
+}
+
+.table-invoice-items input,
+.table-invoice-items select {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.table-invoice-items select.form-select,
+.table-invoice-items input.form-control {
+    height: 32px !important;          
+    padding: 4px 8px !important;       
+    font-size: 10.5px !important;
+}
+
+.table-invoice-items .btn-ghost.text-danger {
+    color: var(--text-secondary) !important;
+    border-radius: 6px !important;
+    transition: color 0.2s, background-color 0.2s !important;
+    height: 32px !important;
+    width: 32px !important;
+    flex-shrink: 0 !important;
+}
+
+.table-invoice-items .btn-ghost.text-danger:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+}
+
+.table-invoice-items .btn-ghost.text-warning {
+    height: 32px !important;
+    width: 32px !important;
+    flex-shrink: 0 !important;
+    border-radius: 6px !important;
+}
+
+/* ==========================================================================
+   Sección: Observaciones
+   ========================================================================== */
+.card-raised:has(textarea) {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 10px 12px 8px 12px !important; 
+    display: grid !important;
+    grid-template-columns: auto 1fr !important; 
+    gap: 20px !important;
+    align-items: center !important; 
+}
+
+.card-raised:has(textarea) .form-label {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 45px !important; 
+    margin: 0 !important;
+}
+
+.card-raised:has(textarea) textarea.form-control {
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    padding: 6px 10px 8px 10px !important;
+    line-height: 1.4 !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    width: 100% !important; 
+    margin-left: 0px !important;
+    height: 38px !important; 
+    min-height: 38px !important;
+    max-height: 54px !important; 
+    overflow-y: auto !important;
+    resize: none !important;
+}   
+
+/* ==========================================================================
+   Estructura de Columnas e Invoice Form
+   ========================================================================== */
+.invoice-form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;                       
+    overflow: hidden; 
+    height: 100%;
+    flex: 1 !important; 
+    min-width: 0 !important;
+}
+
+.card-raised {
+    background: var(--surface-raised) !important; 
+    border: 1px solid var(--border) !important; 
+    border-radius: var(--radius-lg) !important; 
+    padding: 16px !important; 
+    box-sizing: border-box !important; 
+}
+
+/* ==========================================================================
+   Sidebar de Totales
+   ========================================================================== */
+.totals-sidebar.card-raised {
+    background: var(--surface-raised) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    width: 100% !important; 
+    min-width: 100% !important;
+    flex-shrink: 0 !important; 
+    height: 100% !important;
+    overflow-x: auto !important; 
+    flex: 1 !important;
+}
+
+.totals-sidebar.card-raised > div,
+.totals-sidebar.card-raised .d-flex.flex-column {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+}
+
+.totals-sidebar.card-raised .d-flex.justify-content-between {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important; 
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 16px !important; 
+}
+
+.totals-sidebar.card-raised .d-flex.justify-content-between > * {
+    white-space: nowrap !important; 
+    flex-shrink: 0 !important;      
+}
+
+.totals-sidebar .text-gold {
+    color: var(--text-gold, #d4af37) !important;
+    white-space: nowrap !important; 
+}
+
+.totals-sidebar .btn {
+    height: 38px !important;
+    font-family: 'Verdana', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex-shrink: 0 !important; 
+}
+
+.totals-sidebar .btn-primary {
+    background: var(--text-gold, #d4af37) !important;
+    color: #000000 !important;
+    border: none !important;
+}
+.totals-sidebar .btn-primary:hover {
+    background: #c5a02e !important;
+}
+
+.totals-sidebar .btn-outline {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+}
+.totals-sidebar .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ==========================================================================
+   Estilos de la Lista Desplegable (Tema Oscuro Unificado)
+   ========================================================================== */
+.customer-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    background-color: #1a1a1c !important; 
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    z-index: 100 !important;
+    margin-top: 4px !important;
+}
+
+.customer-dropdown-item {
+    padding: 8px 12px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    font-size: 13px !important;
+    background: transparent !important;
+    color: #ffffff !important; 
+    transition: background-color 0.15s ease !important;
+}
+
+.customer-dropdown-item strong {
+    color: #ffffff !important;
+}
+
+.customer-dropdown-item:hover,
+.customer-dropdown-item.is-highlighted {
+    background-color: rgba(255, 255, 255, 0.08) !important; 
+}
+
+.customer-dropdown-meta {
+    font-size: 11px !important;
+    color: rgba(255, 255, 255, 0.5) !important; 
+}
+
+.customer-dropdown-empty {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    background-color: #1a1a1c !important;
+}
+
+/* ==========================================================================
+   Responsive: Tablet (≤ 900px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .modal-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .totals-sidebar.card-raised {
+    height: auto !important;
+    min-width: 0 !important;
+  }
+}
+
+/* ==========================================================================
+   Responsive: Mobile (≤ 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Limitamos la altura del modal para dejar un margen con la barra inferior del dispositivo */
+  .modal.modal-lg {
+    width: 96% !important;
+    height: 85vh !important; /* Altura controlada para evitar solapamientos */
+    max-height: 85vh !important;
+    padding: 10px !important;
+    padding-bottom: 24px !important; 
+  }
+
+  .modal-body {
+    padding: 10px !important;
+    gap: 16px !important;
+    overflow-y: auto !important; 
+    /* Colchón de espacio inferior para que el "Resumen de Importes" no sea bloqueado por barras nativas del celular */
+    padding-bottom: 50px !important; 
+  }
+
+  .invoice-form-column {
+    height: auto !important; 
+    overflow: visible !important;
+  }
+
+  /* --- Sección: Información de Cliente --- */
+  .customer-section {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 14px !important;
+    gap: 10px !important;
+    height: auto !important;
+  }
+
+  .customer-title-block,
+  .customer-button-block {
+    height: auto !important;
+    align-self: flex-start !important;
+  }
+
+  .customer-fields-block {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .customer-inputs-row {
+    flex-direction: column !important;
+    display: flex !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .customer-inputs-row .input-group {
+        width: 100% !important;
+    }
+
+    /* Badge de Descuento: se expande a ancho completo y se centra debajo del buscador */
+    .customer-preferred-badge {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 38px !important;
+        padding: 8px 12px !important;
+        justify-content: center !important; /* Centra el texto del descuento */
+        align-self: stretch !important;
+        box-sizing: border-box !important;
+        white-space: normal !important;
+        text-align: center !important;
+        margin-top: 2px !important;
+    }
+
+    /* Metadatos seleccionados (Correo, Régimen, IVA): permite envoltura multilínea sin cortes */
+    .customer-selected-info {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important; /* Envuelve los textos si no caben en una sola línea */
+        gap: 6px 14px !important;  /* 6px de espacio vertical, 14px de separación horizontal */
+        font-size: 11px !important;
+        color: var(--text-secondary) !important;
+        margin-top: 8px !important;
+        white-space: normal !important; /* Cancela el bloqueo de salto de línea */
+        overflow: visible !important;
+        text-overflow: clip !important;
+        width: 100% !important;
+    }
+
+    .customer-selected-info span {
+        white-space: normal !important; /* Permite saltos de palabra */
+        display: inline-block !important;
+    }
+
+    /* Bloque del botón "Nuevo Cliente" */
+    .customer-button-block {
+        width: 100% !important;
+        height: auto !important;
+        margin-top: 6px !important;
+        display: flex !important;
+        justify-content: flex-start !important; /* Alinea el botón a la izquierda */
+    }
+
+    .btn-new-customer {
+        padding: 6px 0 !important; /* Ajuste limpio alineado al borde del contenedor */
+    } 
+
+  /* --- Sección: Detalles de Pago y Fechas (Soluciona el colapso vertical) --- */
+  .card-raised:has(> span.text-primary) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 12px !important;
+  }
+
+  .card-raised:has(> span.text-primary) > span.text-primary {
+    height: auto !important;
+    margin-bottom: 4px !important;
+    white-space: normal !important;
+  }
+
+  .card-raised:has(> span.text-primary) .grid.grid-3 {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* --- Sección: Observaciones --- */
+  .card-raised:has(textarea) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    height: auto !important;
+    padding: 12px !important;
+  }
+
+  .card-raised:has(textarea) .form-label {
+    height: auto !important;
+    margin-bottom: 4px !important;
+  }
+
+  .card-raised:has(textarea) textarea.form-control {
+    max-height: 70px !important;
+  }
+
+  /* --- Sección: Líneas de Detalle con Scroll Horizontal Seguro --- */
+  .card-raised.items-card-section {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    padding: 12px !important;
+    overflow: visible !important;
+  }
+
+  /* Reactivamos la tabla nativa con scroll horizontal seguro */
+  .table-responsive-wrapper {
+    border: 1px solid var(--border) !important;
+    background: var(--surface-raised) !important;
+    overflow-x: auto !important; /* Habilita scroll horizontal */
+    overflow-y: hidden !important;
+    width: 100% !important;
+  }
+
+  /* Forzamos un ancho mínimo para que las columnas mantengan su legibilidad e inputs adecuados */
+  .table-invoice-items {
+    display: table !important;
+    min-width: 1050px !important; /* Anchura segura para evitar compresión */
+    width: 100% !important;
+  }
+
+  .table-invoice-items thead {
+    display: table-header-group !important; /* Asegura cabeceras correctas siempre */
+  }
+
+  .table-invoice-items tr {
+    display: table-row !important;
+  }
+
+  .table-invoice-items td, 
+  .table-invoice-items th {
+    display: table-cell !important;
+    padding: 8px 6px !important;
+  }
+
+  /* No usamos ::before en esta aproximación para no duplicar etiquetas, ya que thead es visible */
+  .table-invoice-items td::before {
+    display: none !important; 
+  }
+
+  /* Inputs de la tabla con tamaño cómodo para interactuar en pantallas táctiles */
+  .table-invoice-items select.form-select,
+  .table-invoice-items input.form-control {
+    height: 38px !important;
+    font-size: 13px !important;
+  }
+
+  /* --- Sección: Resumen de Importes --- */
+  .totals-sidebar.card-raised {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: auto !important;
+    flex: none !important;
+    margin-top: 10px !important;
+    margin-bottom: 8px !important;
+    padding: 16px !important;
+  }
+
+    .totals-sidebar.card-raised {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+        
+        /* Cancela layouts de rejilla y alturas colapsadas */
+        grid-template-columns: none !important;
+        height: auto !important;
+        min-height: 280px !important; /* Altura mínima suficiente para ver importes y botón */
+        max-height: none !important;
+        
+        /* Elimina el desbordamiento o scroll interno dentro de la tarjeta */
+        overflow: visible !important;
+        overflow-y: visible !important;
+        
+        /* Ajustes de espaciado */
+        margin-top: 16px !important;
+        margin-bottom: 40px !important; /* Espacio seguro para evitar la barra inferior del móvil */
+        padding: 16px !important;
+    }
+
+    /* Asegura que el contenedor de los ítems de importes (Subtotal, IVA, Total) se despliegue */
+    .totals-sidebar.card-raised > div,
+    .totals-sidebar.card-raised .d-flex.flex-column {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important; /* Espaciado interno entre filas de dinero */
+        height: auto !important;
+        min-height: auto !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Asegura que las filas del desglose de dinero mantengan su estructura de extremo a extremo */
+    .totals-sidebar.card-raised .d-flex.justify-content-between {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: auto !important;
+        padding: 4px 0 !important;
+    }
+
+     /* Agrega márgenes estratégicos al botón amarillo de emisión */
+    .totals-sidebar .btn-primary {
+        margin-top: 12px !important;    /* Lo separa del texto "Total Factura" */
+        margin-bottom: 6px !important; /* Lo separa del botón "Guardar Borrador" */
+        margin-left: auto !important;  /* Lo separa del borde derecho */
+        margin-right: auto !important; /* Lo separa del borde izquierdo */
+    }
+    .totals-sidebar .btn-outline {
+        padding: 10px 24px;
+        margin-left: auto !important;  /* Lo separa del borde derecho */
+        margin-right: auto !important; /* Lo separa del borde izquierdo */   
+    }
+
+    /* Identifica el grupo que contiene el selector y previene que los elementos compitan por espacio horizontal */
+    .nested-modal-body .form-group:has(select) {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 4px !important;
+    }
+
+    /* Fuerza a que el select y el checkbox se apilen verticalmente */
+    .nested-modal-body .form-group:has(select) > div,
+    .nested-modal-body .form-group:has(select) .d-flex {
+        display: flex !important;
+        flex-direction: column !important; /* Apilado vertical seguro */
+        align-items: flex-start !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    /* El select ahora toma todo el ancho disponible para que no se corte el texto del Régimen */
+    .nested-modal-body .form-group:has(select) select {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Espaciado del checkbox de IVA para que no quede pegado al select superior */
+    .nested-modal-body .form-group:has(select) label.d-flex.align-items-center {
+        margin-top: 2px !important;
+        height: auto !important;
+    }
+
+}
+
+/* ==========================================================================
+   Responsive: Small Mobile (≤ 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .modal.modal-lg {
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    padding: 6px !important;
+  }
+
+  .modal-body {
+    padding-bottom: 70px !important; /* Incrementamos espacio seguro en dispositivos muy pequeños */
+    
+  }
+
+  .modal-header {
+    padding: 4px 8px !important;
+  }
+
+  .modal-title {
+    font-size: 15px !important;
+  }
+
+  .invoice-form-column {
+    gap: 8px !important;
+  }
+
+  .card-raised {
+    padding: 10px !important;
+  }
+
+  .totals-sidebar .btn {
+    font-size: 11px !important;
+    height: 34px !important;
+  }
+}

@@ -63,6 +63,38 @@ class Settings(BaseSettings):
                 return [origin.strip() for origin in value.split(",")]
         return value
 
+    # --- Billing / DIAN ---
+    COMPANY_NIT: str = "900000000"
+    COMPANY_NAME: str = "Servinow SAS"
+    COMPANY_ADDRESS: str = "Calle 1 # 1-1"
+    COMPANY_CITY: str = "Bogotá"
+    COMPANY_DEPARTMENT: str = "Cundinamarca"
+    COMPANY_PHONE: str = "+57 300 0000000"
+    COMPANY_EMAIL: str = "facturacion@servinow.co"
+
+    DIAN_ENVIRONMENT: str = "test"  # "test" | "production"
+    DIAN_SOFTWARE_ID: str = ""
+    DIAN_SOFTWARE_PIN: str = ""
+    DIAN_TECHNICAL_KEY: str = ""
+    DIAN_CERTIFICATE_PATH: str = ""
+    DIAN_CERTIFICATE_PASSWORD: str = ""
+    DIAN_RESOLUTION_NUMBER: str = ""
+    DIAN_RESOLUTION_DATE: str = ""
+    DIAN_RESOLUTION_PREFIX: str = "SETT"
+    DIAN_RESOLUTION_RANGE_FROM: int = 1
+    DIAN_RESOLUTION_RANGE_TO: int = 5000
+
+
+    # —— SMTP / Email ————————————————————————————————————————————————————————————
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_USE_TLS: bool = True
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "Servinow — Facturación Electrónica"
+
 
 # Singleton instance — importable across the application.
 settings = Settings()
+

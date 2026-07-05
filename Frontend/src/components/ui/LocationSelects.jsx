@@ -19,28 +19,64 @@ export default function LocationSelects({
 
   useEffect(() => {
     const allCountries = Country.getAllCountries();
-    setCountries(allCountries);
-
-    // Initialize from names if provided
-    if (countryValue) {
-      const foundCountry = allCountries.find(c => c.name.toLowerCase() === countryValue.toLowerCase());
-      if (foundCountry) {
-        setSelectedCountryCode(foundCountry.isoCode);
-        const countryStates = State.getStatesOfCountry(foundCountry.isoCode);
-        setStates(countryStates);
-
-        if (stateValue) {
-          const foundState = countryStates.find(s => s.name.toLowerCase() === stateValue.toLowerCase() || s.isoCode === stateValue);
-          if (foundState) {
-            setSelectedStateCode(foundState.isoCode);
-            setCities(City.getCitiesOfState(foundCountry.isoCode, foundState.isoCode));
-          }
-        }
-      }
+    if (!countries.length) {
+      setCountries(allCountries);
     }
-  }, []); // Run once on mount or when initializing. 
-  // Note: We don't want to re-run this on every prop change to avoid infinite loops,
-  // we just want to set the initial ISO codes if the user already had values saved.
+
+    // Sync country
+    let currentCountryCode = selectedCountryCode;
+    if (countryValue) {
+      const foundCountry = allCountries.find(
+        c => c.name.toLowerCase() === countryValue.toLowerCase() || 
+             c.isoCode.toLowerCase() === countryValue.toLowerCase()
+      );
+      if (foundCountry && foundCountry.isoCode !== selectedCountryCode) {
+        setSelectedCountryCode(foundCountry.isoCode);
+        currentCountryCode = foundCountry.isoCode;
+        setStates(State.getStatesOfCountry(foundCountry.isoCode));
+      } else if (!foundCountry && selectedCountryCode) {
+        // If GPS wiped it or sent invalid, we might want to clear
+        setSelectedCountryCode('');
+        currentCountryCode = '';
+        setStates([]);
+      }
+    } else if (selectedCountryCode) {
+      setSelectedCountryCode('');
+      currentCountryCode = '';
+      setStates([]);
+    }
+
+    // Sync state
+    let currentStateCode = selectedStateCode;
+    if (currentCountryCode && stateValue) {
+      const countryStates = State.getStatesOfCountry(currentCountryCode);
+      // Try exact match or includes (some APIs return "Antioquia Department" instead of "Antioquia")
+      const foundState = countryStates.find(
+        s => s.name.toLowerCase() === stateValue.toLowerCase() || 
+             s.isoCode.toLowerCase() === stateValue.toLowerCase() ||
+             s.name.toLowerCase().includes(stateValue.toLowerCase()) ||
+             stateValue.toLowerCase().includes(s.name.toLowerCase())
+      );
+      if (foundState && foundState.isoCode !== selectedStateCode) {
+        setSelectedStateCode(foundState.isoCode);
+        currentStateCode = foundState.isoCode;
+        setCities(City.getCitiesOfState(currentCountryCode, foundState.isoCode));
+      } else if (!foundState && selectedStateCode) {
+        setSelectedStateCode('');
+        currentStateCode = '';
+        setCities([]);
+      }
+    } else if (selectedStateCode) {
+      setSelectedStateCode('');
+      currentStateCode = '';
+      setCities([]);
+    }
+    
+    // Sync city (City just uses cityValue directly for its value, but we need the list)
+    if (currentCountryCode && currentStateCode && !cities.length) {
+       setCities(City.getCitiesOfState(currentCountryCode, currentStateCode));
+    }
+  }, [countryValue, stateValue]); // Re-run when parent values change
 
   const handleCountryChange = (e) => {
     const countryCode = e.target.value;
@@ -135,12 +171,15 @@ export default function LocationSelects({
           <select
             id="citySelect"
             className="form-select"
-            value={cityValue || ''}
+            value={cities.some(c => c.name === cityValue) ? cityValue : ''}
             onChange={handleCityChange}
             disabled={!selectedStateCode || disabled}
             style={{ paddingLeft: '2.5rem' }}
           >
             <option value="">Selecciona una ciudad</option>
+            {cityValue && !cities.some(c => c.name === cityValue) && (
+              <option value={cityValue}>{cityValue}</option>
+            )}
             {cities.map(c => (
               <option key={c.name} value={c.name}>{c.name}</option>
             ))}

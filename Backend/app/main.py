@@ -23,6 +23,7 @@ from app.modules.categories.router import router as categories_router
 from app.modules.services.router import router as services_router
 from app.modules.social.router import router as social_router
 from app.modules.billing.router import router as billing_router
+from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
 
 from app.db.base import Base
@@ -141,6 +142,12 @@ app.include_router(
     uploads_router,
     prefix="/api/v1/uploads",
     tags=["Uploads"],
+)
+
+app.include_router(
+    locations_router,
+    prefix="/api/v1/locations",
+    tags=["Locations"],
 )
 
 

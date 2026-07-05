@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Camera, User, Mail, Shield, AlertTriangle, Share2, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
-import { authClient } from '../../utils/apiClient';
+import { authClient, locationClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import Helpers from '../../utils/helpers';
 import Modal from '../../components/ui/Modal';
@@ -71,13 +71,27 @@ export default function Profile() {
     e.preventDefault();
     setLoading(true);
     try {
+      let finalNeighborhood = formData.neighborhood;
+      // If it's a new neighborhood, register it first
+      if (formData.isNewNeighborhood && formData.city && formData.neighborhood) {
+        try {
+          const newNb = await locationClient.createNeighborhood({
+            name: formData.neighborhood,
+            city_identifier: formData.city
+          });
+          finalNeighborhood = newNb.name;
+        } catch (err) {
+          console.warn("Could not register custom neighborhood:", err);
+        }
+      }
+
       const response = await authClient.updateMe({
         full_name: formData.full_name,
         email: formData.email,
         country: formData.country,
         state: formData.state,
         city: formData.city,
-        neighborhood: formData.neighborhood,
+        neighborhood: finalNeighborhood,
         address: formData.address,
       });
       setCurrentUser({
@@ -357,26 +371,19 @@ export default function Profile() {
               countryValue={formData.country}
               stateValue={formData.state}
               cityValue={formData.city}
-              onLocationChange={({ country, state, city }) => {
-                setFormData(prev => ({ ...prev, country, state, city }));
+              neighborhoodValue={formData.neighborhood}
+              onLocationChange={({ country, state, city, neighborhood, isNewNeighborhood }) => {
+                setFormData(prev => ({ 
+                  ...prev, 
+                  country, 
+                  state, 
+                  city,
+                  neighborhood,
+                  isNewNeighborhood
+                }));
               }}
               disabled={gettingLocation}
             />
-
-            <div className="profile-field">
-              <label htmlFor="neighborhood">Barrio / Sector</label>
-              <div className="input-with-icon">
-                <Compass width="18" height="18" />
-                <input
-                  type="text"
-                  className="form-input"
-                  id="neighborhood"
-                  placeholder="Ej: El Poblado"
-                  value={formData.neighborhood}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
 
             <div className="profile-field full-width">
               <label htmlFor="address">Dirección (Residencia o Local)</label>

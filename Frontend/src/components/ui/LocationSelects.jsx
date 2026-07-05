@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Country, State, City } from 'country-state-city';
-import { Map, MapPin, Compass } from 'lucide-react';
+import { Map, MapPin, Compass, Home } from 'lucide-react';
+import { locationClient } from '../../utils/apiClient';
 
 export default function LocationSelects({ 
   countryValue, 
   stateValue, 
-  cityValue, 
+  cityValue,
+  neighborhoodValue,
   onLocationChange,
   disabled = false
 }) {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+
+  // DB Neighborhoods
+  const [dbNeighborhoods, setDbNeighborhoods] = useState([]);
+  const [loadingNeighborhoods, setLoadingNeighborhoods] = useState(false);
+  const [isCustomNeighborhood, setIsCustomNeighborhood] = useState(false);
+  const [customNeighborhoodText, setCustomNeighborhoodText] = useState('');
 
   // Internal state for ISO codes to make the library work
   const [selectedCountryCode, setSelectedCountryCode] = useState('');
@@ -78,6 +86,60 @@ export default function LocationSelects({
     }
   }, [countryValue, stateValue]); // Re-run when parent values change
 
+  // Sync Neighborhoods whenever cityValue changes
+  useEffect(() => {
+    let isMounted = true;
+    if (cityValue) {
+      setLoadingNeighborhoods(true);
+      locationClient.getNeighborhoods(cityValue)
+        .then(data => {
+          if (isMounted) {
+            setDbNeighborhoods(data || []);
+            // Check if current neighborhoodValue exists in DB or if it's custom
+            if (neighborhoodValue) {
+              const exists = data.some(n => n.name.toLowerCase() === neighborhoodValue.toLowerCase());
+              if (!exists && neighborhoodValue !== 'otro') {
+                setIsCustomNeighborhood(true);
+                setCustomNeighborhoodText(neighborhoodValue);
+              } else {
+                setIsCustomNeighborhood(false);
+                setCustomNeighborhoodText('');
+              }
+            } else {
+              setIsCustomNeighborhood(false);
+              setCustomNeighborhoodText('');
+            }
+          }
+        })
+        .catch(err => console.error("Error fetching neighborhoods:", err))
+        .finally(() => {
+          if (isMounted) setLoadingNeighborhoods(false);
+        });
+    } else {
+      setDbNeighborhoods([]);
+      setIsCustomNeighborhood(false);
+      setCustomNeighborhoodText('');
+    }
+    return () => { isMounted = false; };
+  }, [cityValue]); // Run only when cityValue changes
+
+  // Also sync neighborhood props externally (e.g. from GPS)
+  useEffect(() => {
+    if (neighborhoodValue && dbNeighborhoods.length > 0) {
+      const exists = dbNeighborhoods.some(n => n.name.toLowerCase() === neighborhoodValue.toLowerCase());
+      if (!exists && neighborhoodValue !== 'otro') {
+        setIsCustomNeighborhood(true);
+        setCustomNeighborhoodText(neighborhoodValue);
+      } else if (exists) {
+        setIsCustomNeighborhood(false);
+        setCustomNeighborhoodText('');
+      }
+    } else if (!neighborhoodValue) {
+      setIsCustomNeighborhood(false);
+      setCustomNeighborhoodText('');
+    }
+  }, [neighborhoodValue]);
+
   const handleCountryChange = (e) => {
     const countryCode = e.target.value;
     setSelectedCountryCode(countryCode);
@@ -93,7 +155,9 @@ export default function LocationSelects({
     onLocationChange({
       country: country ? country.name : '',
       state: '',
-      city: ''
+      city: '',
+      neighborhood: '',
+      isNewNeighborhood: false
     });
   };
 
@@ -109,7 +173,9 @@ export default function LocationSelects({
     onLocationChange({
       country: countryValue,
       state: state ? state.name : '',
-      city: ''
+      city: '',
+      neighborhood: '',
+      isNewNeighborhood: false
     });
   };
 
@@ -118,7 +184,45 @@ export default function LocationSelects({
     onLocationChange({
       country: countryValue,
       state: stateValue,
-      city: cityName
+      city: cityName,
+      neighborhood: '',
+      isNewNeighborhood: false
+    });
+  };
+
+  const handleNeighborhoodChange = (e) => {
+    const val = e.target.value;
+    if (val === 'otro') {
+      setIsCustomNeighborhood(true);
+      onLocationChange({
+        country: countryValue,
+        state: stateValue,
+        city: cityValue,
+        neighborhood: customNeighborhoodText,
+        isNewNeighborhood: true
+      });
+    } else {
+      setIsCustomNeighborhood(false);
+      setCustomNeighborhoodText('');
+      onLocationChange({
+        country: countryValue,
+        state: stateValue,
+        city: cityValue,
+        neighborhood: val,
+        isNewNeighborhood: false
+      });
+    }
+  };
+
+  const handleCustomNeighborhoodChange = (e) => {
+    const val = e.target.value;
+    setCustomNeighborhoodText(val);
+    onLocationChange({
+      country: countryValue,
+      state: stateValue,
+      city: cityValue,
+      neighborhood: val,
+      isNewNeighborhood: true
     });
   };
 
@@ -185,6 +289,48 @@ export default function LocationSelects({
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="profile-field">
+        <label htmlFor="neighborhoodSelect">Barrio / Sector</label>
+        <div className="input-with-icon">
+          <Home width="18" height="18" />
+          <select
+            id="neighborhoodSelect"
+            className="form-select"
+            value={isCustomNeighborhood ? 'otro' : (neighborhoodValue || '')}
+            onChange={handleNeighborhoodChange}
+            disabled={!cityValue || disabled || loadingNeighborhoods}
+            style={{ paddingLeft: '2.5rem' }}
+          >
+            <option value="">
+              {loadingNeighborhoods ? 'Cargando barrios...' : 'Selecciona un barrio'}
+            </option>
+            {dbNeighborhoods.map(n => (
+              <option key={n.id} value={n.name}>{n.name}</option>
+            ))}
+            {/* Si GPS trajo un barrio que no está en dbNeighborhoods y isCustomNeighborhood está false (raro pero posible) */}
+            {neighborhoodValue && !isCustomNeighborhood && !dbNeighborhoods.some(n => n.name === neighborhoodValue) && (
+              <option value={neighborhoodValue}>{neighborhoodValue}</option>
+            )}
+            <option value="otro">Otro...</option>
+          </select>
+        </div>
+        
+        {isCustomNeighborhood && (
+          <div className="mt-3 animate-fade-in input-with-icon">
+            <Home width="18" height="18" className="text-tertiary" />
+            <input
+              type="text"
+              className="form-input transition-all duration-300 opacity-100"
+              placeholder="Digita el nombre de tu barrio o sector"
+              value={customNeighborhoodText}
+              onChange={handleCustomNeighborhoodChange}
+              disabled={disabled}
+              autoFocus
+            />
+          </div>
+        )}
       </div>
     </>
   );

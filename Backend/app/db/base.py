@@ -20,6 +20,7 @@ from app.modules.products.models import Product  # noqa: F401
 from app.modules.categories.models import Category  # noqa: F401
 from app.modules.services.models import Service  # noqa: F401
 from app.modules.social.models import SocialAccount, SocialPost  # noqa: F401
+from app.modules.locations.models import Neighborhood  # noqa: F401
 from app.modules.billing.models import (
     Customer,
     Invoice,

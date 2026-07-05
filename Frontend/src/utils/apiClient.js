@@ -280,3 +280,10 @@ export const categoryClient = {
   create: (data) =>
     apiClient.post('/categories', data),
 };
+
+export const locationClient = {
+  getNeighborhoods: (cityIdentifier) => 
+    apiClient.get(`/locations/neighborhoods/${encodeURIComponent(cityIdentifier)}`),
+  createNeighborhood: (data) => 
+    apiClient.post('/locations/neighborhoods', data),
+};

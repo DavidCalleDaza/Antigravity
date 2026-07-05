@@ -8,6 +8,7 @@ import Helpers from '../../utils/helpers';
 import Modal from '../../components/ui/Modal';
 import ImageCropperModal from '../../components/ui/ImageCropperModal';
 import SocialSettings from './SocialSettings';
+import LocationSelects from '../../components/ui/LocationSelects';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 const ROLE_OPTIONS = Object.entries(APP_CONFIG.ROLES).map(([key, value]) => ({
@@ -352,50 +353,15 @@ export default function Profile() {
               <p className="text-xs text-tertiary mt-1">Estos datos nos ayudan a mejorar las estadísticas y campañas de mercadeo.</p>
             </div>
 
-            <div className="profile-field">
-              <label htmlFor="country">País</label>
-              <div className="input-with-icon">
-                <Map width="18" height="18" />
-                <input
-                  type="text"
-                  className="form-input"
-                  id="country"
-                  placeholder="Ej: Colombia"
-                  value={formData.country}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="profile-field">
-              <label htmlFor="state">Departamento / Estado</label>
-              <div className="input-with-icon">
-                <Map width="18" height="18" />
-                <input
-                  type="text"
-                  className="form-input"
-                  id="state"
-                  placeholder="Ej: Antioquia"
-                  value={formData.state}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="profile-field">
-              <label htmlFor="city">Ciudad</label>
-              <div className="input-with-icon">
-                <MapPin width="18" height="18" />
-                <input
-                  type="text"
-                  className="form-input"
-                  id="city"
-                  placeholder="Ej: Medellín"
-                  value={formData.city}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+            <LocationSelects 
+              countryValue={formData.country}
+              stateValue={formData.state}
+              cityValue={formData.city}
+              onLocationChange={({ country, state, city }) => {
+                setFormData(prev => ({ ...prev, country, state, city }));
+              }}
+              disabled={gettingLocation}
+            />
 
             <div className="profile-field">
               <label htmlFor="neighborhood">Barrio / Sector</label>

@@ -12,7 +12,11 @@ class ApiError extends Error {
 
 class ApiClient {
   constructor(baseUrl) {
-    this.baseUrl = baseUrl;
+    let cleanUrl = baseUrl ? baseUrl.replace(/\/+$/, '') : '';
+    if (cleanUrl && !cleanUrl.endsWith('/api/v1')) {
+      cleanUrl = `${cleanUrl}/api/v1`;
+    }
+    this.baseUrl = cleanUrl;
   }
 
   async request(endpoint, options = {}) {

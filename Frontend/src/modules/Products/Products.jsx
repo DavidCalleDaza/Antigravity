@@ -11,9 +11,9 @@ import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-//import { productClient, ApiError } from '../../utils/apiClient';
 import { productClient, categoryClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
+import CategorySelect from '../../components/ui/CategorySelect';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -364,19 +364,13 @@ export default function Products() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <div className="form-group">
               <label className="form-label">Categoría</label>
-              {/* Selector de categorías dinámico en el formulario */}
-              <select
-                className="form-select"
+              <CategorySelect
                 value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-              >
-                <option value="">Seleccionar categoría</option>
-                {dbCategories.map(c => (
-                  <option key={c.id} value={c.id}>
-                    {'-'.repeat(c.depth || 0)} {c.name} {/*mostrar la gerarquia de la categoria */}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setFormData({ ...formData, category_id: val })}
+                entityType="product"
+                categories={dbCategories}
+                onCategoryCreated={loadCategories}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Precio <span className="required">*</span></label>

@@ -277,4 +277,6 @@ export const billingClient = {
 export const categoryClient = {
   list: (entityType = 'product') =>
     apiClient.get(`/categories?entity_type=${entityType}`),
+  create: (data) =>
+    apiClient.post('/categories', data),
 };

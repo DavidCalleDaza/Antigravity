@@ -171,7 +171,7 @@ export default function LocationSelects({
           <select
             id="citySelect"
             className="form-select"
-            value={cities.some(c => c.name === cityValue) ? cityValue : ''}
+            value={cityValue || ''}
             onChange={handleCityChange}
             disabled={!selectedStateCode || disabled}
             style={{ paddingLeft: '2.5rem' }}

@@ -74,6 +74,31 @@ class User(Base):
         nullable=True,
         default=None,
     )
+    country: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        default=None,
+    )
+    state: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        default=None,
+    )
+    city: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        default=None,
+    )
+    neighborhood: Mapped[str | None] = mapped_column(
+        String(150),
+        nullable=True,
+        default=None,
+    )
+    address: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        default=None,
+    )
 
     social_accounts = relationship(
         "SocialAccount",

@@ -61,6 +61,26 @@ class UserBase(BaseModel):
             examples=["client"],
         ),
     ]
+    country: Annotated[
+        str | None,
+        Field(default=None, description="Country (País)", max_length=100),
+    ] = None
+    state: Annotated[
+        str | None,
+        Field(default=None, description="State/Department (Departamento)", max_length=100),
+    ] = None
+    city: Annotated[
+        str | None,
+        Field(default=None, description="City (Ciudad)", max_length=100),
+    ] = None
+    neighborhood: Annotated[
+        str | None,
+        Field(default=None, description="Neighborhood (Barrio/Sector)", max_length=150),
+    ] = None
+    address: Annotated[
+        str | None,
+        Field(default=None, description="Address (Dirección)", max_length=255),
+    ] = None
 
 
 # ── Request Schemas ──────────────────────────────────────────────────────────
@@ -146,6 +166,11 @@ class UserUpdate(BaseModel):
             description="Activate or deactivate the user.",
         ),
     ]
+    country: Annotated[str | None, Field(default=None, max_length=100)] = None
+    state: Annotated[str | None, Field(default=None, max_length=100)] = None
+    city: Annotated[str | None, Field(default=None, max_length=100)] = None
+    neighborhood: Annotated[str | None, Field(default=None, max_length=150)] = None
+    address: Annotated[str | None, Field(default=None, max_length=255)] = None
 
 
 class UserUpdateMe(BaseModel):
@@ -176,6 +201,11 @@ class UserUpdateMe(BaseModel):
             max_length=500,
         ),
     ]
+    country: Annotated[str | None, Field(default=None, max_length=100)] = None
+    state: Annotated[str | None, Field(default=None, max_length=100)] = None
+    city: Annotated[str | None, Field(default=None, max_length=100)] = None
+    neighborhood: Annotated[str | None, Field(default=None, max_length=150)] = None
+    address: Annotated[str | None, Field(default=None, max_length=255)] = None
 
 
 # ── Response Schemas ─────────────────────────────────────────────────────────

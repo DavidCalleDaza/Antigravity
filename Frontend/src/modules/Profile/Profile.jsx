@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, User, Mail, Shield, AlertTriangle, Share2 } from 'lucide-react';
+import { Camera, User, Mail, Shield, AlertTriangle, Share2, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { authClient } from '../../utils/apiClient';
@@ -24,8 +24,14 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     full_name: currentUser?.name || '',
     email: currentUser?.email || '',
+    country: currentUser?.country || '',
+    state: currentUser?.state || '',
+    city: currentUser?.city || '',
+    neighborhood: currentUser?.neighborhood || '',
+    address: currentUser?.address || '',
   });
   const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [deleteAction, setDeleteAction] = useState(null);
   const [cropModalOpen, setCropModalOpen] = useState(false);
@@ -47,6 +53,11 @@ export default function Profile() {
         ...prev,
         full_name: currentUser.name || '',
         email: currentUser.email || '',
+        country: currentUser.country || '',
+        state: currentUser.state || '',
+        city: currentUser.city || '',
+        neighborhood: currentUser.neighborhood || '',
+        address: currentUser.address || '',
       }));
     }
   }, [currentUser]);
@@ -62,12 +73,22 @@ export default function Profile() {
       const response = await authClient.updateMe({
         full_name: formData.full_name,
         email: formData.email,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        neighborhood: formData.neighborhood,
+        address: formData.address,
       });
       setCurrentUser({
         ...currentUser,
         name: response.full_name,
         email: response.email,
         avatar: response.avatar_url,
+        country: response.country,
+        state: response.state,
+        city: response.city,
+        neighborhood: response.neighborhood,
+        address: response.address,
       });
       toast.success('Perfil actualizado correctamente.', 'Éxito');
     } catch (error) {
@@ -75,6 +96,44 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('La geolocalización no está soportada por tu navegador.', 'Error');
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+          const data = await response.json();
+          if (data && data.address) {
+            setFormData(prev => ({
+              ...prev,
+              country: data.address.country || prev.country,
+              state: data.address.state || data.address.region || prev.state,
+              city: data.address.city || data.address.town || data.address.village || prev.city,
+              neighborhood: data.address.suburb || data.address.neighbourhood || prev.neighborhood,
+              address: data.address.road ? `${data.address.road} ${data.address.house_number || ''}`.trim() : prev.address
+            }));
+            toast.success('Ubicación obtenida con éxito.', 'GPS');
+          } else {
+            toast.error('No se pudo resolver la ubicación.', 'Error');
+          }
+        } catch (error) {
+          toast.error('Error al conectarse al servicio de mapas.', 'Error');
+        } finally {
+          setGettingLocation(false);
+        }
+      },
+      (error) => {
+        setGettingLocation(false);
+        toast.error('Permiso denegado o no se pudo obtener la ubicación.', 'Error GPS');
+      }
+    );
   };
 
   const handleAvatarClick = () => {
@@ -271,8 +330,105 @@ export default function Profile() {
               <p className="text-xs text-tertiary mt-1">El rol es asignado por administración y no puede ser cambiado por el usuario.</p>
             </div>
 
-            <div className="full-width flex justify-end mt-4">
-              <button type="submit" className="btn btn-primary btn-lg min-w-[200px]" disabled={loading}>
+            {/* ── Location Fields ── */}
+            <div className="profile-field full-width mt-4 mb-2">
+              <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-2">
+                <h4 className="text-lg font-semibold flex items-center gap-2">
+                  <MapPin width="18" height="18" className="text-primary" /> Información de Ubicación
+                </h4>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={handleGetLocation}
+                  disabled={gettingLocation}
+                >
+                  {gettingLocation ? (
+                    <><span className="animate-spin mr-2">◌</span> Buscando GPS...</>
+                  ) : (
+                    <><Navigation width="14" height="14" className="mr-1" /> Autocompletar con GPS</>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-tertiary mt-1">Estos datos nos ayudan a mejorar las estadísticas y campañas de mercadeo.</p>
+            </div>
+
+            <div className="profile-field">
+              <label htmlFor="country">País</label>
+              <div className="input-with-icon">
+                <Map width="18" height="18" />
+                <input
+                  type="text"
+                  className="form-input"
+                  id="country"
+                  placeholder="Ej: Colombia"
+                  value={formData.country}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="profile-field">
+              <label htmlFor="state">Departamento / Estado</label>
+              <div className="input-with-icon">
+                <Map width="18" height="18" />
+                <input
+                  type="text"
+                  className="form-input"
+                  id="state"
+                  placeholder="Ej: Antioquia"
+                  value={formData.state}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="profile-field">
+              <label htmlFor="city">Ciudad</label>
+              <div className="input-with-icon">
+                <MapPin width="18" height="18" />
+                <input
+                  type="text"
+                  className="form-input"
+                  id="city"
+                  placeholder="Ej: Medellín"
+                  value={formData.city}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="profile-field">
+              <label htmlFor="neighborhood">Barrio / Sector</label>
+              <div className="input-with-icon">
+                <Compass width="18" height="18" />
+                <input
+                  type="text"
+                  className="form-input"
+                  id="neighborhood"
+                  placeholder="Ej: El Poblado"
+                  value={formData.neighborhood}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="profile-field full-width">
+              <label htmlFor="address">Dirección (Residencia o Local)</label>
+              <div className="input-with-icon">
+                <Home width="18" height="18" />
+                <input
+                  type="text"
+                  className="form-input"
+                  id="address"
+                  placeholder="Ej: Calle 10 # 40-50"
+                  value={formData.address}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="full-width flex justify-end mt-4 pt-4 border-t border-[var(--border-color)]">
+              <button type="submit" className="btn btn-primary btn-lg min-w-[200px]" disabled={loading || gettingLocation}>
                 {loading ? (
                   <>
                     <span className="animate-spin mr-2">◌</span>

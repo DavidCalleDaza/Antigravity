@@ -131,7 +131,7 @@ export default function Profile() {
               country: data.address.country || prev.country,
               state: data.address.state || data.address.region || prev.state,
               city: data.address.city || data.address.town || data.address.village || prev.city,
-              neighborhood: data.address.suburb || data.address.neighbourhood || prev.neighborhood,
+              neighborhood: data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.quarter || data.address.hamlet || prev.neighborhood,
               address: data.address.road ? `${data.address.road} ${data.address.house_number || ''}`.trim() : prev.address
             }));
             toast.success('Ubicación obtenida con éxito.', 'GPS');

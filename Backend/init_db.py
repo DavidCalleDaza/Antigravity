@@ -70,6 +70,12 @@ async def init_database():
 
         if 'products' in tables and 'services' in tables:
             logger.info("✅ SUCCESS: 'products' and 'services' tables created!")
+            
+            # Seed default categories
+            from app.db.session import async_session_factory
+            async with async_session_factory() as db:
+                await seed_categories(db)
+                
             return True
         else:
             logger.error(f"❌ FAILED: products={('products' in tables)}, services={('services' in tables)}")
@@ -80,6 +86,87 @@ async def init_database():
         import traceback
         traceback.print_exc()
         return False
+
+
+async def seed_categories(db):
+    """Seed initial categories for products and services."""
+    logger.info("Seeding default categories...")
+    from app.modules.categories.models import Category
+    from sqlalchemy import select
+
+    # Check if there are already categories
+    result = await db.execute(select(Category))
+    if result.scalars().first() is not None:
+        logger.info("Categories already seeded.")
+        return
+
+    default_products = [
+        ('Alimentos', 'Alimentos y comida en general'),
+        ('Bebidas', 'Bebidas calientes, frías y licores'),
+        ('Ropa', 'Prendas de vestir para todas las edades'),
+        ('Calzado', 'Zapatos y calzado deportivo/formal'),
+        ('Tecnología', 'Dispositivos electrónicos y accesorios'),
+        ('Hogar', 'Decoración, muebles y accesorios para el hogar'),
+        ('Salud', 'Productos de bienestar y farmacia'),
+        ('Belleza', 'Cuidado personal y cosméticos'),
+        ('Deportes', 'Equipamiento deportivo y fitness'),
+        ('Mascotas', 'Alimentos y accesorios para mascotas'),
+        ('Papelería', 'Útiles escolares y de oficina'),
+        ('Otros', 'Otros artículos y productos generales')
+    ]
+
+    default_services = [
+        ('Barbería', 'Corte de cabello para caballeros y arreglo de barba'),
+        ('Estilista / Peluquería', 'Corte, peinado y tratamientos capilares'),
+        ('Manicura / Pedicura', 'Cuidado de uñas y manos/pies'),
+        ('Masajes / Spa', 'Tratamientos de relajación y masajes corporales'),
+        ('Fisioterapia', 'Rehabilitación y terapia física'),
+        ('Entrenamiento Personal', 'Asesoría deportiva y rutinas de ejercicio'),
+        ('Asesoría / Consultoría', 'Servicios profesionales de consultoría'),
+        ('Soporte Técnico', 'Reparación de hardware y soporte de sistemas'),
+        ('Limpieza / Mantenimiento', 'Servicios de aseo y mantenimiento general'),
+        ('Tutorías / Clases', 'Apoyo académico y lecciones privadas'),
+        ('Otros', 'Otros servicios generales')
+    ]
+
+    categories_to_add = []
+    
+    def make_slug(name, entity):
+        s = name.lower()
+        for char in ['/', ' ', ',', '.', '&', '(', ')', '/']:
+            s = s.replace(char, '-')
+        while '--' in s:
+            s = s.replace('--', '-')
+        s = s.strip('-')
+        return f"{s}-{entity}"
+
+    for name, desc in default_products:
+        categories_to_add.append(Category(
+            name=name,
+            description=desc,
+            slug=make_slug(name, 'product'),
+            entity_type='product',
+            status='active',
+            depth=0
+        ))
+
+    for name, desc in default_services:
+        categories_to_add.append(Category(
+            name=name,
+            description=desc,
+            slug=make_slug(name, 'service'),
+            entity_type='service',
+            status='active',
+            depth=0
+        ))
+
+    try:
+        db.add_all(categories_to_add)
+        await db.commit()
+        logger.info(f"Successfully seeded {len(categories_to_add)} categories!")
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error seeding categories: {e}")
 
 
 async def verify_tables():

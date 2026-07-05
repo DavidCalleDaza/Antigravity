@@ -69,7 +69,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=[
+        "https://servinow.vercel.app",
+        *settings.CORS_ORIGINS
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,6 +82,15 @@ app.add_middleware(
 # ── Exception Handlers ──────────────────────────────────────────────────────
 
 register_exception_handlers(app)
+
+
+# ── Ngrok Skip Browser Warning Middleware ────────────────────────────────────
+
+@app.middleware("http")
+async def add_ngrok_skip_header(request, call_next):
+    response = await call_next(request)
+    response.headers["ngrok-skip-browser-warning"] = "true"
+    return response
 
 
 # ── Routers ──────────────────────────────────────────────────────────────────
@@ -133,6 +145,7 @@ app.include_router(
 
 
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
+app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")
 
 
 # ── Health Check ─────────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ import { useStore } from '../../store/useStore';
 import { serviceClient, categoryClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 
-const { ADMIN, SELLER } = APP_CONFIG.ROLES;
+const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
 export default function Services() {
   const { currentUser } = useStore();
@@ -98,7 +98,6 @@ export default function Services() {
     upload(file);
   };
 
-  // Función handleSaveService unificada y corregida
   const handleSaveService = async (e) => {
     e.preventDefault();
     try {
@@ -106,10 +105,8 @@ export default function Services() {
         name: formData.name,
         price: formData.price,
         status: formData.status,
-        // Forzamos la conversión a String asegurando que nunca sea null o un número puro
         description: String(formData.description || ''), 
         duration: String(formData.duration || ''),
-        // Mantiene la conversión a null si está vacía
         category_id: formData.category_id === '' ? null : formData.category_id,
       };
 
@@ -135,10 +132,8 @@ export default function Services() {
         }, 100);
       }
     } catch (err) {
-      // IMPORTANTE: Esto imprimirá el error real en la consola de su navegador (F12 -> pestaña Consola)
       console.error("Error detallado al guardar el servicio:", err);
 
-      // Comprobación más segura que evita fallos de compilación de Vite
       const isApiError = err && (err.name === 'ApiError' || typeof err.status === 'number');
 
       if (isApiError) {
@@ -157,7 +152,6 @@ export default function Services() {
           toast.error(err.message || `Error del servidor (Código ${err.status})`);
         }
       } else {
-        // Si el backend está apagado, fetch arroja un TypeError estándar "Failed to fetch"
         if (err instanceof TypeError && err.message?.includes('fetch')) {
           toast.error('No se pudo conectar con el servidor. ¿Está encendido el backend?');
         } else {

@@ -29,12 +29,7 @@ async def init_database():
         from app.core.config import settings
         logger.info(f"Database URL host: {settings.DATABASE_URL.split('@')[1] if '@' in settings.DATABASE_URL else 'configured'}")
 
-        from app.db.base_class import Base
-        from app.modules.auth.models import User
-        from app.modules.wall.models import Comment, Post
-        from app.modules.products.models import Product
-        from app.modules.services.models import Service
-
+        from app.db.base import Base
         from sqlalchemy import text
         from app.db.session import engine
 
@@ -58,7 +53,12 @@ async def init_database():
             logger.info(f"Tables after create_all: {tables}")
 
         missing = []
-        expected = ['comments', 'posts', 'products', 'services', 'users']
+        expected = [
+            'comments', 'posts', 'products', 'services', 'users',
+            'social_accounts', 'social_posts', 'categories', 'customers',
+            'invoices', 'invoice_items', 'invoice_sequences', 'credit_notes',
+            'credit_note_items', 'dian_events'
+        ]
         for tbl in expected:
             if tbl not in tables:
                 missing.append(tbl)
@@ -89,7 +89,7 @@ async def verify_tables():
     try:
         from sqlalchemy import text
         from app.db.session import engine
-        from app.db.base_class import Base
+        from app.db.base import Base
 
         async with engine.connect() as conn:
             result = await conn.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'"))

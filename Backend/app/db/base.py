@@ -19,6 +19,7 @@ from app.modules.wall.models import Comment, Post  # noqa: F401
 from app.modules.products.models import Product  # noqa: F401
 from app.modules.categories.models import Category  # noqa: F401
 from app.modules.services.models import Service  # noqa: F401
+from app.modules.social.models import SocialAccount, SocialPost  # noqa: F401
 from app.modules.billing.models import (
     Customer,
     Invoice,
@@ -28,10 +29,3 @@ from app.modules.billing.models import (
     CreditNoteItem,
     DianEvent,
 )  # noqa: F401
-
-
-# Future models — add imports here as modules are built:
-# from app.modules.products.models import Product  # noqa: F401
-# from app.modules.billing.models import Invoice   # noqa: F401
-# from app.modules.agenda.models import Appointment # noqa: F401
-# from app.modules.wall.models import Post          # noqa: F401

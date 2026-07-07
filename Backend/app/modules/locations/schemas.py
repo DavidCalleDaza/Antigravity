@@ -30,3 +30,23 @@ class NeighborhoodResponse(NeighborhoodBase):
 
     id: uuid.UUID
     is_verified: bool
+
+from datetime import datetime
+
+class LocationBase(BaseModel):
+    country: Annotated[str | None, Field(None, max_length=100)] = None
+    country_code: Annotated[str | None, Field(None, max_length=10)] = None
+    state: Annotated[str | None, Field(None, max_length=100)] = None
+    state_code: Annotated[str | None, Field(None, max_length=10)] = None
+    city: Annotated[str | None, Field(None, max_length=100)] = None
+    neighborhood: Annotated[str | None, Field(None, max_length=150)] = None
+    address: Annotated[str | None, Field(None, max_length=255)] = None
+
+class LocationCreate(LocationBase):
+    pass
+
+class LocationResponse(LocationBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime | None = None

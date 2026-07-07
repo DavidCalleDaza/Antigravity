@@ -154,7 +154,9 @@ export default function LocationSelects({
     // Bubble up to parent
     onLocationChange({
       country: country ? country.name : '',
+      countryCode: countryCode || '',
       state: '',
+      stateCode: '',
       city: '',
       neighborhood: '',
       isNewNeighborhood: false
@@ -172,7 +174,9 @@ export default function LocationSelects({
 
     onLocationChange({
       country: countryValue,
+      countryCode: selectedCountryCode,
       state: state ? state.name : '',
+      stateCode: stateCode || '',
       city: '',
       neighborhood: '',
       isNewNeighborhood: false
@@ -183,7 +187,9 @@ export default function LocationSelects({
     const cityName = e.target.value;
     onLocationChange({
       country: countryValue,
+      countryCode: selectedCountryCode,
       state: stateValue,
+      stateCode: selectedStateCode,
       city: cityName,
       neighborhood: '',
       isNewNeighborhood: false
@@ -196,7 +202,9 @@ export default function LocationSelects({
       setIsCustomNeighborhood(true);
       onLocationChange({
         country: countryValue,
+        countryCode: selectedCountryCode,
         state: stateValue,
+        stateCode: selectedStateCode,
         city: cityValue,
         neighborhood: customNeighborhoodText,
         isNewNeighborhood: true
@@ -206,7 +214,9 @@ export default function LocationSelects({
       setCustomNeighborhoodText('');
       onLocationChange({
         country: countryValue,
+        countryCode: selectedCountryCode,
         state: stateValue,
+        stateCode: selectedStateCode,
         city: cityValue,
         neighborhood: val,
         isNewNeighborhood: false
@@ -219,7 +229,9 @@ export default function LocationSelects({
     setCustomNeighborhoodText(val);
     onLocationChange({
       country: countryValue,
+      countryCode: selectedCountryCode,
       state: stateValue,
+      stateCode: selectedStateCode,
       city: cityValue,
       neighborhood: val,
       isNewNeighborhood: true

@@ -9,11 +9,12 @@ admin, seller, and client.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, func
+from sqlalchemy import Boolean, DateTime, String, func, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
+from app.modules.locations.models import Location
 
 
 class User(Base):
@@ -74,31 +75,13 @@ class User(Base):
         nullable=True,
         default=None,
     )
-    country: Mapped[str | None] = mapped_column(
-        String(100),
+    location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("locations.id", ondelete="SET NULL"),
         nullable=True,
-        default=None,
     )
-    state: Mapped[str | None] = mapped_column(
-        String(100),
-        nullable=True,
-        default=None,
-    )
-    city: Mapped[str | None] = mapped_column(
-        String(100),
-        nullable=True,
-        default=None,
-    )
-    neighborhood: Mapped[str | None] = mapped_column(
-        String(150),
-        nullable=True,
-        default=None,
-    )
-    address: Mapped[str | None] = mapped_column(
-        String(255),
-        nullable=True,
-        default=None,
-    )
+
+    location: Mapped["Location"] = relationship()
 
     social_accounts = relationship(
         "SocialAccount",

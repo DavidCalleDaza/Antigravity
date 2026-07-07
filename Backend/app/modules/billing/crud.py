@@ -26,6 +26,7 @@ from app.modules.billing.models import (
     InvoiceItem,
     InvoiceSequence,
 )
+from app.modules.locations.models import Location
 
 from app.modules.billing.schemas import (
     CreditNoteCreate,
@@ -47,7 +48,7 @@ async def get_customers(
     active_only: bool = True,
 ) -> list[Customer]:
     """Retrieve paginated customers with optional search by name or ID number."""
-    stmt = select(Customer).order_by(Customer.business_name).offset(skip).limit(limit)
+    stmt = select(Customer).options(selectinload(Customer.location)).order_by(Customer.business_name).offset(skip).limit(limit)
     if active_only:
         stmt = stmt.where(Customer.is_active == True)  # noqa: E712
     if search:
@@ -61,13 +62,13 @@ async def get_customers(
 
 async def get_customer(db: AsyncSession, customer_id: uuid.UUID) -> Customer | None:
     """Retrieve a single customer by ID."""
-    result = await db.execute(select(Customer).where(Customer.id == customer_id))
+    result = await db.execute(select(Customer).options(selectinload(Customer.location)).where(Customer.id == customer_id))
     return result.scalar_one_or_none()
 
 
 async def get_customer_by_id_number(db: AsyncSession, id_number: str) -> Customer | None:
     """Retrieve a customer by their identification number."""
-    result = await db.execute(select(Customer).where(Customer.id_number == id_number))
+    result = await db.execute(select(Customer).options(selectinload(Customer.location)).where(Customer.id_number == id_number))
     return result.scalar_one_or_none()
 
 
@@ -97,7 +98,10 @@ async def create_customer(db: AsyncSession, customer_in: CustomerCreate) -> Cust
         if existing_id:
             raise ValueError("Número de documento de identificación ya registrado.")
 
-    db_customer = Customer(**customer_in.model_dump())
+    customer_data = customer_in.model_dump(exclude={"location"})
+    db_customer = Customer(**customer_data)
+    if customer_in.location:
+        db_customer.location = Location(**customer_in.location.model_dump())
     db.add(db_customer)
     await db.flush()
     await db.refresh(db_customer)
@@ -112,7 +116,7 @@ async def update_customer(
 
     Valida la unicidad de campos omitiendo el propio registro que se está editando.
     """
-    update_data = customer_in.model_dump(exclude_unset=True)
+    update_data = customer_in.model_dump(exclude_unset=True, exclude={"location"})
 
     if "email" in update_data and update_data["email"] != db_customer.email:
         existing_email = await db.execute(
@@ -146,6 +150,14 @@ async def update_customer(
 
     for field, value in update_data.items():
         setattr(db_customer, field, value)
+        
+    if customer_in.location is not None:
+        if db_customer.location:
+            for k, v in customer_in.location.model_dump(exclude_unset=True).items():
+                setattr(db_customer.location, k, v)
+        else:
+            db_customer.location = Location(**customer_in.location.model_dump())
+
     db.add(db_customer)
     await db.flush()
     await db.refresh(db_customer)

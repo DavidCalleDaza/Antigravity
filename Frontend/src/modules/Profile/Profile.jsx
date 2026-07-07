@@ -25,11 +25,13 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     full_name: currentUser?.name || '',
     email: currentUser?.email || '',
-    country: currentUser?.country || '',
-    state: currentUser?.state || '',
-    city: currentUser?.city || '',
-    neighborhood: currentUser?.neighborhood || '',
-    address: currentUser?.address || '',
+    country: currentUser?.location?.country || '',
+    countryCode: currentUser?.location?.country_code || '',
+    state: currentUser?.location?.state || '',
+    stateCode: currentUser?.location?.state_code || '',
+    city: currentUser?.location?.city || '',
+    neighborhood: currentUser?.location?.neighborhood || '',
+    address: currentUser?.location?.address || '',
   });
   const [loading, setLoading] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
@@ -54,11 +56,13 @@ export default function Profile() {
         ...prev,
         full_name: currentUser.name || '',
         email: currentUser.email || '',
-        country: currentUser.country || '',
-        state: currentUser.state || '',
-        city: currentUser.city || '',
-        neighborhood: currentUser.neighborhood || '',
-        address: currentUser.address || '',
+        country: currentUser.location?.country || '',
+        countryCode: currentUser.location?.country_code || '',
+        state: currentUser.location?.state || '',
+        stateCode: currentUser.location?.state_code || '',
+        city: currentUser.location?.city || '',
+        neighborhood: currentUser.location?.neighborhood || '',
+        address: currentUser.location?.address || '',
       }));
     }
   }, [currentUser]);
@@ -88,22 +92,22 @@ export default function Profile() {
       const response = await authClient.updateMe({
         full_name: formData.full_name,
         email: formData.email,
-        country: formData.country,
-        state: formData.state,
-        city: formData.city,
-        neighborhood: finalNeighborhood,
-        address: formData.address,
+        location: {
+          country: formData.country,
+          country_code: formData.countryCode,
+          state: formData.state,
+          state_code: formData.stateCode,
+          city: formData.city,
+          neighborhood: finalNeighborhood,
+          address: formData.address,
+        }
       });
       setCurrentUser({
         ...currentUser,
         name: response.full_name,
         email: response.email,
         avatar: response.avatar_url,
-        country: response.country,
-        state: response.state,
-        city: response.city,
-        neighborhood: response.neighborhood,
-        address: response.address,
+        location: response.location,
       });
       toast.success('Perfil actualizado correctamente.', 'Éxito');
     } catch (error) {
@@ -129,7 +133,9 @@ export default function Profile() {
             setFormData(prev => ({
               ...prev,
               country: data.address.country || prev.country,
+              countryCode: data.address.country_code ? data.address.country_code.toUpperCase() : prev.countryCode,
               state: data.address.state || data.address.region || prev.state,
+              stateCode: '',
               city: data.address.city || data.address.town || data.address.village || prev.city,
               neighborhood: data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.quarter || data.address.hamlet || prev.neighborhood,
               address: data.address.road ? `${data.address.road} ${data.address.house_number || ''}`.trim() : prev.address
@@ -372,11 +378,13 @@ export default function Profile() {
               stateValue={formData.state}
               cityValue={formData.city}
               neighborhoodValue={formData.neighborhood}
-              onLocationChange={({ country, state, city, neighborhood, isNewNeighborhood }) => {
+              onLocationChange={({ country, countryCode, state, stateCode, city, neighborhood, isNewNeighborhood }) => {
                 setFormData(prev => ({ 
                   ...prev, 
                   country, 
+                  countryCode,
                   state, 
+                  stateCode,
                   city,
                   neighborhood,
                   isNewNeighborhood

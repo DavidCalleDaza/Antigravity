@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Navigation, MapPin } from 'lucide-react';
 import { billingClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
+import LocationSelects from '../../components/ui/LocationSelects';
 import "../../../css/pages/CustomerModal.css";
 
 const calculateDV = (nit) => {
@@ -20,16 +21,75 @@ const calculateDV = (nit) => {
 export default function CustomerModal({ isOpen, onClose, onSave }) {
   const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
   
   // Estado para capturar errores de duplicados/validación desde el backend
   const [validationErrors, setValidationErrors] = useState({});
 
   const [newCust, setNewCust] = useState({
     id_type: 'NIT', id_number: '', dv: '', business_name: '', trade_name: '',
-    email: '', phone: '', address: '', city: '', department: '',
-    tax_regime: 'Simplificado', is_tax_responsible: false,
+    email: '', phone: '', tax_regime: 'Simplificado', is_tax_responsible: false,
     is_preferred: false, discount_type: 'percent', discount_value: 0,
+    location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
   });
+
+  const handleLocationChange = (loc) => {
+    setNewCust(prev => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        country: loc.country,
+        country_code: loc.countryCode,
+        state: loc.state,
+        state_code: loc.stateCode,
+        city: loc.city,
+        neighborhood: loc.neighborhood,
+      }
+    }));
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('La geolocalización no está soportada por tu navegador.', 'Error');
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+          const data = await response.json();
+          if (data && data.address) {
+            setNewCust(prev => ({
+              ...prev,
+              location: {
+                ...prev.location,
+                country: data.address.country || prev.location.country,
+                country_code: data.address.country_code ? data.address.country_code.toUpperCase() : prev.location.country_code,
+                state: data.address.state || data.address.region || prev.location.state,
+                state_code: '',
+                city: data.address.city || data.address.town || data.address.village || prev.location.city,
+                neighborhood: data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.quarter || data.address.hamlet || prev.location.neighborhood,
+                address: data.address.road ? `${data.address.road} ${data.address.house_number || ''}`.trim() : prev.location.address
+              }
+            }));
+            toast.success('Ubicación obtenida con éxito.', 'GPS');
+          } else {
+            toast.error('No se pudo resolver la ubicación.', 'Error');
+          }
+        } catch (error) {
+          toast.error('Error al conectarse al servicio de mapas.', 'Error');
+        } finally {
+          setGettingLocation(false);
+        }
+      },
+      (error) => {
+        setGettingLocation(false);
+        toast.error('Permiso denegado o no se pudo obtener la ubicación.', 'Error GPS');
+      }
+    );
+  };
 
   if (!isOpen) return null;
 
@@ -81,9 +141,9 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
   const resetForm = () => {
     setNewCust({
       id_type: 'NIT', id_number: '', dv: '', business_name: '', trade_name: '',
-      email: '', phone: '', address: '', city: '', department: '',
-      tax_regime: 'Simplificado', is_tax_responsible: false,
+      email: '', phone: '', tax_regime: 'Simplificado', is_tax_responsible: false,
       is_preferred: false, discount_type: 'percent', discount_value: 0,
+      location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
     });
     setValidationErrors({}); // Limpiar estado de errores
     onClose();
@@ -257,42 +317,46 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                 </div>
             </div>
 
-           {/* Fila Única: Dirección, Ciudad y Departamento */}
-            <div className="grid-col-2 d-flex gap-3">
-            {/* Departamento */}
-            <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label mb-1">Departamento</label>
-                <input 
-                type="text" 
-                className="form-control" 
-                placeholder="Cundinamarca"
-                value={newCust.department} 
-                onChange={(e) => setNewCust({ ...newCust, department: e.target.value })} 
-                />
+           {/* Fila: Ubicación */}
+            <div className="grid-col-2" style={{ gridColumn: 'span 2' }}>
+              <div className="d-flex justify-content-between align-items-center mb-3" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+                <h4 className="m-0 d-flex align-items-center gap-2" style={{ fontSize: '1.1rem', fontWeight: 600 }}>
+                  <MapPin width="18" height="18" style={{ color: 'var(--primary)' }} /> Información de Ubicación
+                </h4>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm d-flex align-items-center"
+                  onClick={handleGetLocation}
+                  disabled={gettingLocation || submitting}
+                  style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}
+                >
+                  {gettingLocation ? (
+                    <><span className="animate-spin" style={{ marginRight: '0.5rem', display: 'inline-block' }}>◌</span> Buscando GPS...</>
+                  ) : (
+                    <><Navigation width="14" height="14" style={{ marginRight: '0.25rem' }} /> Autocompletar con GPS</>
+                  )}
+                </button>
+              </div>
             </div>
-            {/* Ciudad */}
-            <div className="form-group" style={{ flex: 1 }}>
-                <label className="form-label mb-1">Ciudad</label>
-                <input 
-                type="text" 
-                className="form-control" 
-                placeholder="Bogotá"
-                value={newCust.city} 
-                onChange={(e) => setNewCust({ ...newCust, city: e.target.value })} 
-                />
+            <div className="grid-col-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <LocationSelects
+                countryValue={newCust.location?.country}
+                stateValue={newCust.location?.state}
+                cityValue={newCust.location?.city}
+                neighborhoodValue={newCust.location?.neighborhood}
+                onLocationChange={handleLocationChange}
+                disabled={submitting || gettingLocation}
+              />
             </div>
-            {/* Dirección */}
-            <div className="form-group" style={{ flex: 2 }}>
+            <div className="form-group grid-col-2">
                 <label className="form-label mb-1">Dirección</label>
                 <input 
-                type="text" 
-                className="form-control" 
-                placeholder="Calle 100 # 15-20"
-                value={newCust.address} 
-                onChange={(e) => setNewCust({ ...newCust, address: e.target.value })} 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Calle 100 # 15-20"
+                  value={newCust.location?.address || ''} 
+                  onChange={(e) => setNewCust({ ...newCust, location: { ...newCust.location, address: e.target.value } })} 
                 />
-            </div>
-
             </div>
 
             <div className="form-group grid-col-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '6px' }}>

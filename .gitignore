@@ -49,3 +49,5 @@ htmlcov/
 
 # --- Uploads / Dynamic Media ---
 Backend/uploads/
+.env
+Backend/.env

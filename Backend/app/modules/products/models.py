@@ -22,12 +22,13 @@ class Product(Base):
         id: Unique identifier (UUID v4, auto-generated).
         name: Product display name.
         description: Optional product description.
-        category: Product category (e.g., 'Bebidas', 'Comidas').
+        category_id: Foreign key to the category (UUID, nullable).
         price: Product price (numeric, 2 decimal places).
         stock: Available inventory quantity.
         status: Product availability status (active, inactive, out_of_stock).
         image_url: Optional URL to product image.
         video_url: Optional URL to product video.
+        user_id: ID of the user who created the product.
         created_at: Timestamp of creation (server-side default).
         updated_at: Timestamp of last update.
     """
@@ -42,12 +43,14 @@ class Product(Base):
     )
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    category: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
-        default="General",
-        server_default="General",
+    
+    # Se reemplaza la columna antigua 'category' (String) por 'category_id' (UUID con FK)
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("categories.id", ondelete="RESTRICT"),
+        nullable=True,
     )
+    
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     stock: Mapped[int] = mapped_column(default=0, server_default="0")
     status: Mapped[str] = mapped_column(
@@ -58,6 +61,12 @@ class Product(Base):
     )
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     video_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        comment="Usuario que creó el producto",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -68,3 +77,7 @@ class Product(Base):
         nullable=True,
         onupdate=func.now(),
     )
+
+    # Opcional: relación SQLAlchemy para cargar los datos de la categoría mediante ORM
+    # Nota: Requiere que exista un modelo 'Category' con la propiedad 'products' definida.
+    category = relationship("Category", back_populates="products", lazy="selectin")

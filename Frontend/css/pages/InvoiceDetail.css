@@ -1,0 +1,579 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   InvoiceDetail.css
+   Scoped styles for the InvoiceDetail drawer component.
+   Relies on CSS custom properties defined in the global theme (var(--*)).
+───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Utility ── */
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.text-right  { text-align: right; }
+.text-center { text-align: center; }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.text-secondary { color: var(--text-secondary); }
+.text-gold   { color: var(--gold, #c9a84c); }
+.font-bold   { font-weight: 600; }
+
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: var(--text-xs, 11px);
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badge--icon { gap: 4px; }
+
+.badge--neutral  { background: var(--surface-raised); color: var(--text-secondary); border: 1px solid var(--border-color); }
+.badge--info     { background: #dbeafe; color: #1d4ed8; }
+.badge--warning  { background: #fef9c3; color: #92400e; }
+.badge--success  { background: #dcfce7; color: #166534; }
+.badge--danger   { background: #fee2e2; color: #991b1b; }
+
+
+/* ── Drawer overlay (backdrop) ── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  z-index: 1050;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Drawer shell ── */
+.invoice-drawer {
+  position: relative;
+  height: 100%;
+  width: 90%;
+  max-width: 750px;
+  background: var(--surface);
+  box-shadow: -8px 0 32px rgba(0 0 0 / .18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: drawerSlideIn .22s ease-out;
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); opacity: .6; }
+  to   { transform: translateX(0);    opacity: 1;  }
+}
+
+/* ── Detail sections wrapper ──
+   Contenedor de todas las secciones del body (barra de acciones, tarjetas
+   de cliente/fechas, tabla de ítems, totales, notas crédito, timeline DIAN).
+   Sin este gap, las secciones quedan pegadas unas a otras. */
+.invoice-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header ── */
+.invoice-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.invoice-drawer__title-group { display: flex; flex-direction: column; gap: 6px; }
+
+.invoice-drawer__title {
+  font-size: var(--text-lg, 17px);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.invoice-drawer__badges { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.drawer-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+}
+.drawer-close:hover { color: var(--text-primary); background: var(--surface-raised); }
+
+
+/* ── Body ── */
+.invoice-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+
+/* ── Loading state ── */
+.invoice-drawer__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm, 13px);
+}
+
+
+.invoice-drawer__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invoice-drawer__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invoice-drawer__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.invoice-drawer__badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.invoice-drawer__title-row .btn-ghost.btn-icon-only {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: #16a34a; /* verde */
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.invoice-drawer__title-row .btn-ghost.btn-icon-only:hover:not(:disabled) {
+  background-color: var(--surface-hover, rgba(255,255,255,0.06));
+  color: var(--text-primary, #1e293b);
+}
+
+.invoice-drawer__title-row .btn-ghost.btn-icon-only:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Action bar ──
+   All buttons stay on ONE row, no horizontal scroll. Using CSS grid with
+   equal-width auto columns (instead of flex) guarantees every button gets
+   exactly the same share of the available width, so they shrink together
+   proportionally as more buttons appear (Editar, Transmitir DIAN, Anular,
+   Marcar Pagada, Emitir Nota Crédito) instead of overflowing the container.
+   Labels are allowed to wrap to a second line inside the button if the
+   width gets very tight, rather than breaking out of the row. */
+.invoice-detail__actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: stretch;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.invoice-detail__actions .btn {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 6px;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  line-height: 1.2;
+  gap: 4px;
+  /* btn-ghost has no border by default, which made it ~2px shorter than the
+     outlined/filled variants next to it. Reserving the same border width
+     (transparent, so it stays invisible for ghost) keeps every button in
+     this row exactly the same height regardless of variant. */
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  /* Match whatever hover animation the other variants use, so btn-ghost
+     (Anular) lifts on hover just like btn-outline/btn-primary/btn-success. */
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+.invoice-detail__actions .btn:hover {
+  transform: translateY(-1px);
+}
+
+.invoice-detail__actions .btn:active {
+  transform: translateY(0);
+}
+
+.invoice-detail__actions .btn svg {
+  flex-shrink: 0;
+}
+
+/* On narrow screens, tighten further so text stays readable at 1 line
+   as long as possible before wrapping. */
+@media (max-width: 480px) {
+  .invoice-detail__actions {
+    gap: 4px;
+    padding: 8px;
+  }
+  .invoice-detail__actions .btn {
+    padding: 7px 4px;
+    font-size: 11px;
+  }
+  .invoice-detail__actions .btn svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+
+
+/* ── Shared info card ── */
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.info-card__name   { font-size: var(--text-sm, 13px); font-weight: 600; color: var(--text-primary); }
+.info-card__sub    { font-size: var(--text-xs, 11px); color: var(--text-secondary); }
+.info-card__rows   { font-size: var(--text-xs, 11px); color: var(--text-secondary); display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.info-card__note   { font-size: var(--text-xs, 11px); color: var(--text-secondary); margin: 0; }
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, var(--text-secondary));
+  margin-bottom: 8px !important;
+  margin-top: 10px !important;
+}
+
+
+/* ── Meta grid (2-col) ── */
+.invoice-detail__meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 560px) {
+  .invoice-detail__meta-grid { grid-template-columns: 1fr; }
+}
+
+
+/* ── Line items card ── */
+.invoice-detail__items-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.items-card__header {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-raised);
+}
+
+.items-card__header h4 {
+  margin: 0;
+  font-size: var(--text-sm, 13px);
+  font-weight: 600;
+}
+
+
+/* ── Invoice table (shared) ── */
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm, 13px);
+}
+
+.invoice-table thead tr {
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-raised);
+}
+
+.invoice-table th {
+  padding: 8px 12px;
+  font-size: var(--text-xs, 11px);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: left;
+}
+
+.invoice-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.invoice-table tbody tr:last-child td { border-bottom: none; }
+
+/* Items table: fixed layout so columns keep a consistent, professional width
+   instead of collapsing/drifting to the right when the description is short.
+   "Descripción" is the only column without an explicit width, so it absorbs
+   whatever space is left. The .col-discount width is only ever applied when
+   that column is actually rendered (invoices that have a discount). */
+.invoice-table--items {
+  table-layout: fixed;
+}
+
+.invoice-table--items tbody tr:hover { background: var(--surface-raised); }
+
+.invoice-table--items .col-index    { width: 34px; }
+.invoice-table--items .col-desc     { width: auto; }
+.invoice-table--items .col-qty      { width: 64px; }
+.invoice-table--items .col-price    { width: 108px; }
+.invoice-table--items .col-tax      { width: 64px; }
+.invoice-table--items .col-total    { width: 110px; }
+
+.invoice-table--items td.col-desc {
+  overflow-wrap: break-word;
+}
+
+
+/* ── Totals card ── */
+.totals-card {
+  padding: 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100% !important;          /* Cambiado de 'fit-content' a '100%' para estirarse */
+  box-sizing: border-box !important; /* Asegura que el padding no desborde el alto */
+}
+
+.totals-card__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs, 12px);
+  color: var(--text-secondary);
+}
+
+.totals-card__row--discount { color: var(--danger); }
+
+.totals-card__row--total {
+  font-size: var(--text-sm, 14px);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: auto !important; /* Empuja la fila del total al fondo de la tarjeta de forma simétrica */
+}
+
+.totals-card__row--total span:last-child { color: var(--gold, #c9a84c); }
+
+.totals-card__divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 4px 0;
+}
+
+
+.totals-card__estimate-tag {
+  font-size: 10px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+
+.cufe-hash {
+  font-size: 10px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+}
+
+
+/* ── Credit notes section ── */
+.invoice-detail__credit-notes {
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.credit-notes__header {
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, .06);
+  border-bottom: 1px solid rgba(239, 68, 68, .2);
+}
+
+.credit-notes__header h4 {
+  margin: 0;
+  font-size: var(--text-sm, 13px);
+  font-weight: 700;
+  color: var(--danger);
+}
+
+
+/* ── Credit note form ── */
+.credit-note-form {
+  padding: 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.credit-note-form__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.credit-note-form__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: var(--text-sm, 13px);
+  color: var(--danger);
+}
+
+.credit-note-form__body { display: flex; flex-direction: column; gap: 14px; }
+
+.credit-note-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Compact input for CN qty cells */
+.form-control--compact {
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-xs, 6px) !important;
+  padding: 2px 6px !important;
+  height: 28px !important;
+  font-size: var(--text-sm, 13px) !important;
+  outline: none;
+  transition: border-color 0.0001s ease;
+  max-width: 60% !important;
+}
+
+/* Fuerza a que el contenedor de metadatos ordene las tarjetas verticalmente */
+.invoice-detail__meta-grid .flex-column {
+  display: flex !important;
+  flex-direction: column !important; /* Fuerza la disposición vertical (una arriba y otra abajo) */
+  gap: 12px !important;              /* Espacio limpio de separación entre observaciones y CUFE */
+}
+
+/* Reparte el espacio a la mitad (50%) exacta para cada tarjeta con diseño compacto */
+.invoice-detail__meta-grid > div:first-child .info-card {
+  flex: 1 !important;                         /* Siguen midiendo lo mismo que la de totales */
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;     /* Alinea el texto arriba pegado al título */
+  padding: 6px 10px !important;              /* Reduce el padding para ganar espacio vertical */
+  gap: 0px !important;                        /* Reduce la separación entre título y texto */
+}
+
+/* ── DIAN timeline ── */
+.dian-timeline {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dian-timeline__item {
+  display: flex;
+  gap: 10px;
+  font-size: var(--text-xs, 12px);
+}
+
+.dian-timeline__icon { margin-top: 1px; flex-shrink: 0; }
+
+.dian-timeline__content { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+
+.dian-timeline__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.dian-timeline__message { margin: 0; color: var(--text-secondary); }
+
+/* ==========================================================================
+   Responsive: Mobile (≤ 600px)
+   ========================================================================== */
+@media (max-width: 600px) {
+  /* Drawer takes full width */
+  .invoice-drawer {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Reduce body padding */
+  .invoice-drawer__body {
+    padding: 16px;
+  }
+
+  /* Header compact */
+  .invoice-drawer__header {
+    padding: 14px 16px 12px;
+  }
+
+  /* Action buttons: stack on very narrow screens */
+  .invoice-detail__actions {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Totals card fit */
+  .totals-card {
+    padding: 12px;
+  }
+
+  /* Table horizontal scroll */
+  .invoice-detail__items-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .invoice-table--items {
+    min-width: 500px;
+  }
+}
+

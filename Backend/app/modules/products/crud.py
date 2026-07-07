@@ -18,8 +18,9 @@ async def get_products(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 50,
-    category: str | None = None,
+    category_id: uuid.UUID | None = None,
     status: str | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> list[Product]:
     """
     Retrieve paginated products with optional filtering.
@@ -28,18 +29,21 @@ async def get_products(
         db: Active async database session.
         skip: Number of records to skip (offset).
         limit: Maximum number of products to return.
-        category: Optional category filter.
+        category_id: Optional category ID filter.
         status: Optional status filter.
+        user_id: Optional user ID filter to get products created by a specific user.
 
     Returns:
         List of ``Product`` instances ordered by created_at descending.
     """
     stmt = select(Product).order_by(Product.created_at.desc()).offset(skip).limit(limit)
 
-    if category:
-        stmt = stmt.where(Product.category == category)
+    if category_id:
+        stmt = stmt.where(Product.category_id == category_id)
     if status:
         stmt = stmt.where(Product.status == status)
+    if user_id:
+        stmt = stmt.where(Product.user_id == user_id)
 
     result = await db.execute(stmt)
     return list(result.scalars().all())
@@ -52,13 +56,14 @@ async def get_product(db: AsyncSession, product_id: uuid.UUID) -> Product | None
     return result.scalar_one_or_none()
 
 
-async def create_product(db: AsyncSession, product_in: ProductCreate) -> Product:
+async def create_product(db: AsyncSession, product_in: ProductCreate, user_id: uuid.UUID) -> Product:
     """
     Create a new product.
 
     Args:
         db: Active async database session.
         product_in: Validated product creation payload.
+        user_id: ID of the user creating the product.
 
     Returns:
         The newly created ``Product`` instance.
@@ -66,12 +71,13 @@ async def create_product(db: AsyncSession, product_in: ProductCreate) -> Product
     db_product = Product(
         name=product_in.name,
         description=product_in.description,
-        category=product_in.category,
+        category_id=product_in.category_id,
         price=product_in.price,
         stock=product_in.stock,
         status=product_in.status,
         image_url=product_in.image_url,
         video_url=product_in.video_url,
+        user_id=user_id,
     )
     db.add(db_product)
     await db.commit()

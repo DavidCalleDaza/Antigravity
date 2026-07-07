@@ -12,6 +12,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.locations.schemas import LocationCreate, LocationResponse
+
 
 class UserRole(str, Enum):
     """Allowed user roles for role-based access control."""
@@ -61,6 +63,7 @@ class UserBase(BaseModel):
             examples=["client"],
         ),
     ]
+    location: Annotated[LocationCreate | None, Field(default=None)] = None
 
 
 # ── Request Schemas ──────────────────────────────────────────────────────────
@@ -146,6 +149,7 @@ class UserUpdate(BaseModel):
             description="Activate or deactivate the user.",
         ),
     ]
+    location: Annotated[LocationCreate | None, Field(default=None)] = None
 
 
 class UserUpdateMe(BaseModel):
@@ -176,6 +180,7 @@ class UserUpdateMe(BaseModel):
             max_length=500,
         ),
     ]
+    location: Annotated[LocationCreate | None, Field(default=None)] = None
 
 
 # ── Response Schemas ─────────────────────────────────────────────────────────
@@ -207,3 +212,4 @@ class UserResponse(UserBase):
         str | None,
         Field(description="URL of the user's avatar image.", default=None),
     ]
+    location: Annotated[LocationResponse | None, Field(default=None)] = None

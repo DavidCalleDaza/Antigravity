@@ -37,14 +37,14 @@ logger = logging.getLogger(__name__)
 async def list_products(
     skip: Annotated[int, Query(description="Número de registros a omitir.", ge=0)] = 0,
     limit: Annotated[int, Query(description="Máximo de productos a retornar.", ge=1, le=100)] = 50,
-    category: Annotated[str | None, Query(description="Filtrar por categoría.")] = None,
+    category_id: Annotated[uuid.UUID | None, Query(description="Filtrar por ID de categoría (UUID).")] = None,
     status: Annotated[str | None, Query(description="Filtrar por estado.")] = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[ProductResponse]:
     try:
-        logger.info(f"Fetching products: skip={skip}, limit={limit}, category={category}, status={status}")
-        products = await get_products(db, skip=skip, limit=limit, category=category, status=status)
+        logger.info(f"Fetching products: skip={skip}, limit={limit}, category_id={category_id}, status={status}, user_id={current_user.id}")
+        products = await get_products(db, skip=skip, limit=limit, category_id=category_id, status=status, user_id=current_user.id)
         logger.info(f"Found {len(products)} products")
         return [ProductResponse.model_validate(p) for p in products]
     except Exception as e:
@@ -63,8 +63,8 @@ async def create_new_product(
     current_user: User = Depends(get_current_user),
 ) -> ProductResponse:
     try:
-        logger.info(f"Creating product: {product_in.name}, category={product_in.category}, price={product_in.price}")
-        product = await create_product(db, product_in)
+        logger.info(f"Creating product: {product_in.name}, category_id={product_in.category_id}, price={product_in.price}")
+        product = await create_product(db, product_in, current_user.id)
         logger.info(f"Product created successfully with id={product.id}")
         return ProductResponse.model_validate(product)
     except Exception as e:
@@ -124,5 +124,4 @@ async def delete_existing_product(
     if video_url:
         filename = video_url.split("/")[-1]
         background_tasks.add_task(schedule_file_cleanup, filename)
-
     return None

@@ -581,6 +581,11 @@
   }
 
   .modal { margin: var(--space-4); }
+
+  /* Compensation for Bottom Navbar */
+  .page-content {
+    padding-bottom: 92px !important;
+  }
 }
 
 @media (max-width: 480px) {

@@ -1072,3 +1072,18 @@ main .btn-success svg,
 .card .btn-success svg {
   color: inherit;
 }
+
+/* ── Toast Notifications Responsive ── */
+@media (max-width: 480px) {
+  .toast-container {
+    left: var(--space-4);
+    right: var(--space-4);
+    width: auto;
+  }
+  .toast {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+

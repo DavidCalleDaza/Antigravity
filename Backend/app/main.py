@@ -23,6 +23,7 @@ from app.modules.categories.router import router as categories_router
 from app.modules.services.router import router as services_router
 from app.modules.social.router import router as social_router
 from app.modules.billing.router import router as billing_router
+from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
 
 from app.db.base import Base
@@ -69,7 +70,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=[
+        "https://servinow.vercel.app",
+        *settings.CORS_ORIGINS
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,6 +83,15 @@ app.add_middleware(
 # ── Exception Handlers ──────────────────────────────────────────────────────
 
 register_exception_handlers(app)
+
+
+# ── Ngrok Skip Browser Warning Middleware ────────────────────────────────────
+
+@app.middleware("http")
+async def add_ngrok_skip_header(request, call_next):
+    response = await call_next(request)
+    response.headers["ngrok-skip-browser-warning"] = "true"
+    return response
 
 
 # ── Routers ──────────────────────────────────────────────────────────────────
@@ -131,8 +144,15 @@ app.include_router(
     tags=["Uploads"],
 )
 
+app.include_router(
+    locations_router,
+    prefix="/api/v1/locations",
+    tags=["Locations"],
+)
+
 
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
+app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")
 
 
 # ── Health Check ─────────────────────────────────────────────────────────────

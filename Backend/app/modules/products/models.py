@@ -28,6 +28,7 @@ class Product(Base):
         status: Product availability status (active, inactive, out_of_stock).
         image_url: Optional URL to product image.
         video_url: Optional URL to product video.
+        user_id: ID of the user who created the product.
         created_at: Timestamp of creation (server-side default).
         updated_at: Timestamp of last update.
     """
@@ -60,6 +61,12 @@ class Product(Base):
     )
     image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     video_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        comment="Usuario que creó el producto",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

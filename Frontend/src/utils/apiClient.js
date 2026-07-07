@@ -12,7 +12,11 @@ class ApiError extends Error {
 
 class ApiClient {
   constructor(baseUrl) {
-    this.baseUrl = baseUrl;
+    let cleanUrl = baseUrl ? baseUrl.replace(/\/+$/, '') : '';
+    if (cleanUrl && !cleanUrl.endsWith('/api/v1')) {
+      cleanUrl = `${cleanUrl}/api/v1`;
+    }
+    this.baseUrl = cleanUrl;
   }
 
   async request(endpoint, options = {}) {
@@ -213,6 +217,7 @@ export const serviceClient = {
 
 export const socialClient = {
   listAccounts: () => apiClient.get('/social/accounts'),
+  getAuthorizeUrl: (platform) => apiClient.get(`/social/authorize/${platform}`),
   publish: (data) => apiClient.post('/social/publish', data),
   listPosts: () => apiClient.get('/social/posts'),
   deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
@@ -239,15 +244,12 @@ export const billingClient = {
   markPaid: (id) => apiClient.post(`/billing/invoices/${id}/mark-paid`),
 
   // PDF & DIAN
-  // @deprecated: no envía el header de autenticación (window.open no lo permite).
-  // Se conserva solo por compatibilidad; usar downloadInvoicePDF() en su lugar.
   getInvoicePDFUrl: (id) => `${SERVER_BASE_URL}/api/v1/billing/invoices/${id}/download`,
-  // Descarga el PDF autenticado como Blob, listo para guardar en disco.
   downloadInvoicePDF: (id) => apiClient.getBlob(`/billing/invoices/${id}/download`),
   sendToDian: (id) => apiClient.post(`/billing/invoices/${id}/send-dian`),
   getDianStatus: (id) => apiClient.get(`/billing/invoices/${id}/dian-status`),
 
-  //Send Invoice Email
+  // Send Invoice Email
   sendInvoiceEmail: (id) => apiClient.post(`/billing/invoices/${id}/send-email`),
 
   // Credit Notes
@@ -272,8 +274,16 @@ export const billingClient = {
   },
 };
 
-// 
 export const categoryClient = {
   list: (entityType = 'product') =>
     apiClient.get(`/categories?entity_type=${entityType}`),
+  create: (data) =>
+    apiClient.post('/categories', data),
+};
+
+export const locationClient = {
+  getNeighborhoods: (cityIdentifier) => 
+    apiClient.get(`/locations/neighborhoods/${encodeURIComponent(cityIdentifier)}`),
+  createNeighborhood: (data) => 
+    apiClient.post('/locations/neighborhoods', data),
 };

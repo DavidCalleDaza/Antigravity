@@ -32,6 +32,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
+from app.modules.locations.models import Location
 
 
 # —— Customers ————————————————————————————————————————————————————————————————
@@ -75,13 +76,10 @@ class Customer(Base):
         String(30), nullable=True, unique=True, index=True,
         comment="Número de contacto telefónico único"
     )
-    address: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    department: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    country_code: Mapped[str] = mapped_column(
-        # ✅ CAMBIO 1: CHAR(2) para coincidir con el estándar ISO 3166-1 alpha-2
-        CHAR(2), nullable=False, default="CO", server_default="CO",
+    location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL"), nullable=True,
     )
+    location: Mapped["Location"] = relationship()
     tax_regime: Mapped[str] = mapped_column(
         String(50), nullable=False, default="Simplificado", server_default="Simplificado",
         comment="Régimen tributario: Simplificado, Común, Gran Contribuyente",

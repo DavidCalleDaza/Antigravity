@@ -12,6 +12,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.modules.locations.schemas import LocationCreate, LocationResponse
+
 
 # —— Constantes ENUM (espejo de los tipos PostgreSQL) —————————————————————————
 
@@ -47,11 +49,7 @@ class CustomerBase(BaseModel):
     trade_name: Annotated[str | None, Field(None, description="Nombre comercial.", max_length=255)]
     email: Annotated[str, Field(..., description="Email de contacto.", max_length=255)]
     phone: Annotated[str | None, Field(None, description="Teléfono.", max_length=30)]
-    address: Annotated[str | None, Field(None, description="Dirección.", max_length=255)]
-    city: Annotated[str | None, Field(None, description="Ciudad.", max_length=100)]
-    department: Annotated[str | None, Field(None, description="Departamento.", max_length=100)]
-    # max_length=2 consistente con CHAR(2) en DB y modelo ORM
-    country_code: Annotated[str, Field(default="CO", max_length=2)]
+    location: Annotated[LocationCreate | None, Field(None, description="Ubicación.")]
     tax_regime: Annotated[
         str, Field(default="Simplificado", description="Régimen tributario.", max_length=50)
     ]
@@ -75,9 +73,7 @@ class CustomerUpdate(BaseModel):
     trade_name: Annotated[str | None, Field(None, max_length=255)] = None
     email: Annotated[str | None, Field(None, max_length=255)] = None
     phone: Annotated[str | None, Field(None, max_length=30)] = None
-    address: Annotated[str | None, Field(None, max_length=255)] = None
-    city: Annotated[str | None, Field(None, max_length=100)] = None
-    department: Annotated[str | None, Field(None, max_length=100)] = None
+    location: Annotated[LocationCreate | None, Field(None)] = None
     tax_regime: Annotated[str | None, Field(None, max_length=50)] = None
     is_tax_responsible: Annotated[bool | None, Field(None)] = None
     is_active: Annotated[bool | None, Field(None)] = None
@@ -95,6 +91,7 @@ class CustomerResponse(CustomerBase):
     is_active: bool
     created_at: datetime
     updated_at: datetime | None = None
+    location: LocationResponse | None = None
 
 
 # —— Invoice Item Schemas —————————————————————————————————————————————————————

@@ -1,0 +1,6 @@
+# Set default behavior
+* text=auto
+
+# Enforce LF line endings for shell scripts and Docker entrypoints
+*.sh text eol=lf
+Backend/entrypoint.sh text eol=lf

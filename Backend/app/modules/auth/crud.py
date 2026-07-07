@@ -8,6 +8,7 @@ dependency system and return ORM model instances.
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.security import hash_password
 from app.modules.auth.models import User
@@ -25,14 +26,14 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     Returns:
         The ``User`` instance if found, or ``None``.
     """
-    stmt = select(User).where(User.email == email)
+    stmt = select(User).options(selectinload(User.location)).where(User.email == email)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
 
 async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
     """Retrieve a user by their UUID."""
-    stmt = select(User).where(User.id == user_id)
+    stmt = select(User).options(selectinload(User.location)).where(User.id == user_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -76,10 +77,19 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
     Returns:
         The updated ``User`` instance.
     """
-    update_data = user_in.model_dump(exclude_unset=True)
+    update_data = user_in.model_dump(exclude_unset=True, exclude={"location"})
     for field, value in update_data.items():
         if value is not None:
             setattr(user, field, value)
+            
+    if user_in.location is not None:
+        from app.modules.locations.models import Location
+        if user.location:
+            for k, v in user_in.location.model_dump(exclude_unset=True).items():
+                setattr(user.location, k, v)
+        else:
+            user.location = Location(**user_in.location.model_dump())
+
     await db.commit()
     await db.refresh(user)
     return user

@@ -19,11 +19,13 @@ from app.modules.auth.models import User
 from app.modules.services.crud import (
     create_service,
     delete_service,
+    get_categories,
     get_service,
     get_services,
     update_service,
 )
 from app.modules.services.schemas import (
+    ServiceCategoryResponse,
     ServiceCreate,
     ServiceResponse,
     ServiceUpdate,
@@ -33,6 +35,16 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+@router.get("/categories", response_model=list[ServiceCategoryResponse], status_code=status.HTTP_200_OK)
+async def list_categories(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[ServiceCategoryResponse]:
+    """List all service categories."""
+    categories = await get_categories(db)
+    return [ServiceCategoryResponse.model_validate(c) for c in categories]
+
+
 @router.get("", response_model=list[ServiceResponse], status_code=status.HTTP_200_OK)
 async def list_services(
     skip: Annotated[int, Query(description="Número de registros a omitir.", ge=0)] = 0,
@@ -40,11 +52,11 @@ async def list_services(
     category_id: Annotated[uuid.UUID | None, Query(description="Filtrar por categoría ID.")] = None,
     status: Annotated[str | None, Query(description="Filtrar por estado.")] = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> list[ServiceResponse]:
     services = []
     try:
-        services = await get_services(db, skip=skip, limit=limit, category_id=category_id, status=status)
+        services = await get_services(db, skip=skip, limit=limit, category_id=category_id, status=status, user_id=current_user.id)
         return [ServiceResponse.model_validate(s) for s in services]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -56,7 +68,7 @@ async def create_new_service(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ServiceResponse:
-    service = await create_service(db, service_in)
+    service = await create_service(db, service_in, current_user.id)
     return ServiceResponse.model_validate(service)
 
 

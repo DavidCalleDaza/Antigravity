@@ -10,9 +10,16 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-#from app.modules.services.models import Service, ServiceCategory
-from app.modules.services.models import Service
+from app.modules.services.models import Service, ServiceCategory
 from app.modules.services.schemas import ServiceCreate, ServiceUpdate
+
+
+async def get_categories(db: AsyncSession) -> list[ServiceCategory]:
+    """Retrieve all service categories ordered by name."""
+    stmt = select(ServiceCategory).order_by(ServiceCategory.name)
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
 
 async def get_services(
     db: AsyncSession,
@@ -20,6 +27,7 @@ async def get_services(
     limit: int = 50,
     category_id: uuid.UUID | None = None,
     status: str | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> list[Service]:
     """
     Retrieve paginated services with optional filtering.
@@ -30,6 +38,7 @@ async def get_services(
         limit: Maximum number of services to return.
         category_id: Optional category ID filter.
         status: Optional status filter.
+        user_id: Optional user ID filter to get services created by a specific user.
 
     Returns:
         List of ``Service`` instances ordered by created_at descending.
@@ -40,6 +49,8 @@ async def get_services(
         stmt = stmt.where(Service.category_id == category_id)
     if status:
         stmt = stmt.where(Service.status == status)
+    if user_id:
+        stmt = stmt.where(Service.user_id == user_id)
 
     result = await db.execute(stmt)
     return list(result.scalars().all())
@@ -52,13 +63,14 @@ async def get_service(db: AsyncSession, service_id: uuid.UUID) -> Service | None
     return result.scalar_one_or_none()
 
 
-async def create_service(db: AsyncSession, service_in: ServiceCreate) -> Service:
+async def create_service(db: AsyncSession, service_in: ServiceCreate, user_id: uuid.UUID) -> Service:
     """
     Create a new service.
 
     Args:
         db: Active async database session.
         service_in: Validated service creation payload.
+        user_id: ID of the user creating the service.
 
     Returns:
         The newly created ``Service`` instance.
@@ -72,6 +84,7 @@ async def create_service(db: AsyncSession, service_in: ServiceCreate) -> Service
         status=service_in.status,
         image_url=service_in.image_url,
         video_url=service_in.video_url,
+        user_id=user_id,
     )
     db.add(db_service)
     await db.commit()

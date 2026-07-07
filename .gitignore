@@ -46,3 +46,15 @@ htmlcov/
 *.swo
 *.sublime-project
 *.sublime-workspace
+
+# --- Uploads / Dynamic Media ---
+Backend/uploads/
+.env
+Backend/.env
+.env
+Backend/.env
+Backend/.env
+.env
+Backend/.env
+Backend/.env
+Backend/uploads/

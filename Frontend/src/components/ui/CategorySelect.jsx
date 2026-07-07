@@ -151,13 +151,19 @@ export default function CategorySelect({ value, onChange, entityType, categories
                 Nueva Categoría
               </button>
             ) : (
-              <form onSubmit={handleCreateCategory} className="category-select-create-form">
+              <div className="category-select-create-form">
                 <input
                   type="text"
                   className="form-input category-select-create-input"
                   placeholder="Nombre de categoría..."
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCreateCategory(e);
+                    }
+                  }}
                   disabled={creating}
                   autoFocus
                 />
@@ -176,14 +182,15 @@ export default function CategorySelect({ value, onChange, entityType, categories
                     Cancelar
                   </button>
                   <button
-                    type="submit"
+                    type="button"
                     className="btn btn-primary btn-sm"
+                    onClick={handleCreateCategory}
                     disabled={creating || !newCategoryName.trim()}
                   >
                     {creating ? <Loader2 width="14" height="14" className="spin" /> : 'Crear'}
                   </button>
                 </div>
-              </form>
+              </div>
             )}
           </div>
         </div>

@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from app.db.session import get_db
 from app.modules.locations.models import Neighborhood
@@ -15,20 +15,20 @@ router = APIRouter()
     summary="Get neighborhoods by city",
     description="Returns a list of neighborhoods for the specified city, ordered alphabetically."
 )
-def get_neighborhoods(
+async def get_neighborhoods(
     city_identifier: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Retrieve all neighborhoods associated with a specific city.
     Uses case-insensitive matching for the city identifier.
     """
-    neighborhoods = (
-        db.query(Neighborhood)
+    result = await db.execute(
+        select(Neighborhood)
         .filter(func.lower(Neighborhood.city_identifier) == city_identifier.lower())
         .order_by(Neighborhood.name)
-        .all()
     )
+    neighborhoods = result.scalars().all()
     return neighborhoods
 
 @router.post(
@@ -38,19 +38,22 @@ def get_neighborhoods(
     summary="Add a new neighborhood",
     description="Registers a new custom neighborhood for a city. It is saved as unverified."
 )
-def create_neighborhood(
+async def create_neighborhood(
     neighborhood_in: NeighborhoodCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a new neighborhood.
     By default, is_verified will be set to False since this is user-submitted.
     """
     # Check if it already exists (case-insensitive for both city and name)
-    existing = db.query(Neighborhood).filter(
-        func.lower(Neighborhood.city_identifier) == neighborhood_in.city_identifier.lower(),
-        func.lower(Neighborhood.name) == neighborhood_in.name.lower()
-    ).first()
+    result = await db.execute(
+        select(Neighborhood).filter(
+            func.lower(Neighborhood.city_identifier) == neighborhood_in.city_identifier.lower(),
+            func.lower(Neighborhood.name) == neighborhood_in.name.lower()
+        )
+    )
+    existing = result.scalars().first()
 
     if existing:
         return existing
@@ -62,7 +65,7 @@ def create_neighborhood(
     )
     
     db.add(db_obj)
-    db.commit()
-    db.refresh(db_obj)
+    await db.commit()
+    await db.refresh(db_obj)
     
     return db_obj

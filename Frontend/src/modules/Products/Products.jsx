@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, List, Grid3X3, PackageX, ShoppingCart } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
@@ -49,6 +50,28 @@ export default function Products() {
   const [shareModal, setShareModal] = useState({ isOpen: false, item: null });
 
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle OAuth callback redirect status
+  useEffect(() => {
+    const socialStatus = searchParams.get('social_status');
+    const platform = searchParams.get('platform');
+    const detail = searchParams.get('detail');
+
+    if (socialStatus === 'success') {
+      toast.success(`¡Cuenta de ${platform || 'red social'} conectada exitosamente!`);
+    } else if (socialStatus === 'error') {
+      toast.error(`Error al conectar ${platform || 'red social'}: ${detail || 'desconocido'}`);
+    }
+
+    // Clean up query params so they don't reappear on refresh
+    if (socialStatus) {
+      searchParams.delete('social_status');
+      searchParams.delete('platform');
+      searchParams.delete('detail');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { upload, uploading, progress, preview, reset, validateFile } = useFileUpload({
     onSuccess: (data) => {

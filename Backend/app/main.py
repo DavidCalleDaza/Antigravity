@@ -184,3 +184,8 @@ async def health_check() -> HealthCheckResponse:
         db_ok = False
 
     return HealthCheckResponse(status="ok", db_connection=db_ok)
+
+@app.get("/tiktok{verification_id}.txt", include_in_schema=False)
+async def tiktok_verify_dynamic(verification_id: str):
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(f"tiktok-developers-site-verification={verification_id}")

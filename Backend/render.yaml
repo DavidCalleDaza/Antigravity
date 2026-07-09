@@ -1,0 +1,34 @@
+# ============================================
+# Servinow Backend — Render Blueprint
+# ============================================
+# Docs: https://docs.render.com/blueprint-spec
+
+services:
+  - type: web
+    name: servinow-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: CORS_ORIGINS
+        sync: false  # Set manually with your Vercel URL
+      - key: FRONTEND_URL
+        sync: false  # Set manually with your Vercel URL
+      - key: APP_NAME
+        value: Servinow API
+      - key: APP_VERSION
+        value: 0.1.0
+      - key: DEBUG
+        value: "False"
+      - key: ENVIRONMENT
+        value: production

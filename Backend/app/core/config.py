@@ -18,12 +18,17 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore"
     )
 
     # --- Application ---
     APP_NAME: str = "Servinow API"
+    PROJECT_NAME: str = "Servinow V9"
     APP_VERSION: str = "0.1.0"
-    DEBUG: bool = True
+    API_V1_STR: str = "/api/v1"
+    PORT: int = 8000
+    DEBUG: bool = False
+    ENVIRONMENT: str = "production"  # "development" | "production"
 
     # --- Database ---
     POSTGRES_USER: str = "servinow_user"
@@ -31,6 +36,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "servinow_db"
     POSTGRES_HOST: str = "db"
     POSTGRES_PORT: int = 5432
+    postgres_host_port: int = 5432
     DATABASE_URL: str = (
         "postgresql+asyncpg://servinow_user:servinow_secret_password@db:5432/servinow_db"
     )
@@ -39,6 +45,14 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me-to-a-very-long-random-string-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    FIELD_ENCRYPTION_KEY: str = ""
+
+    @field_validator("FIELD_ENCRYPTION_KEY", mode="after")
+    @classmethod
+    def validate_field_encryption_key(cls, v: str) -> str:
+        if not v:
+            raise ValueError("FIELD_ENCRYPTION_KEY cannot be empty. Run Fernet.generate_key() to generate one.")
+        return v
 
     # --- CORS ---
     CORS_ORIGINS: List[str] = [
@@ -47,6 +61,9 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
+
+    # --- Frontend URL (for CORS in production) ---
+    FRONTEND_URL: str = ""
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -63,40 +80,31 @@ class Settings(BaseSettings):
                 return [origin.strip() for origin in value.split(",")]
         return value
 
-    # --- Billing / DIAN ---
-    COMPANY_NIT: str = "900000000"
-    COMPANY_NAME: str = "Servinow SAS"
-    COMPANY_ADDRESS: str = "Calle 1 # 1-1"
-    COMPANY_CITY: str = "Bogotá"
-    COMPANY_DEPARTMENT: str = "Cundinamarca"
-    COMPANY_PHONE: str = "+57 300 0000000"
-    COMPANY_EMAIL: str = "facturacion@servinow.co"
+    @property
+    def effective_cors_origins(self) -> List[str]:
+        """
+        Returns CORS origins, automatically including FRONTEND_URL
+        if it is set and not already in the list.
+        """
+        origins = list(self.CORS_ORIGINS)
+        if self.FRONTEND_URL and self.FRONTEND_URL not in origins:
+            origins.append(self.FRONTEND_URL)
+        return origins
 
-    DIAN_ENVIRONMENT: str = "test"  # "test" | "production"
-    DIAN_SOFTWARE_ID: str = ""
-    DIAN_SOFTWARE_PIN: str = ""
-    DIAN_TECHNICAL_KEY: str = ""
-    DIAN_CERTIFICATE_PATH: str = ""
-    DIAN_CERTIFICATE_PASSWORD: str = ""
-    DIAN_RESOLUTION_NUMBER: str = ""
-    DIAN_RESOLUTION_DATE: str = ""
-    DIAN_RESOLUTION_PREFIX: str = "SETT"
-    DIAN_RESOLUTION_RANGE_FROM: int = 1
-    DIAN_RESOLUTION_RANGE_TO: int = 5000
+    # --- Celery / Redis ---
+    REDIS_URL: str = "redis://localhost:6379/0"
 
-    # —— SMTP / Email ————————————————————————————————————————————————————————————
-    SMTP_HOST: str = ""
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_USE_TLS: bool = True
-    SMTP_FROM_EMAIL: str = ""
-    SMTP_FROM_NAME: str = "Servinow — Facturación Electrónica"
+    # --- Cloudinary ---
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
 
     # --- Social OAuth ---
     META_APP_ID: str = ""
     META_APP_SECRET: str = ""
     META_REDIRECT_URI: str = ""
+    META_API_VERSION: str = "v20.0"
+    
     TIKTOK_CLIENT_KEY: str = ""
     TIKTOK_CLIENT_SECRET: str = ""
     TIKTOK_REDIRECT_URI: str = ""

@@ -1,38 +1,40 @@
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
 import uuid
 from datetime import datetime
-from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
-
-class SocialPlatform(str, Enum):
-    TIKTOK = "tiktok"
-    INSTAGRAM = "instagram"
-    FACEBOOK = "facebook"
 
 class SocialAccountBase(BaseModel):
-    platform: SocialPlatform
-    platform_username: str | None = None
+    platform: str
+    platform_user_id: Optional[str] = None
+    platform_username: Optional[str] = None
+
+class SocialAccountCreate(SocialAccountBase):
+    access_token: str
+    refresh_token: Optional[str] = None
+    expires_at: Optional[datetime] = None
 
 class SocialAccountResponse(SocialAccountBase):
-    model_config = ConfigDict(from_attributes=True)
-    
     id: uuid.UUID
     created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class SocialPostBase(BaseModel):
-    platform: SocialPlatform
-    caption: str | None = None
-    media_url: str | None = None
-    product_id: uuid.UUID | None = None
-    service_id: uuid.UUID | None = None
+    platform: str
+    caption: Optional[str] = None
+    media_url: Optional[str] = None
+    product_id: Optional[uuid.UUID] = None
+    service_id: Optional[uuid.UUID] = None
 
 class SocialPostCreate(SocialPostBase):
     pass
 
 class SocialPostResponse(SocialPostBase):
-    model_config = ConfigDict(from_attributes=True)
-    
     id: uuid.UUID
     status: str
-    published_at: datetime | None = None
-    error_message: str | None = None
+    platform_post_id: Optional[str] = None
+    error_message: Optional[str] = None
+    published_at: Optional[datetime] = None
     created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)

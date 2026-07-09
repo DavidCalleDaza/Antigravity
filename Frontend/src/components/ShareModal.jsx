@@ -18,7 +18,9 @@ function buildShareText(item) {
   const desc = item.description
     ? (item.description.length > 100 ? item.description.slice(0, 97) + '...' : item.description)
     : '';
-  return `✨ ${item.name} - ${item.category}${desc ? '\n\n' + desc : ''}\n\n💰 Precio: $${Number(item.price).toLocaleString('es-CO')}\n\n¡Contáctanos para más información!`;
+  const categoryText = item.category || '';
+  const nameAndCategory = categoryText ? `${item.name} - ${categoryText}` : item.name;
+  return `✨ ${nameAndCategory}${desc ? '\n\n' + desc : ''}\n\n💰 Precio: $${Number(item.price || 0).toLocaleString('es-CO')}\n\n¡Contáctanos para más información!`;
 }
 
 // handlePublish ya no se utiliza directamente ya que ahora publicamos vía el backend.
@@ -134,7 +136,8 @@ export default function ShareModal({
            platform: platform,
            caption: shareText,
            media_url: item?.imageUrl || item?.image_url || '',
-           product_id: item?.id
+           product_id: item?.stock !== undefined ? item?.id : null,
+           service_id: item?.duration !== undefined ? item?.id : null
          });
       }
       if (onPublish) {

@@ -199,6 +199,10 @@ async def health_check() -> HealthCheckResponse:
 
     return HealthCheckResponse(status="ok", db_connection=db_ok)
 
+@app.get("/", include_in_schema=False)
+async def root():
+    return {"message": "Servinow API is running"}
+
 @app.get("/tiktok{verification_id}.txt", include_in_schema=False)
 async def tiktok_verify_dynamic(verification_id: str):
     from fastapi.responses import PlainTextResponse

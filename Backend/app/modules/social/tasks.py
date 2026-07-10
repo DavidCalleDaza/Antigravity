@@ -26,6 +26,7 @@ async def _publish_async(
     platform: str,
     local_path: str,
     caption: str,
+    is_ai_generated: bool = False,
 ):
     post_id = uuid.UUID(post_id_str)
     user_id = uuid.UUID(user_id_str)
@@ -151,10 +152,11 @@ def publish_to_social_task(
     platform: str,
     local_path: str,
     caption: str,
+    is_ai_generated: bool = False,
 ):
     """
     Celery task to publish content to social platforms in the background.
     """
     return asyncio.run(
-        _publish_async(post_id_str, user_id_str, platform, local_path, caption)
+        _publish_async(post_id_str, user_id_str, platform, local_path, caption, is_ai_generated)
     )

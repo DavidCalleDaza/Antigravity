@@ -30,3 +30,4 @@ from app.modules.billing.models import (
     CreditNoteItem,
     DianEvent,
 )  # noqa: F401
+from app.modules.ai.models import AiGenerationTask  # noqa: F401

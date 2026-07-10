@@ -297,3 +297,9 @@ export const locationClient = {
   createNeighborhood: (data) => 
     apiClient.post('/locations/neighborhoods', data),
 };
+
+export const aiClient = {
+  generateCopy: (data) => apiClient.post('/ai/generate-copy', data),
+  generateVideo: (data) => apiClient.post('/ai/generate-video', data),
+  getTaskStatus: (taskId) => apiClient.get(`/ai/task/${taskId}`),
+};

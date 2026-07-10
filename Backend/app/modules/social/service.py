@@ -84,7 +84,7 @@ async def exchange_tiktok_code(code: str, redirect_uri: str) -> dict:
 # ── Content Publishing ──────────────────────────────────────────────────────
 
 
-async def publish_to_meta(access_token: str, local_image_path: str, caption: str) -> dict:
+async def publish_to_meta(access_token: str, local_image_path: str, caption: str, is_ai_generated: bool = False) -> dict:
     """
     Publish a photo to a Facebook Page using multipart/form-data upload.
     Facebook Photos API accepts direct file upload — no Cloudinary needed.
@@ -115,6 +115,8 @@ async def publish_to_meta(access_token: str, local_image_path: str, caption: str
         # Use page access token (not user token) for publishing to the page
         page_access_token = page.get("access_token", access_token)
 
+        logger.info(f"Publishing to Meta Page {page_id}. AI Generated: {is_ai_generated}")
+        
         # Upload photo to the page
         with open(abs_path, "rb") as f:
             post_resp = await client.post(
@@ -135,7 +137,7 @@ async def publish_to_meta(access_token: str, local_image_path: str, caption: str
         return post_data
 
 
-async def publish_to_instagram(access_token: str, image_url: str, caption: str, ig_user_id: str) -> dict:
+async def publish_to_instagram(access_token: str, image_url: str, caption: str, ig_user_id: str, is_ai_generated: bool = False) -> dict:
     """
     Publish a photo to Instagram using the Instagram Graph API (2-step process).
 
@@ -149,6 +151,7 @@ async def publish_to_instagram(access_token: str, image_url: str, caption: str, 
         ig_user_id: The Instagram Business Account ID.
     """
     async with httpx.AsyncClient(timeout=60.0) as client:
+        logger.info(f"Publishing to Instagram {ig_user_id}. AI Generated: {is_ai_generated}")
         # Step 1: Create a media container
         container_resp = await client.post(
             f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
@@ -190,7 +193,7 @@ async def publish_to_instagram(access_token: str, image_url: str, caption: str, 
         return publish_data
 
 
-async def publish_to_tiktok(access_token: str, local_image_path: str, caption: str, public_image_url: str = None) -> dict:
+async def publish_to_tiktok(access_token: str, local_image_path: str, caption: str, public_image_url: str = None, is_ai_generated: bool = False) -> dict:
     """
     Publish a photo or video to TikTok using the Content Posting API.
     """
@@ -205,6 +208,7 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
     async with httpx.AsyncClient(timeout=60.0) as client:
         if is_video:
             # Video upload flow
+            logger.info(f"Publishing Video to TikTok. AI Generated: {is_ai_generated}")
             init_resp = await client.post(
                 "https://open.tiktokapis.com/v2/post/publish/video/init/",
                 headers={
@@ -218,6 +222,7 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
                         "disable_duet": False,
                         "disable_comment": False,
                         "disable_stitch": False,
+                        "aigc_info": {"aigc_label_type": "AIGC_GENERATED"} if is_ai_generated else {}
                     },
                     "source_info": {
                         "source": "FILE_UPLOAD",
@@ -256,6 +261,7 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
 
         else:
             # Photo upload flow — TikTok Content Posting API for photos
+            logger.info(f"Publishing Photo to TikTok. AI Generated: {is_ai_generated}")
             init_resp = await client.post(
                 "https://open.tiktokapis.com/v2/post/publish/content/init/",
                 headers={
@@ -267,6 +273,7 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
                         "title": caption[:80] + "..." if len(caption) > 80 else caption,
                         "description": caption,
                         "privacy_level": "SELF_ONLY",
+                        "aigc_info": {"aigc_label_type": "AIGC_GENERATED"} if is_ai_generated else {}
                     },
                     "source_info": {
                         "source": "PULL_FROM_URL",

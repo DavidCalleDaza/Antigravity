@@ -86,3 +86,4 @@ class SocialPost(Base):
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_ai_generated: Mapped[bool] = mapped_column(default=False, nullable=False, server_default="false")

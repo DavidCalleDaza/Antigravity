@@ -109,6 +109,13 @@ class Settings(BaseSettings):
     TIKTOK_CLIENT_SECRET: str = ""
     TIKTOK_REDIRECT_URI: str = ""
 
+    # --- AI Generation (Testing Phase) ---
+    GEMINI_API_KEY: str = ""
+    GOOGLE_CLOUD_PROJECT: str = ""
+    GOOGLE_CLOUD_LOCATION: str = "global"
+    GCS_VIDEO_BUCKET: str = "servinow-ai-video-dev"
+    AI_VIDEO_DAILY_LIMIT: int = 50
+
 
 # Singleton instance — importable across the application.
 settings = Settings()

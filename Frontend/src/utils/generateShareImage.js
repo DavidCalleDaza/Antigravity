@@ -1,3 +1,6 @@
+import { SERVER_BASE_URL } from './apiClient';
+import Helpers from './helpers';
+
 export async function generateShareImage({ imageUrl, name, price, category }) {
   const canvas = document.createElement('canvas');
   canvas.width  = 1080;
@@ -9,7 +12,9 @@ export async function generateShareImage({ imageUrl, name, price, category }) {
 
   if (imageUrl) {
     try {
-      const img = await loadImage(imageUrl);
+      let finalUrl = Helpers.resolveMediaUrl(imageUrl);
+      finalUrl += (finalUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`;
+      const img = await loadImage(finalUrl);
       const targetH = 756;
       const scale   = Math.min(1080 / img.width, targetH / img.height);
       const w = img.width  * scale;

@@ -329,6 +329,7 @@ async def publish_content(
         platform=post_in.platform,
         local_path=local_path,
         caption=post_in.caption or "",
+        is_ai_generated=post_in.is_ai_generated,
     )
 
     return db_post

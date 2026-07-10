@@ -42,6 +42,7 @@ class SocialPostBase(BaseModel):
     media_url: Optional[str] = None
     product_id: Optional[uuid.UUID] = None
     service_id: Optional[uuid.UUID] = None
+    is_ai_generated: bool = False
 
 class SocialPostCreate(SocialPostBase):
     pass

@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2 } from 'lucide-react';
 import { generateShareImage } from '../utils/generateShareImage';
 import { socialClient } from '../utils/apiClient';
+import AiCopyGenerator from './AI/AiCopyGenerator';
+import AiVideoGenerator from './AI/AiVideoGenerator';
 
 const NETWORKS = [
   { id: 'facebook', label: 'Facebook', Icon: Facebook },
@@ -39,6 +41,8 @@ export default function ShareModal({
   const [showInstagramPanel, setShowInstagramPanel] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [accounts, setAccounts] = useState([]);
+  const [aiVideoUrl, setAiVideoUrl] = useState(null);
+  const [isAiGeneratedPost, setIsAiGeneratedPost] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -67,6 +71,8 @@ export default function ShareModal({
       setImageBlob(null);
       setPreviewUrl(null);
       setLoadingImage(true);
+      setAiVideoUrl(null);
+      setIsAiGeneratedPost(false);
 
       generateShareImage({
         imageUrl: item.imageUrl || item.image_url,
@@ -135,9 +141,10 @@ export default function ShareModal({
          await socialClient.publish({
            platform: platform,
            caption: shareText,
-           media_url: item?.imageUrl || item?.image_url || '',
+           media_url: aiVideoUrl || item?.imageUrl || item?.image_url || '',
            product_id: item?.stock !== undefined ? item?.id : null,
-           service_id: item?.duration !== undefined ? item?.id : null
+           service_id: item?.duration !== undefined ? item?.id : null,
+           is_ai_generated: isAiGeneratedPost,
          });
       }
       if (onPublish) {
@@ -176,7 +183,11 @@ export default function ShareModal({
                   <Loader2 width={32} height={32} className="spin" />
                 </div>
               ) : previewUrl ? (
-                <img src={previewUrl} alt="Vista previa" className="share-preview-image" />
+                aiVideoUrl ? (
+                  <video src={aiVideoUrl} autoPlay loop muted playsInline className="share-preview-image" style={{ objectFit: 'cover' }} />
+                ) : (
+                  <img src={previewUrl} alt="Vista previa" className="share-preview-image" />
+                )
               ) : (
                 <div className="share-preview-placeholder">
                   <Share2 width={48} height={48} />
@@ -187,10 +198,27 @@ export default function ShareModal({
                 <span className="share-preview-price">$ {Number(item.price).toLocaleString('es-CO')}</span>
               </div>
             </div>
+            <AiVideoGenerator 
+              item={item} 
+              imageBlob={imageBlob} 
+              onVideoGenerated={(url) => {
+                setAiVideoUrl(url);
+                setIsAiGeneratedPost(true);
+              }} 
+            />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Texto para publicar</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Texto para publicar</label>
+              <AiCopyGenerator 
+                item={item} 
+                onGenerated={(text) => {
+                  setShareText(text);
+                  setIsAiGeneratedPost(true);
+                }} 
+              />
+            </div>
             <textarea
               className="form-textarea"
               value={shareText}

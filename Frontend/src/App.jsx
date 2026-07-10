@@ -10,6 +10,7 @@ import MainLayout from './components/layout/MainLayout';
 import Dashboard from './modules/Dashboard/Dashboard';
 import Products from './modules/Products/Products';
 import Services from './modules/Services/Services';
+import Categories from './modules/Categories/Categories';
 import Billing from './modules/Billing/Billing';
 import Agenda from './modules/Agenda/Agenda';
 import Wall from './modules/Wall/Wall';
@@ -37,6 +38,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/products" element={<Products />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/categories" element={<Categories allowedRoles={[ADMIN, SELLER]} />} />
             <Route path="/billing" element={<Billing allowedRoles={[ADMIN, SELLER]} />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/wall" element={<Wall />} />

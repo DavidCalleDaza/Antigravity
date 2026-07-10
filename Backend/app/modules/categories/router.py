@@ -128,3 +128,115 @@ async def create_category(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al crear la categoría."
         )
+
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    status: str | None = None
+
+@router.patch("/{category_id}", response_model=CategoryResponse, status_code=status.HTTP_200_OK)
+async def update_category(
+    category_id: uuid.UUID,
+    category_in: CategoryUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> CategoryResponse:
+    if current_user.role not in ["admin", "seller"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para editar categorías."
+        )
+
+    stmt = select(Category).where(Category.id == category_id)
+    result = await db.execute(stmt)
+    category = result.scalars().first()
+    
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Categoría no encontrada."
+        )
+
+    if category_in.name is not None:
+        name_clean = category_in.name.strip()
+        if not name_clean:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="El nombre de la categoría no puede estar vacío."
+            )
+        category.name = name_clean
+        
+        # Opcional: Actualizar el slug si cambia el nombre
+        slug_base = re.sub(r'[^a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜ]', '-', name_clean.lower())
+        slug_base = re.sub(r'-+', '-', slug_base).strip('-')
+        slug = f"{slug_base}-{category.entity_type}"
+        
+        # Verificar slug duplicado ignorando a sí mismo
+        dup_stmt = select(Category).where(Category.slug == slug, Category.id != category_id)
+        dup_res = await db.execute(dup_stmt)
+        if dup_res.scalars().first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Ya existe una categoría con el nombre '{name_clean}' para este tipo."
+            )
+        category.slug = slug
+
+    if category_in.description is not None:
+        category.description = category_in.description
+
+    if category_in.status is not None:
+        category.status = category_in.status
+
+    try:
+        await db.commit()
+        await db.refresh(category)
+        return category
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error al actualizar categoría: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor al actualizar la categoría."
+        )
+
+from sqlalchemy.exc import IntegrityError
+
+@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_category(
+    category_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role not in ["admin", "seller"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para eliminar categorías."
+        )
+
+    stmt = select(Category).where(Category.id == category_id)
+    result = await db.execute(stmt)
+    category = result.scalars().first()
+    
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Categoría no encontrada."
+        )
+
+    try:
+        await db.delete(category)
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        logger.warning(f"Intento de eliminar categoría en uso: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar la categoría porque está siendo usada por uno o más productos o servicios."
+        )
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Error al eliminar categoría: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno al eliminar la categoría."
+        )

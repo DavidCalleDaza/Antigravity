@@ -22,6 +22,7 @@ const NAV_ITEMS = [
     items: [
       { id: 'products', label: 'Productos', icon: 'Package', page: '/products', allowedRoles: [ADMIN, SELLER, CLIENT] },
       { id: 'services', label: 'Servicios', icon: 'Wrench', page: '/services', allowedRoles: [ADMIN, SELLER, CLIENT] },
+      { id: 'categories', label: 'Categorías', icon: 'Tags', page: '/categories', allowedRoles: [ADMIN, SELLER] },
       { id: 'billing', label: 'Facturación', icon: 'FileText', page: '/billing', allowedRoles: [ADMIN, SELLER] },
     ],
   },

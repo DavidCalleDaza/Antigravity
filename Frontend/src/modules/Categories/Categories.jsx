@@ -130,9 +130,9 @@ export default function Categories() {
   };
 
   const columns = [
-    { key: 'name', label: 'Nombre', sortable: true },
-    { key: 'description', label: 'Descripción', sortable: false },
-    { key: 'status', label: 'Estado', sortable: true, render: (v) => statusBadge(v) }
+    { key: 'name', label: 'Nombre', sortable: true, width: '200px' },
+    { key: 'description', label: 'Descripción', sortable: false, width: '400px' },
+    { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
   ];
 
   const tableActions = (row) => (

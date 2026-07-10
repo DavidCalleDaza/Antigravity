@@ -67,13 +67,18 @@ const Table = ({
   };
 
   const allCols = actions 
-    ? [...columns, { key: '_actions', label: 'Acciones', sortable: false }] 
+    ? [...columns, { key: '_actions', label: 'Acciones', sortable: false, width: '120px' }] 
     : columns;
 
   return (
     <div className="table-wrapper">
       <div className="table-container">
         <table className="table">
+          <colgroup>
+            {allCols.map((col, idx) => (
+              <col key={idx} style={col.width ? { width: col.width } : {}} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               {allCols.map((col, idx) => (
@@ -81,7 +86,6 @@ const Table = ({
                   key={idx}
                   className={col.sortable !== false ? 'sortable' : ''} 
                   onClick={() => col.sortable !== false && handleSort(col.key)}
-                  style={col.width ? { width: col.width } : {}}
                 >
                   {col.label}
                   {col.sortable !== false && sortConfig.key === col.key && (

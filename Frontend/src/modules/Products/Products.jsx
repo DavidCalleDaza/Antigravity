@@ -228,11 +228,11 @@ export default function Products() {
   };
 
   const columns = [
-    { key: 'name', label: 'Producto', sortable: true, width: '25%' },
-    { key: 'category', label: 'Categoría', sortable: true, width: '20%' },
-    { key: 'price', label: 'Precio', sortable: true, width: '15%', render: (v) => Helpers.formatCurrency(v) },
-    { key: 'stock', label: 'Stock', sortable: true, width: '15%' },
-    { key: 'status', label: 'Estado', sortable: true, width: '10%', render: (v) => statusBadge(v) }
+    { key: 'name', label: 'Producto', sortable: true, width: '180px' },
+    { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
+    { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
+    { key: 'stock', label: 'Stock', sortable: true, width: '90px' },
+    { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
   ];
 
   const tableActions = (row) => (

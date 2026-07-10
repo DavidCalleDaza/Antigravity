@@ -500,7 +500,7 @@ export default function Products() {
           { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
         ]}
       >
-        <p style={{ color: 'var(--text-secondary)' }}>¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.</p>
+        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.</div>
       </Modal>
 
       <ShareModal

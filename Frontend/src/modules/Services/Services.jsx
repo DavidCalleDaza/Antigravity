@@ -381,7 +381,7 @@ export default function Services() {
           { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
         ]}
       >
-        <p style={{ color: 'var(--text-secondary)' }}>¿Estás seguro de que deseas eliminar este servicio?</p>
+        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este servicio?</div>
       </Modal>
 
       <ShareModal

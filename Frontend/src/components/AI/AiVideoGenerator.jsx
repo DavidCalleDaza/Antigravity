@@ -83,14 +83,14 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
   }, [taskId, status, onVideoGenerated]);
 
   return (
-    <div style={{ marginTop: '16px', padding: '12px', borderRadius: '8px', background: 'var(--neutral-800)', border: '1px solid var(--neutral-700)' }}>
+    <div className="ai-video-card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Video width="16" height="16" />
+          <h4 className="ai-video-title">
+            <Video width="16" height="16" className="ai-video-icon" />
             Video con IA (Google Veo)
           </h4>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <p className="ai-video-desc">
             Convierte esta imagen en un video corto usando inteligencia artificial.
           </p>
         </div>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+
 import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2 } from 'lucide-react';
 import { generateShareImage } from '../utils/generateShareImage';
 import { socialClient } from '../utils/apiClient';
 import Helpers from '../utils/helpers';
 import AiCopyGenerator from './AI/AiCopyGenerator';
 import AiVideoGenerator from './AI/AiVideoGenerator';
+import Drawer from './ui/Drawer';
+import Modal from './ui/Modal';
 
 const NETWORKS = [
   { id: 'facebook', label: 'Facebook', Icon: Facebook },
@@ -44,6 +46,7 @@ export default function ShareModal({
   const [accounts, setAccounts] = useState([]);
   const [aiVideoUrl, setAiVideoUrl] = useState(null);
   const [isAiGeneratedPost, setIsAiGeneratedPost] = useState(false);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -173,20 +176,19 @@ export default function ShareModal({
 
   const hasSelected = selectedNetworks.length > 0;
 
-  return createPortal(
-    <div className="modal-overlay active" onClick={(e) => e.target.classList.contains('modal-overlay') && onClose()}>
-      <div className="modal animate-scaleUp" role="dialog" aria-modal="true">
-        <div className="modal-header">
-          <h3 className="modal-title">
-            <Share2 width="20" height="20" style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-            Publicar en redes sociales
-          </h3>
-          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
-            <X width="20" height="20" />
-          </button>
+  return (
+    <Drawer
+      isOpen={isOpen}
+      onClose={onClose}
+      position="right"
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Share2 width="20" height="20" />
+          Publicar en redes sociales
         </div>
-
-        <div className="modal-body">
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2)' }}>
           <div className="share-preview">
             <label className="form-label">Vista previa</label>
             <div className="share-preview-card">
@@ -198,7 +200,7 @@ export default function ShareModal({
                 aiVideoUrl ? (
                   <video src={aiVideoUrl} autoPlay loop muted playsInline className="share-preview-image" style={{ objectFit: 'cover' }} />
                 ) : (
-                  <img src={previewUrl} alt="Vista previa" className="share-preview-image" />
+                  <img src={previewUrl} alt="Vista previa" className="share-preview-image" onClick={() => setIsImagePreviewOpen(true)} style={{ cursor: 'pointer' }} title="Ampliar imagen" />
                 )
               ) : (
                 <div className="share-preview-placeholder">
@@ -232,7 +234,7 @@ export default function ShareModal({
               />
             </div>
             <textarea
-              className="form-textarea"
+              className="form-textarea share-textarea"
               value={shareText}
               onChange={(e) => setShareText(e.target.value)}
               rows="3"
@@ -304,9 +306,7 @@ export default function ShareModal({
               </div>
             </div>
           )}
-        </div>
-
-        <div className="modal-footer">
+        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
           <button
             className="btn btn-primary"
@@ -325,7 +325,60 @@ export default function ShareModal({
         </div>
       </div>
 
+      <Modal
+        isOpen={isImagePreviewOpen}
+        onClose={() => setIsImagePreviewOpen(false)}
+        title="Vista previa detallada"
+        size="sm"
+        actions={[
+          { label: 'Cerrar', onClick: () => setIsImagePreviewOpen(false) }
+        ]}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', gridColumn: '1 / -1', width: '100%' }}>
+          <img src={previewUrl} alt="Vista previa detallada" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: '8px' }} />
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textAlign: 'center', margin: 0, textWrap: 'wrap' }}>
+            Esta imagen incluye el texto incrustado que se publicará en las redes.
+          </p>
+        </div>
+      </Modal>
+
       <style>{`
+        /* AI Tone Select */
+        .ai-tone-select {
+          padding: 4px 8px;
+          border-radius: 4px;
+          border: 1px solid var(--neutral-700);
+          background: var(--neutral-800);
+          color: var(--text-primary);
+          font-size: 0.875rem;
+        }
+        
+        [data-theme="light"] .ai-tone-select {
+          background: var(--surface);
+          border-color: var(--border-color);
+          color: var(--text-primary);
+        }
+
+        /* Share Textarea */
+        .share-textarea {
+          background: var(--neutral-900);
+          border: 1px solid var(--neutral-700);
+          border-radius: var(--radius-lg);
+          padding: var(--space-4);
+          font-size: 0.875rem;
+          color: var(--text-primary);
+          transition: border-color var(--transition-fast);
+        }
+
+        [data-theme="light"] .share-textarea {
+          background: var(--surface);
+          border-color: var(--border-color);
+          box-shadow: var(--shadow-sm);
+        }
+
+        [data-theme="light"] .share-textarea:focus {
+          border-color: var(--gold);
+        }
         .share-preview {
           margin-bottom: var(--space-5);
         }
@@ -337,6 +390,12 @@ export default function ShareModal({
           display: flex;
           flex-direction: row;
           height: 100px;
+          border: 1px solid transparent;
+        }
+
+        [data-theme="light"] .share-preview-card {
+          background: var(--gold-dim);
+          border-color: var(--gold);
         }
 
         .share-preview-image {
@@ -366,15 +425,64 @@ export default function ShareModal({
           gap: var(--space-1);
         }
 
+        [data-theme="light"] .share-preview-info {
+          background: transparent;
+        }
+
         .share-preview-name {
           font-weight: var(--font-semibold);
           color: var(--text-primary);
           font-size: var(--text-sm);
         }
 
+        [data-theme="light"] .share-preview-name {
+          color: #121212;
+        }
+
         .share-preview-price {
           color: var(--gold);
           font-weight: var(--font-bold);
+        }
+
+        [data-theme="light"] .share-preview-price {
+          color: #047857;
+        }
+
+        /* AI Video Card Styles */
+        .ai-video-card {
+          margin-top: 16px;
+          padding: 12px;
+          border-radius: 8px;
+          background: var(--neutral-800);
+          border: 1px solid var(--neutral-700);
+        }
+
+        [data-theme="light"] .ai-video-card {
+          background: var(--gold-dim);
+          border-color: var(--gold);
+        }
+
+        .ai-video-title {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--text-primary);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        [data-theme="light"] .ai-video-title {
+          color: #121212;
+        }
+
+        .ai-video-desc {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          margin-top: 4px;
+        }
+
+        [data-theme="light"] .ai-video-desc {
+          color: #333333;
         }
 
         .share-networks {
@@ -441,7 +549,6 @@ export default function ShareModal({
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </div>,
-    document.body
+    </Drawer>
   );
 }

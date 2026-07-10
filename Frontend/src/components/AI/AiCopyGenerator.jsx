@@ -31,8 +31,7 @@ export default function AiCopyGenerator({ item, onGenerated }) {
       <select 
         value={tone} 
         onChange={(e) => setTone(e.target.value)} 
-        className="form-select" 
-        style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--neutral-700)', background: 'var(--neutral-800)', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+        className="form-select ai-tone-select"
       >
         <option value="persuasivo">Persuasivo</option>
         <option value="formal">Formal</option>

@@ -20,11 +20,17 @@ const Drawer = ({
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
+      if (position === 'right') {
+        document.body.classList.add('drawer-open-right');
+      }
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = '';
+      if (position === 'right') {
+        document.body.classList.remove('drawer-open-right');
+      }
     };
   }, [isOpen, onClose]);
 

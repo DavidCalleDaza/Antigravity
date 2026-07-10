@@ -23,7 +23,7 @@ export default function Products() {
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
 
-  const [view, setView] = useState('grid');
+  const [view, setView] = useState('table');
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]); // Nuevo estado para las categorías de la BD
   const [loading, setLoading] = useState(true);
@@ -239,8 +239,11 @@ export default function Products() {
     <div className="d-flex gap-2">
       {canManage && (
         <>
-          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)}>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">
             <PencilIcon />
+          </button>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => setShareModal({ isOpen: true, item: row })} title="Compartir">
+            <ShareIcon />
           </button>
           <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => { setDeletingId(row.id); setIsConfirmOpen(true); }}>
             <TrashIcon />
@@ -585,6 +588,18 @@ function CartIcon() {
       <circle cx="8" cy="21" r="1" />
       <circle cx="19" cy="21" r="1" />
       <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
     </svg>
   );
 }

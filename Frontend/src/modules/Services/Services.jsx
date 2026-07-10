@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { Plus, CalendarPlus, List, Grid3X3 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
+import Table from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
@@ -21,6 +22,7 @@ export default function Services() {
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
 
+  const [view, setView] = useState('table');
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -206,6 +208,51 @@ export default function Services() {
     setIsModalOpen(true);
   };
 
+  const columns = [
+    { key: 'name', label: 'Servicio', sortable: true },
+    { key: 'category', label: 'Categoría', sortable: true },
+    { key: 'price', label: 'Precio', sortable: true, render: (v) => Helpers.formatCurrency(v) },
+    { key: 'duration', label: 'Duración', sortable: true },
+    { key: 'status', label: 'Estado', sortable: true, render: (v) => statusBadge(v) }
+  ];
+
+  const statusBadge = (status) => {
+    switch (status) {
+      case 'active': return <span className="status-badge active">● Activo</span>;
+      case 'inactive': return <span className="status-badge inactive">● Inactivo</span>;
+      default: return <span className="status-badge">● {status}</span>;
+    }
+  };
+
+  const tableActions = (row) => (
+    <div className="d-flex gap-2">
+      {canManage && (
+        <>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">
+            <PencilIcon />
+          </button>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => setShareModal({ isOpen: true, item: row })} title="Compartir">
+            <ShareIcon />
+          </button>
+          <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => { setDeletingId(row.id); setIsConfirmOpen(true); }} title="Eliminar">
+            <TrashIcon />
+          </button>
+        </>
+      )}
+      {userRole === CLIENT && (
+        <button className="btn btn-primary btn-sm" onClick={() => toast.success(`Cita para ${row.name} solicitada`)}>
+          <CalendarPlus width="14" height="14" />
+          Agendar
+        </button>
+      )}
+    </div>
+  );
+
+  const enrichedServices = services.map(s => ({
+    ...s,
+    category: categories.find(c => c.id === s.category_id)?.name || ''
+  }));
+
   return (
     <div className="page-content">
       <div className="page-header">
@@ -223,6 +270,25 @@ export default function Services() {
         </div>
       </div>
 
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <div className="view-toggle">
+          <button
+            className={`view-toggle-btn ${view === 'table' ? 'active' : ''}`}
+            onClick={() => setView('table')}
+            title="Vista de tabla"
+          >
+            <List width="18" height="18" />
+          </button>
+          <button
+            className={`view-toggle-btn ${view === 'grid' ? 'active' : ''}`}
+            onClick={() => setView('grid')}
+            title="Vista de grid"
+          >
+            <Grid3X3 width="18" height="18" />
+          </button>
+        </div>
+      </div>
+
       {loading ? (
         <MediaCardSkeleton count={6} />
       ) : error ? (
@@ -232,14 +298,13 @@ export default function Services() {
           <div className="error-state-text">{error}</div>
           <button className="btn btn-primary" onClick={loadServices}>Reintentar</button>
         </div>
-      ) : (
+      ) : view === 'grid' ? (
         <div className="product-grid">
-          {services.map(s => {
-            const categoryName = categories.find(c => c.id === s.category_id)?.name || '';
+          {enrichedServices.map(s => {
             return (
               <MediaCard
                 key={s.id}
-                item={{ ...s, category: categoryName }}
+                item={s}
                 variant="service"
                 canManage={canManage}
                 onEdit={openEditModal}
@@ -252,6 +317,12 @@ export default function Services() {
             );
           })}
         </div>
+      ) : (
+        <Table
+          columns={columns}
+          data={enrichedServices}
+          actions={tableActions}
+        />
       )}
 
       <Drawer
@@ -441,5 +512,33 @@ export default function Services() {
         }
       `}</style>
     </div>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
   );
 }

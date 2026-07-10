@@ -22,7 +22,19 @@
 }
 
 .app.sidebar-collapsed .app-main {
-  margin-left: var(--sidebar-collapsed);
+  margin-left: var(--sidebar-collapsed) !important;
+  width: calc(100% - var(--sidebar-collapsed)) !important;
+}
+
+@media (min-width: 1024px) {
+  body.drawer-open-right .app-main {
+    margin-right: 420px !important;
+    width: calc(100% - var(--sidebar-width) - 420px) !important;
+  }
+  
+  body.drawer-open-right .app.sidebar-collapsed .app-main {
+    width: calc(100% - var(--sidebar-collapsed) - 420px) !important;
+  }
 }
 
 /* ── Sidebar ── */

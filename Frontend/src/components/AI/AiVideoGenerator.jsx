@@ -23,9 +23,9 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
     setVideoUrl(null);
     
     try {
-      // 1. Prepare form data
       const formData = new FormData();
-      formData.append('prompt', `An animated cinematic showcase of a product named ${item.name}. ${item.description || ''}`.substring(0, 1000));
+      const itemType = item.type === 'servicio' ? 'service' : 'product';
+      formData.append('prompt', `An animated cinematic showcase of a ${itemType} named ${item.name}. ${item.description || ''}`.substring(0, 1000));
       // Append the imageBlob as a file
       formData.append('file', imageBlob, 'cover.png');
       

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2 } from 'lucide-react';
 import { generateShareImage } from '../utils/generateShareImage';
 import { socialClient } from '../utils/apiClient';
+import Helpers from '../utils/helpers';
 import AiCopyGenerator from './AI/AiCopyGenerator';
 import AiVideoGenerator from './AI/AiVideoGenerator';
 
@@ -75,7 +76,7 @@ export default function ShareModal({
       setIsAiGeneratedPost(false);
 
       generateShareImage({
-        imageUrl: item.imageUrl || item.image_url,
+        imageUrl: Helpers.resolveMediaUrl(item.imageUrl || item.image_url),
         name: item.name,
         price: item.price,
         category: item.category,
@@ -159,11 +160,22 @@ export default function ShareModal({
     }
   };
 
+  const connectedNetworkIds = NETWORKS.filter(n => accounts.some(a => a.platform === n.id)).map(n => n.id);
+  const isAllSelected = connectedNetworkIds.length > 0 && connectedNetworkIds.every(id => selectedNetworks.includes(id));
+  
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedNetworks(connectedNetworkIds);
+    } else {
+      setSelectedNetworks([]);
+    }
+  };
+
   const hasSelected = selectedNetworks.length > 0;
 
   return createPortal(
     <div className="modal-overlay active" onClick={(e) => e.target.classList.contains('modal-overlay') && onClose()}>
-      <div className="modal modal-lg animate-scaleUp" role="dialog" aria-modal="true">
+      <div className="modal animate-scaleUp" role="dialog" aria-modal="true">
         <div className="modal-header">
           <h3 className="modal-title">
             <Share2 width="20" height="20" style={{ marginRight: '8px', verticalAlign: 'middle' }} />
@@ -223,12 +235,24 @@ export default function ShareModal({
               className="form-textarea"
               value={shareText}
               onChange={(e) => setShareText(e.target.value)}
-              rows="4"
+              rows="3"
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Selecciona las redes</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Selecciona las redes</label>
+              <label className="share-network-option" style={{ padding: '0', border: 'none', background: 'transparent' }}>
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  disabled={connectedNetworkIds.length === 0}
+                  className="form-checkbox"
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
+              </label>
+            </div>
             <div className="share-networks">
               {NETWORKS.map(({ id, label, Icon }) => {
                 const isConnected = accounts.some(a => a.platform === id);
@@ -310,21 +334,21 @@ export default function ShareModal({
           background: var(--neutral-900);
           border-radius: var(--radius-lg);
           overflow: hidden;
-          aspect-ratio: 1;
-          max-height: 280px;
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
+          height: 100px;
         }
 
         .share-preview-image {
-          flex: 1;
-          width: 100%;
+          width: 100px;
+          height: 100px;
           object-fit: cover;
         }
 
         .share-preview-loading,
         .share-preview-placeholder {
-          flex: 1;
+          width: 100px;
+          height: 100px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -332,11 +356,14 @@ export default function ShareModal({
         }
 
         .share-preview-info {
+          flex: 1;
           padding: var(--space-3) var(--space-4);
           background: var(--neutral-800);
           display: flex;
-          justify-content: space-between;
-          align-items: center;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          gap: var(--space-1);
         }
 
         .share-preview-name {

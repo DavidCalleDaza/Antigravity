@@ -58,6 +58,41 @@ async def _publish_async(
             access_token = account_with_tokens.tokens[0].access_token
             platform_user_id = account_with_tokens.platform_user_id
 
+            if platform == "tiktok":
+                token_obj = account_with_tokens.tokens[0]
+                from datetime import datetime, timezone, timedelta
+                is_expired = False
+                if token_obj.expires_at:
+                    now_utc = datetime.now(timezone.utc)
+                    expires_at = token_obj.expires_at
+                    if expires_at.tzinfo is None:
+                        expires_at = expires_at.replace(tzinfo=timezone.utc)
+                    if expires_at <= now_utc + timedelta(minutes=5):
+                        is_expired = True
+
+                if is_expired and token_obj.refresh_token:
+                    logger.info("TikTok access token is expired or close to expiration. Refreshing...")
+                    try:
+                        refresh_data = await service.refresh_tiktok_token(token_obj.refresh_token)
+                        tiktok_data = refresh_data.get("data", refresh_data)
+                        new_access_token = tiktok_data.get("access_token")
+                        new_expires_in = tiktok_data.get("expires_in")
+                        new_refresh_token = tiktok_data.get("refresh_token")
+
+                        if new_access_token:
+                            token_obj.access_token = new_access_token
+                            access_token = new_access_token
+                            if new_expires_in:
+                                token_obj.expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(new_expires_in))
+                            if new_refresh_token:
+                                token_obj.refresh_token = new_refresh_token
+
+                            await db.commit()
+                            logger.info("TikTok access token refreshed successfully.")
+                    except Exception as refresh_err:
+                        logger.error(f"Failed to refresh TikTok token: {refresh_err}")
+                        raise refresh_err
+
             # 2. Publish to the specific platform
             if platform == "facebook":
                 publish_result = await service.publish_to_meta(

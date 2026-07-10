@@ -172,7 +172,7 @@ export default function Products() {
           .filter(([, v]) => v)
           .map(([k]) => k);
         setTimeout(() => {
-          setShareModal({ isOpen: true, item: { ...savedItem, type: 'producto' } });
+          setShareModal({ isOpen: true, item: { ...savedItem, imageUrl: savedItem.image_url || formData.image_url, type: 'producto' } });
         }, 100);
       }
     } catch (err) {
@@ -445,7 +445,21 @@ export default function Products() {
           </div>
 
           <div className="share-on-save">
-            <label className="form-label">Publicar al guardar (opcional)</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Publicar al guardar (opcional)</label>
+              <label className="share-checkbox-label" style={{ margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={shareOnSave.facebook && shareOnSave.instagram && shareOnSave.tiktok}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setShareOnSave({ facebook: checked, instagram: checked, tiktok: checked });
+                  }}
+                  className="form-checkbox"
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
+              </label>
+            </div>
             <div className="share-networks-inline">
               {[
                 { id: 'facebook', label: 'Facebook' },
@@ -493,6 +507,7 @@ export default function Products() {
         isOpen={shareModal.isOpen}
         onClose={() => setShareModal({ isOpen: false, item: null })}
         item={shareModal.item}
+        onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
       />
 
       <style>{`

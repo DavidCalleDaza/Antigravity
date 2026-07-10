@@ -8,11 +8,32 @@ async def generate_social_copy(product_name: str, description: str, tone: str = 
         f"sociales sobre este producto: '{product_name}'. Descripción: {description}. "
         f"No uses hashtags excesivos ni emojis de más."
     )
-    response = await client.aio.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents=prompt,
-    )
-    return response.text
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    models_to_try = [
+        "gemini-3.5-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-2.0-flash-lite"
+    ]
+    last_error = None
+    
+    for model_name in models_to_try:
+        try:
+            logger.info(f"Generating social copy using model: {model_name}")
+            response = await client.aio.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            return response.text
+        except Exception as e:
+            logger.warning(f"Model {model_name} failed: {e}. Trying next fallback...")
+            last_error = e
+            
+    raise last_error
+
 
 import asyncio
 import os

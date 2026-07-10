@@ -292,3 +292,26 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
                 )
 
             return {"status": "success", "platform_post_id": init_data.get("data", {}).get("publish_id")}
+
+
+async def refresh_tiktok_token(refresh_token: str) -> dict:
+    """Refresh a TikTok access token using the refresh token."""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(
+            "https://open.tiktokapis.com/v2/oauth/token/",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={
+                "client_key": settings.TIKTOK_CLIENT_KEY,
+                "client_secret": settings.TIKTOK_CLIENT_SECRET,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+            },
+        )
+        data = response.json()
+        if data.get("error", "") and data["error"] != "ok":
+            raise HTTPException(
+                status_code=400,
+                detail=f"TikTok OAuth refresh error: {data.get('error_description', data)}",
+            )
+        return data
+

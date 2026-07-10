@@ -62,7 +62,8 @@ async def get_current_user(
     except ValueError:
         raise credentials_exception
 
-    stmt = select(User).where(User.id == user_id)
+    from sqlalchemy.orm import selectinload
+    stmt = select(User).options(selectinload(User.location)).where(User.id == user_id)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
@@ -76,3 +77,12 @@ async def get_current_user(
         )
 
     return user
+
+async def require_staff(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency that requires the user to be staff."""
+    if not current_user.is_staff:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Acceso restringido al equipo interno"
+        )
+    return current_user

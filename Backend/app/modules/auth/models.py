@@ -65,6 +65,12 @@ class User(Base):
         default=True,
         server_default="true",
     )
+    is_staff: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -81,10 +87,11 @@ class User(Base):
         nullable=True,
     )
 
-    location: Mapped["Location"] = relationship()
+    location: Mapped["Location"] = relationship(lazy="joined")
 
     social_accounts = relationship(
         "SocialAccount",
+        foreign_keys="[SocialAccount.user_id]",
         back_populates="user",
         cascade="all, delete-orphan",
     )

@@ -220,6 +220,68 @@ async def callback_platform(
 
 # ── Account management ──────────────────────────────────────────────────────
 
+from app.modules.social.manual_credentials_service import save_manual_credentials
+
+@router.post("/accounts/manual/validate")
+async def manual_validate(
+    req: schemas.ManualValidateRequest,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Validates token and returns available accounts/pages."""
+    return await save_manual_credentials(
+        db=db,
+        target_user_id=current_user.id,
+        acting_user_id=current_user.id,
+        platform_group=req.platform_group,
+        app_id=req.app_id,
+        app_secret=req.app_secret,
+        access_token=req.access_token,
+    )
+
+@router.post("/accounts/manual/confirm")
+async def manual_confirm(
+    req: schemas.ManualConfirmRequest,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Creates SocialAccount and SocialToken based on the selected account."""
+    if req.platform_group == "meta":
+        # Create Facebook account
+        fb_in = schemas.SocialAccountCreate(
+            platform="facebook",
+            platform_user_id=req.selected_account_id,
+            platform_username=req.selected_account_name,
+            access_token=req.access_token,
+        )
+        fb_account = await crud.create_or_update_social_account(db, current_user.id, fb_in)
+        fb_account.last_modified_by = current_user.id
+        
+        # Update tokens with last_modified_by (will be handled via commit below)
+        
+        if req.instagram_business_account_id:
+            ig_in = schemas.SocialAccountCreate(
+                platform="instagram",
+                platform_user_id=req.instagram_business_account_id,
+                platform_username=None,
+                access_token=req.access_token,
+            )
+            ig_account = await crud.create_or_update_social_account(db, current_user.id, ig_in)
+            ig_account.last_modified_by = current_user.id
+            
+    elif req.platform_group == "tiktok":
+        tiktok_in = schemas.SocialAccountCreate(
+            platform="tiktok",
+            platform_user_id=req.selected_account_id,
+            platform_username=req.selected_account_name,
+            access_token=req.access_token,
+        )
+        tk_account = await crud.create_or_update_social_account(db, current_user.id, tiktok_in)
+        tk_account.last_modified_by = current_user.id
+        
+    await db.commit()
+    return {"status": "success"}
+
 @router.get("/accounts", response_model=List[schemas.SocialAccountResponse])
 async def list_accounts(
     current_user=Depends(get_current_user),

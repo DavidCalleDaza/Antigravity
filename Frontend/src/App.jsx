@@ -16,6 +16,7 @@ import Wall from './modules/Wall/Wall';
 import Statistics from './modules/Statistics/Statistics';
 import Market from './modules/Market/Market';
 import Profile from './modules/Profile/Profile';
+import SocialAccountsAdmin from './modules/Admin/SocialAccountsAdmin';
 
 import CustomCursor from './components/common/CustomCursor';
 
@@ -42,6 +43,12 @@ function App() {
             <Route path="/statistics" element={<Statistics allowedRoles={[ADMIN]} />} />
             <Route path="/market" element={<Market allowedRoles={[ADMIN]} />} />
             <Route path="/profile" element={<Profile />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute isStaffRequired={true} />}>
+          <Route element={<MainLayout />}>
+            <Route path="/admin/social" element={<SocialAccountsAdmin />} />
           </Route>
         </Route>
 

@@ -221,6 +221,16 @@ export const socialClient = {
   publish: (data) => apiClient.post('/social/publish', data),
   listPosts: () => apiClient.get('/social/posts'),
   deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
+  connectManualValidate: (data) => apiClient.post('/social/accounts/manual/validate', data),
+  connectManualConfirm: (data) => apiClient.post('/social/accounts/manual/confirm', data),
+};
+
+export const adminSocialClient = {
+  searchUsers: (search) => apiClient.get(`/admin/social/users?search=${encodeURIComponent(search)}`),
+  listAccounts: (userId) => apiClient.get(`/admin/social/accounts/${userId}`),
+  connectManualValidate: (userId, data) => apiClient.post(`/admin/social/accounts/${userId}/manual/validate`, data),
+  connectManualConfirm: (userId, data) => apiClient.post(`/admin/social/accounts/${userId}/manual/confirm`, data),
+  deleteAccount: (userId, platform) => apiClient.delete(`/admin/social/accounts/${userId}/${platform}`),
 };
 
 export const billingClient = {

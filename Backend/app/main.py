@@ -22,6 +22,7 @@ from app.modules.products.router import router as products_router
 from app.modules.categories.router import router as categories_router
 from app.modules.services.router import router as services_router
 from app.modules.social.router import router as social_router
+from app.modules.admin_social.router import router as admin_social_router
 from app.modules.billing.router import router as billing_router
 from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
@@ -130,6 +131,12 @@ app.include_router(
     social_router,
     prefix="/api/v1/social",
     tags=["Social Media"],
+)
+
+app.include_router(
+    admin_social_router,
+    prefix="/api/v1",
+    tags=["Admin Social Media"],
 )
 
 app.include_router(

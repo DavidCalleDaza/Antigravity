@@ -472,11 +472,12 @@
 }
 
 .table td {
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   font-size: var(--text-sm);
   color: var(--text-primary);
   border-bottom: var(--border);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .table tbody tr:last-child td { border-bottom: none; }
@@ -613,6 +614,10 @@
 
 .modal-lg { max-width: 720px; }
 .modal-sm { max-width: 400px; }
+.modal-sm .modal-body {
+  display: block !important;
+  padding: var(--space-6) !important;
+}
 
 
 /* ── Toast Notifications ── */

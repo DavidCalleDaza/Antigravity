@@ -131,6 +131,23 @@
   width: 36px;
   height: 36px;
   flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-collapsed .sidebar-logo {
+  display: none;
+}
+
+.sidebar-collapsed .sidebar-header {
+  justify-content: center !important;
+  padding: var(--space-4);
+}
+
+.sidebar-toggle-btn {
+  color: var(--text-secondary);
+}
+.sidebar-toggle-btn:hover {
+  color: var(--gold);
 }
 
 .sidebar-brand {

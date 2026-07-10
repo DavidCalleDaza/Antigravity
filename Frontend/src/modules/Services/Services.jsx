@@ -209,11 +209,11 @@ export default function Services() {
   };
 
   const columns = [
-    { key: 'name', label: 'Servicio', sortable: true },
-    { key: 'category', label: 'Categoría', sortable: true },
-    { key: 'price', label: 'Precio', sortable: true, render: (v) => Helpers.formatCurrency(v) },
-    { key: 'duration', label: 'Duración', sortable: true },
-    { key: 'status', label: 'Estado', sortable: true, render: (v) => statusBadge(v) }
+    { key: 'name', label: 'Servicio', sortable: true, width: '25%' },
+    { key: 'category', label: 'Categoría', sortable: true, width: '20%' },
+    { key: 'price', label: 'Precio', sortable: true, width: '15%', render: (v) => Helpers.formatCurrency(v) },
+    { key: 'duration', label: 'Duración', sortable: true, width: '15%' },
+    { key: 'status', label: 'Estado', sortable: true, width: '10%', render: (v) => statusBadge(v) }
   ];
 
   const statusBadge = (status) => {

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
@@ -5,6 +6,7 @@ import { useStore } from '../../store/useStore';
 import { useToast } from '../ui/Toast';
 import ServinowLogo from '../ui/ServinowLogo';
 import Helpers from '../../utils/helpers';
+import Modal from '../ui/Modal';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -42,10 +44,11 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar({ isOpen, closeMobile }) {
-  const { currentUser, sidebarCollapsed, logout } = useStore();
+  const { currentUser, sidebarCollapsed, logout, toggleSidebar } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const userRole = currentUser?.role;
 
   const getAvatarUrl = () => {
@@ -71,10 +74,13 @@ export default function Sidebar({ isOpen, closeMobile }) {
   return (
     <>
       <aside className={`sidebar`} id="sidebar">
-        <div className="sidebar-header">
+        <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div className="sidebar-logo">
             <ServinowLogo width={56} height={56} variant="auto" />
           </div>
+          <button className="btn btn-ghost btn-icon-only sidebar-toggle-btn" onClick={toggleSidebar} title="Alternar menú">
+            <LucideIcons.Menu width="20" height="20" />
+          </button>
         </div>
 
         <nav className="sidebar-nav">
@@ -106,7 +112,7 @@ export default function Sidebar({ isOpen, closeMobile }) {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-user" id="sidebar-user-menu" onClick={handleLogout}>
+          <div className="sidebar-user" id="sidebar-user-menu" onClick={() => setIsLogoutModalOpen(true)}>
             <div className="avatar avatar-sm">
               {getAvatarUrl() ? (
                 <>
@@ -140,6 +146,18 @@ export default function Sidebar({ isOpen, closeMobile }) {
         id="sidebar-overlay"
         onClick={closeMobile}
       ></div>
+      <Modal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        title="Cerrar sesión"
+        size="sm"
+        actions={[
+          { label: 'Cancelar', onClick: () => setIsLogoutModalOpen(false) },
+          { label: 'Cerrar sesión', className: 'btn-danger', onClick: handleLogout }
+        ]}
+      >
+        <div style={{ color: 'var(--text-secondary)', width: '100%', padding: '10px 0' }}>¿Estás seguro de que deseas cerrar sesión?</div>
+      </Modal>
     </>
   );
 }

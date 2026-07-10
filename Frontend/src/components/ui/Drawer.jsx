@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useStore } from '../../store/useStore';
 
 const Drawer = ({
   isOpen,
@@ -10,6 +11,9 @@ const Drawer = ({
   showHeader = true,
   closeIcon = true
 }) => {
+  const setSidebarCollapsed = useStore(state => state.setSidebarCollapsed);
+  const sidebarCollapsed = useStore(state => state.sidebarCollapsed);
+
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -22,6 +26,9 @@ const Drawer = ({
       document.body.style.overflow = 'hidden';
       if (position === 'right') {
         document.body.classList.add('drawer-open-right');
+        if (!sidebarCollapsed) {
+          setSidebarCollapsed(true);
+        }
       }
     }
 

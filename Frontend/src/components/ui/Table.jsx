@@ -81,6 +81,7 @@ const Table = ({
                   key={idx}
                   className={col.sortable !== false ? 'sortable' : ''} 
                   onClick={() => col.sortable !== false && handleSort(col.key)}
+                  style={col.width ? { width: col.width } : {}}
                 >
                   {col.label}
                   {col.sortable !== false && sortConfig.key === col.key && (

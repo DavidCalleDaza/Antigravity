@@ -6,6 +6,7 @@ import Landing from './modules/Landing/Landing';
 import Login from './modules/Auth/Login';
 import Register from './modules/Auth/Register';
 import Unauthorized from './modules/Auth/Unauthorized';
+import GoogleCallback from './modules/Auth/GoogleCallback';
 import MainLayout from './components/layout/MainLayout';
 import Dashboard from './modules/Dashboard/Dashboard';
 import Products from './modules/Products/Products';
@@ -32,6 +33,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/auth/callback" element={<GoogleCallback />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>

@@ -179,6 +179,7 @@ export const apiClient = new ApiClient(API_BASE_URL);
 export const authClient = {
   register: (data) => apiClient.post('/auth/register', data),
   login: (data) => apiClient.post('/auth/login', data),
+  googleExchange: (code) => apiClient.post('/auth/google/exchange', { code }),
   me: () => apiClient.get('/auth/me'),
   updateMe: (data) => apiClient.patch('/auth/me', data),
   deleteAccount: (permanent = false) =>

@@ -9,7 +9,8 @@ export default function LocationSelects({
   cityValue,
   neighborhoodValue,
   onLocationChange,
-  disabled = false
+  disabled = false,
+  variant = 'default' // 'default' (comportamiento original) | 'embedded' (modal de cliente, estilo compacto)
 }) {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -24,6 +25,13 @@ export default function LocationSelects({
   // Internal state for ISO codes to make the library work
   const [selectedCountryCode, setSelectedCountryCode] = useState('');
   const [selectedStateCode, setSelectedStateCode] = useState('');
+
+  const isEmbedded = variant === 'embedded';
+  // En modo embedded, el padding-left del select lo controla el CSS externo
+  // (.profile-field--embedded .form-select), no un style inline.
+  const selectPaddingStyle = isEmbedded ? undefined : { paddingLeft: '2.5rem' };
+  const fieldClassName = isEmbedded ? 'profile-field profile-field--embedded' : 'profile-field';
+  const iconClassName = isEmbedded ? 'location-icon-embedded' : '';
 
   useEffect(() => {
     const allCountries = Country.getAllCountries();
@@ -240,17 +248,17 @@ export default function LocationSelects({
 
   return (
     <>
-      <div className="profile-field">
+      <div className={fieldClassName}>
         <label htmlFor="countrySelect">País</label>
         <div className="input-with-icon">
-          <Map width="18" height="18" />
+          <Map width="18" height="18" className={iconClassName} />
           <select
             id="countrySelect"
             className="form-select"
             value={selectedCountryCode || ''}
             onChange={handleCountryChange}
             disabled={disabled}
-            style={{ paddingLeft: '2.5rem' }}
+            style={selectPaddingStyle}
           >
             <option value="">Selecciona un país</option>
             {countries.map(c => (
@@ -260,17 +268,17 @@ export default function LocationSelects({
         </div>
       </div>
 
-      <div className="profile-field">
+      <div className={fieldClassName}>
         <label htmlFor="stateSelect">Departamento / Estado</label>
         <div className="input-with-icon">
-          <Compass width="18" height="18" />
+          <Compass width="18" height="18" className={iconClassName} />
           <select
             id="stateSelect"
             className="form-select"
             value={selectedStateCode || ''}
             onChange={handleStateChange}
             disabled={!selectedCountryCode || disabled}
-            style={{ paddingLeft: '2.5rem' }}
+            style={selectPaddingStyle}
           >
             <option value="">Selecciona un estado</option>
             {states.map(s => (
@@ -280,17 +288,17 @@ export default function LocationSelects({
         </div>
       </div>
 
-      <div className="profile-field">
+      <div className={fieldClassName}>
         <label htmlFor="citySelect">Ciudad</label>
         <div className="input-with-icon">
-          <MapPin width="18" height="18" />
+          <MapPin width="18" height="18" className={iconClassName} />
           <select
             id="citySelect"
             className="form-select"
             value={cityValue || ''}
             onChange={handleCityChange}
             disabled={!selectedStateCode || disabled}
-            style={{ paddingLeft: '2.5rem' }}
+            style={selectPaddingStyle}
           >
             <option value="">Selecciona una ciudad</option>
             {cityValue && !cities.some(c => c.name === cityValue) && (
@@ -303,17 +311,17 @@ export default function LocationSelects({
         </div>
       </div>
 
-      <div className="profile-field">
+      <div className={fieldClassName}>
         <label htmlFor="neighborhoodSelect">Barrio / Sector</label>
         <div className="input-with-icon">
-          <Home width="18" height="18" />
+          <Home width="18" height="18" className={iconClassName} />
           <select
             id="neighborhoodSelect"
             className="form-select"
             value={isCustomNeighborhood ? 'otro' : (neighborhoodValue || '')}
             onChange={handleNeighborhoodChange}
             disabled={!cityValue || disabled || loadingNeighborhoods}
-            style={{ paddingLeft: '2.5rem' }}
+            style={selectPaddingStyle}
           >
             <option value="">
               {loadingNeighborhoods ? 'Cargando barrios...' : 'Selecciona un barrio'}
@@ -331,7 +339,7 @@ export default function LocationSelects({
         
         {isCustomNeighborhood && (
           <div className="mt-3 animate-fade-in input-with-icon">
-            <Home width="18" height="18" className="text-tertiary" />
+            <Home width="18" height="18" className={`text-tertiary ${iconClassName}`} />
             <input
               type="text"
               className="form-input transition-all duration-300 opacity-100"

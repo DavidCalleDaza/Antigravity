@@ -25,6 +25,7 @@ from app.modules.social.router import router as social_router
 from app.modules.billing.router import router as billing_router
 from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
+from app.modules.billing.public_verify_router import router as public_verify_router
 
 from app.db.base import Base
 from app.shared.schemas import HealthCheckResponse
@@ -150,6 +151,11 @@ app.include_router(
     tags=["Locations"],
 )
 
+app.include_router(
+    public_verify_router,
+    prefix="/api/v1",
+    tags=["Public Verification"],
+)
 
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
 app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")

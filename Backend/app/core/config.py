@@ -84,6 +84,8 @@ class Settings(BaseSettings):
     DIAN_RESOLUTION_RANGE_FROM: int = 1
     DIAN_RESOLUTION_RANGE_TO: int = 5000
 
+    PUBLIC_VERIFY_BASE_URL: str = "https://tudominio.com/verify"
+
     # —— SMTP / Email ————————————————————————————————————————————————————————————
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

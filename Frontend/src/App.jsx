@@ -16,6 +16,7 @@ import Wall from './modules/Wall/Wall';
 import Statistics from './modules/Statistics/Statistics';
 import Market from './modules/Market/Market';
 import Profile from './modules/Profile/Profile';
+import VerifyPublic from './Pages/VerifyPublic';
 
 import CustomCursor from './components/common/CustomCursor';
 
@@ -30,6 +31,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/verify/:cufe" element={<VerifyPublic />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>

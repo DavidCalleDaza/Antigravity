@@ -290,11 +290,11 @@ def _build_invoice_pdf(invoice: Invoice, destination) -> None:
     grid_data = [
         [
             Paragraph(f"<b>Nombre/Razón Social:</b> {customer_name}", style_customer_name),
-            Paragraph(f"<b>Dirección:</b> {customer.address or 'N/A'}", style_normal)            
+            Paragraph(f"<b>Dirección:</b> {customer.location.address if customer.location else 'N/A'}", style_normal)            
         ],
         [
             Paragraph(f"<b>Identificación:</b> {customer_id_str}", style_normal),
-            Paragraph(f"<b>Ciudad:</b> {customer.city or 'N/A'} - {customer.department or 'N/A'}", style_normal)
+            Paragraph(f"<b>Ciudad:</b> {(customer.location.city if customer.location else 'N/A')} - {(customer.location.state if customer.location else 'N/A')}", style_normal)
             
         ],
         [
@@ -405,18 +405,13 @@ def _build_invoice_pdf(invoice: Invoice, destination) -> None:
 
     # --- 4. TOTALS & QR CODE & NOTES SECTION ---
     # Prepare QR code content (fallbacks if qr_data is not present)
-    qr_content = invoice.qr_data or (
-        f"NumFac: {invoice.full_number}\n"
-        f"NitOfe: {settings.COMPANY_NIT}\n"
-        f"NitAdq: {customer.id_number}\n"
-        f"ValFac: {invoice.subtotal:.2f}\n"
-        f"ValIva: {invoice.tax_total:.2f}\n"
-        f"ValTot: {invoice.total:.2f}\n"
-        f"CUFE: {invoice.cufe or 'N/A'}"
-    )
+    verify_base_url = getattr(settings, "PUBLIC_VERIFY_BASE_URL", "https://tudominio.com/verify")
+    verify_identifier = invoice.cufe or str(invoice.id)
+    qr_content = f"{verify_base_url}/{verify_identifier}"
 
     qr_stream = _generate_qr_code_image(qr_content)
     qr_flowable = RLImage(qr_stream, width=1.2 * inch, height=1.2 * inch)
+    
 
     # Totals column
     discount_p = Paragraph(f"${invoice.discount_total:,.2f}", style_text_right)

@@ -17,7 +17,7 @@
 .modal.modal-lg {
     width: 92% !important;           
     min-width: auto !important;
-    max-width: 1250px !important;    
+    max-width: 1400px !important;    
     height: 88vh !important;         
     display: flex !important;
     flex-direction: column !important;
@@ -33,7 +33,7 @@
 .modal-body {
     flex: 1;
     display: grid !important;
-    grid-template-columns: 1fr 310px !important; /* Sidebar a la derecha */
+    grid-template-columns: 1fr 290px   !important; /* Sidebar a la derecha */
     gap: 20px !important;
     padding: 15px !important;
     overflow-y: auto !important; /* Asegura el scroll vertical del modal */
@@ -380,7 +380,7 @@
     z-index: 10 !important;
     background: var(--surface-raised) !important;
     font-family: 'Verdana', sans-serif !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     padding: 8px 4px 8px 9px !important; 
     border-bottom: 2px solid var(--border) !important;
     letter-spacing: 0.05em !important; 
@@ -401,7 +401,7 @@
 }
 
 /* Distribución de columnas */
-.table-invoice-items th:nth-child(1), .table-invoice-items td:nth-child(1) { width: 16% !important; }
+.table-invoice-items th:nth-child(1), .table-invoice-items td:nth-child(1) { width: 18% !important; }
 .table-invoice-items th:nth-child(2), .table-invoice-items td:nth-child(2) { width: 18% !important; }
 .table-invoice-items th:nth-child(3), .table-invoice-items td:nth-child(3) { width: 24% !important; }
 .table-invoice-items th:nth-child(4), .table-invoice-items td:nth-child(4) { width: 4% !important; min-width: 4%!important; }
@@ -409,6 +409,11 @@
 .table-invoice-items th:nth-child(6), .table-invoice-items td:nth-child(6) { width: 10% !important; }
 .table-invoice-items th:nth-child(7), .table-invoice-items td:nth-child(7) { width: 9% !important; }
 .table-invoice-items th:nth-child(8), .table-invoice-items td:nth-child(8) { width: 9% !important; text-align: right !important; white-space: nowrap !important; }
+
+
+.table-invoice-items td:nth-child(8) strong {
+    font-size: 11px !important;
+}
 
 .table-invoice-items th:last-child,
 .table-invoice-items td:last-child {
@@ -441,7 +446,7 @@
 .table-invoice-items input.form-control {
     height: 32px !important;          
     padding: 4px 8px !important;       
-    font-size: 10.5px !important;
+    font-size: 10px !important;
 }
 
 .table-invoice-items .btn-ghost.text-danger {
@@ -577,6 +582,22 @@
     white-space: nowrap !important; 
 }
 
+.totals-sidebar .text-sm {
+    font-size: 12px !important;
+}
+
+.totals-sidebar .font-bold.text-sm.text-primary {
+    font-size: 14px !important;
+}
+
+.totals-sidebar .font-bold.text-base {
+    font-size: 12px !important;
+}
+
+.totals-sidebar .font-bold.text-lg {
+    font-size: 15px !important;
+}
+
 .totals-sidebar .btn {
     height: 38px !important;
     font-family: 'Verdana', sans-serif !important;
@@ -588,8 +609,10 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 8px !important;
-    width: 100% !important;
+    width: 90% !important;
     flex-shrink: 0 !important; 
+    padding: 1px 2px !important;
+    margin-left: 5% !important;
 }
 
 .totals-sidebar .btn-primary {
@@ -937,6 +960,7 @@
         margin-bottom: 6px !important; /* Lo separa del botón "Guardar Borrador" */
         margin-left: auto !important;  /* Lo separa del borde derecho */
         margin-right: auto !important; /* Lo separa del borde izquierdo */
+        margin-top: 45px !important;
     }
     .totals-sidebar .btn-outline {
         padding: 10px 24px;

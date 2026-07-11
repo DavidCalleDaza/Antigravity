@@ -35,6 +35,39 @@ from app.db.base_class import Base
 from app.modules.locations.models import Location
 
 
+# —— Country Settings ——————————————————————————————————————————————————————————
+
+class CountrySetting(Base):
+    """
+    Represents the settings and tax defaults per country.
+    """
+    __tablename__ = "country_settings"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False,
+    )
+    country_code: Mapped[str] = mapped_column(
+        String(10), nullable=False, unique=True, index=True,
+        comment="ISO 3166-1 Alpha-2 code (e.g. CO, US)"
+    )
+    country_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    default_tax_rate: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2), nullable=False, default=Decimal("0.00"), server_default="0.00",
+        comment="Default VAT / tax rate percentage"
+    )
+    currency_code: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    currency_symbol: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=func.now()
+    )
+
+
 # —— Customers ————————————————————————————————————————————————————————————————
 
 

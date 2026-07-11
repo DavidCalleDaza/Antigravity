@@ -1,0 +1,199 @@
+.searchable-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.searchable-select-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.searchable-select-trigger:hover {
+  border-color: var(--gold);
+}
+
+.searchable-select-trigger[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.searchable-select-trigger-text {
+  color: #fff;
+}
+
+.searchable-select-trigger-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.searchable-select-chevron {
+  color: var(--gold);
+}
+
+.searchable-select-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto !important;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.searchable-select-clear:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+/* Variante compacta, para usar dentro de tablas (misma altura que un <select> normal), ajuste del ancho del desplegable */
+.searchable-select-wrapper--compact .searchable-select-dropdown {
+  min-width: 170px;
+}
+
+.searchable-select-wrapper--compact .searchable-select-search-wrapper {
+  padding: 6px 8px;
+}
+
+.searchable-select-wrapper--compact .searchable-select-search-input {
+  font-size: 13px;
+}
+.searchable-select-wrapper--compact .searchable-select-trigger {
+  height: 28px;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.searchable-select-wrapper--compact .searchable-select-trigger-text {
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searchable-select-wrapper--compact .searchable-select-chevron {
+  width: 12px;
+  height: 12px;
+}
+
+.searchable-select-wrapper--compact .searchable-select-clear {
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+}
+
+.searchable-select-wrapper--compact .searchable-select-item {
+  font-size: 10px;
+  padding: 6px 10px;
+}
+
+.searchable-select-wrapper--compact .searchable-select-no-results {
+  font-size: 10px;
+}
+
+.searchable-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  z-index: 50;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.searchable-select-search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.searchable-select-search-icon {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.searchable-select-search-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #fff;
+  outline: none;
+  font-size: 14px;
+}
+
+.searchable-select-search-input:focus,
+.searchable-select-search-input:focus-visible {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.searchable-select-list {
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.searchable-select-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #eee;
+  font-size: 14px;
+}
+
+.searchable-select-item:hover {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.searchable-select-item--selected {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.searchable-select-check {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.searchable-select-no-results {
+  padding: 10px 12px;
+  color: #777;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.searchable-select-footer {
+  border-top: 1px solid var(--border);
+  padding: 6px;
+}

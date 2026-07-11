@@ -1,5 +1,19 @@
-import React, { useState } from 'react';
-import { X, Navigation, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  X, 
+  Navigation, 
+  MapPin, 
+  CreditCard, 
+  Building2, 
+  ShieldCheck, 
+  Mail, 
+  Phone, 
+  Home, 
+  Tag,
+  Check,
+  AlertTriangle,
+  Loader2
+} from 'lucide-react';
 import { billingClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import LocationSelects from '../../components/ui/LocationSelects';
@@ -33,6 +47,10 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
   });
 
+  const [countryTaxInfo, setCountryTaxInfo] = useState(null); // { exists, default_tax_rate, is_active }
+  const [checkingCountryTax, setCheckingCountryTax] = useState(false);
+  const [customTaxRate, setCustomTaxRate] = useState('');
+
   const handleLocationChange = (loc) => {
     setNewCust(prev => ({
       ...prev,
@@ -47,6 +65,37 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
       }
     }));
   };
+
+  useEffect(() => {
+    const code = newCust.location?.country_code;
+    if (!code) {
+      setCountryTaxInfo(null);
+      setCustomTaxRate('');
+      return;
+    }
+    let cancelled = false;
+    const fetchCountryTax = async () => {
+      setCheckingCountryTax(true);
+      try {
+        const cs = await billingClient.getCountrySettings(code);
+        if (cancelled) return;
+        if (cs && cs.default_tax_rate !== undefined) {
+          setCountryTaxInfo({ exists: true, default_tax_rate: parseFloat(cs.default_tax_rate), is_active: cs.is_active });
+        } else {
+          setCountryTaxInfo({ exists: false, default_tax_rate: 0, is_active: true });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setCountryTaxInfo({ exists: false, default_tax_rate: 0, is_active: true });
+        }
+      } finally {
+        if (!cancelled) setCheckingCountryTax(false);
+      }
+    };
+    setCustomTaxRate('');
+    fetchCountryTax();
+    return () => { cancelled = true; };
+  }, [newCust.location?.country_code]);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -91,8 +140,6 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     );
   };
 
-  if (!isOpen) return null;
-
   const handleCreateCustomer = async (e) => {
     e.preventDefault();
     if (!newCust.business_name || !newCust.id_number || !newCust.email) {
@@ -102,6 +149,27 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     try {
       setSubmitting(true);
       setValidationErrors({}); // Limpiar errores antes de enviar
+      
+      const code = newCust.location?.country_code;
+      const rateNum = customTaxRate !== ''
+        ? parseFloat(customTaxRate)
+        : (countryTaxInfo?.exists ? countryTaxInfo.default_tax_rate : 0);
+
+      const rateChanged = code && !isNaN(rateNum) &&
+        (!countryTaxInfo?.exists || rateNum !== countryTaxInfo.default_tax_rate);
+
+      if (rateChanged) {
+        if (rateNum < 0 || rateNum > 100) {
+          toast.error('El IVA debe estar entre 0 y 100.');
+          setSubmitting(false);
+          return;
+        }
+        await billingClient.upsertCountrySettings(code, {
+          country_code: code,
+          country_name: newCust.location.country,
+          default_tax_rate: rateNum,
+        });
+      }
       
       const created = await billingClient.createCustomer(newCust);
       toast.success('Cliente creado exitosamente.');
@@ -113,19 +181,16 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
       const status = err.response?.status;
       const data = err.response?.data;
 
-      // Intenta extraer errores estructurados venga como venga (422 estándar o 400 con objeto)
       const backendErrors = data?.detail?.errors || data?.errors || null;
 
       if (backendErrors) {
         setValidationErrors(backendErrors);
         toast.error('Corrija los campos duplicados o con errores en el formulario.');
       } else {
-        // Extrae siempre un STRING legible, nunca un objeto
         let message = 'Error al crear el cliente.';
         if (typeof data?.detail === 'string') {
           message = data.detail;
         } else if (typeof data?.detail === 'object' && data.detail !== null) {
-          // Si detail es un objeto {errors: {...}}, saca el primer mensaje disponible
           const firstField = Object.values(data.detail.errors || data.detail)[0];
           message = Array.isArray(firstField) ? firstField[0] : String(firstField || message);
         } else if (err.message) {
@@ -145,7 +210,7 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
       is_preferred: false, discount_type: 'percent', discount_value: 0,
       location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
     });
-    setValidationErrors({}); // Limpiar estado de errores
+    setValidationErrors({});
     onClose();
   };
 
@@ -155,15 +220,12 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     }
   };
 
- return (
+  if (!isOpen) return null;
+
+  return (
     <div 
       className="nested-modal-overlay active" 
-      onClick={(e) => {
-        e.stopPropagation(); 
-        if (e.target.classList.contains('nested-modal-overlay')) {
-          resetForm();
-        }
-      }}
+      onClick={handleOverlayClick}
     >
       <div className="nested-modal animate-scaleUp" onClick={(e) => e.stopPropagation()}>
         
@@ -184,45 +246,51 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
             
                 {/* Tipo Documento */}
                 <div className="form-group" style={{ flex: 45 }}>
-                    <label className="form-label mb-1">Tipo Documento</label>
-                    <select className="form-select" value={newCust.id_type}
-                    onChange={(e) => {
-                        const t = e.target.value;
-                        setNewCust({ ...newCust, id_type: t, dv: t === 'NIT' ? calculateDV(newCust.id_number) : '' });
-                    }}>
-                    <option value="NIT">NIT (Empresa)</option>
-                    <option value="CC">Cédula de Ciudadanía</option>
-                    <option value="CE">Cédula de Extranjería</option>
-                    <option value="PP">Pasaporte</option>
-                    </select>
+                    <label className="form-label">Tipo Documento</label>
+                    <div className="input-icon-wrapper">
+                        <CreditCard className="input-icon" />
+                        <select className="form-select" value={newCust.id_type}
+                        onChange={(e) => {
+                            const t = e.target.value;
+                            setNewCust({ ...newCust, id_type: t, dv: t === 'NIT' ? calculateDV(newCust.id_number) : '' });
+                        }}>
+                        <option value="NIT">NIT (Empresa)</option>
+                        <option value="CC">Cédula de Ciudadanía</option>
+                        <option value="CE">Cédula de Extranjería</option>
+                        <option value="PP">Pasaporte</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Número de Documento y DV */}
                 <div className="form-group" style={{ flex: 45 }}>
-                    <label className="form-label mb-1">Número de Documento <span className="text-danger">*</span></label>
+                    <label className="form-label">Número de Documento <span className="text-danger">*</span></label>
                     <div className="d-flex gap-2 w-100">
-                    <input 
-                        type="text" 
-                        className={`form-control input-id-number ${validationErrors.id_number ? 'is-invalid' : ''}`} 
-                        placeholder="Ej: 900800700"
-                        value={newCust.id_number}
-                        onChange={(e) => {
-                        const v = e.target.value;
-                        setNewCust({ ...newCust, id_number: v, dv: newCust.id_type === 'NIT' ? calculateDV(v) : newCust.dv });
-                        if (validationErrors.id_number) setValidationErrors({ ...validationErrors, id_number: null });
-                        }}
-                        required 
-                    />
-                    {newCust.id_type === 'NIT' && (
-                        <input 
-                        type="text" 
-                        className="form-control text-center input-dv" 
-                        placeholder="DV"
-                        value={newCust.dv} 
-                        readOnly 
-                        title="Dígito de Verificación" 
-                        />
-                    )}
+                        <div className="input-icon-wrapper flex-1">
+                            <CreditCard className="input-icon" />
+                            <input 
+                                type="text" 
+                                className={`form-control input-id-number ${validationErrors.id_number ? 'is-invalid' : ''}`} 
+                                placeholder="Ej: 900800700"
+                                value={newCust.id_number}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  setNewCust({ ...newCust, id_number: v, dv: newCust.id_type === 'NIT' ? calculateDV(v) : newCust.dv });
+                                  if (validationErrors.id_number) setValidationErrors({ ...validationErrors, id_number: null });
+                                }}
+                                required 
+                            />
+                        </div>
+                        {newCust.id_type === 'NIT' && (
+                            <input 
+                              type="text" 
+                              className="form-control text-center input-dv" 
+                              placeholder="DV"
+                              value={newCust.dv} 
+                              readOnly 
+                              title="Dígito de Verificación" 
+                            />
+                        )}
                     </div>
                     {validationErrors.id_number && (
                       <span className="text-danger text-xs mt-1" style={{ display: 'block', fontSize: '11px' }}>
@@ -236,25 +304,31 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
             <div className="grid-col-2 d-flex gap-3">
                 {/* Razón Social / Nombre Completo */}
                 <div className="form-group" style={{ flex: 45 }}>
-                    <label className="form-label mb-1">Razón Social / Nombre Completo <span className="text-danger">*</span></label>
-                    <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="Nombre comercial o legal"
-                    value={newCust.business_name} 
-                    onChange={(e) => setNewCust({ ...newCust, business_name: e.target.value })} 
-                    required 
-                    />
+                    <label className="form-label">Razón Social / Nombre Completo <span className="text-danger">*</span></label>
+                    <div className="input-icon-wrapper">
+                        <Building2 className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          placeholder="Nombre comercial o legal"
+                          value={newCust.business_name} 
+                          onChange={(e) => setNewCust({ ...newCust, business_name: e.target.value })} 
+                          required 
+                        />
+                    </div>
                 </div>
 
                 {/* Régimen Tributario */}
                 <div className="form-group" style={{ flex: 35 }}>
-                    <label className="form-label mb-1">Régimen Tributario</label>
-                    <select className="form-select" value={newCust.tax_regime} onChange={(e) => setNewCust({ ...newCust, tax_regime: e.target.value })}>
-                    <option value="Simplificado">Persona Natural / Simplificado</option>
-                    <option value="Común">Responsable de IVA / Común</option>
-                    <option value="Gran Contribuyente">Gran Contribuyente</option>
-                    </select>
+                    <label className="form-label">Régimen Tributario</label>
+                    <div className="input-icon-wrapper">
+                        <ShieldCheck className="input-icon" />
+                        <select className="form-select" value={newCust.tax_regime} onChange={(e) => setNewCust({ ...newCust, tax_regime: e.target.value })}>
+                          <option value="Simplificado">Persona Natural / Simplificado</option>
+                          <option value="Común">Responsable de IVA / Común</option>
+                          <option value="Gran Contribuyente">Gran Contribuyente</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Responsable de IVA */}
@@ -264,32 +338,35 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                         data-tooltip="Responsable de IVA: Persona o empresa obligada a facturar, cobrar y declarar este impuesto ante la DIAN."
                     >
                         <input 
-                        type="checkbox" 
-                        checked={newCust.is_tax_responsible}
-                        onChange={(e) => setNewCust({ ...newCust, is_tax_responsible: e.target.checked })}
-                        className="form-checkbox" 
+                          type="checkbox" 
+                          checked={newCust.is_tax_responsible}
+                          onChange={(e) => setNewCust({ ...newCust, is_tax_responsible: e.target.checked })}
+                          className="form-checkbox" 
                         />
                         <span className="text-sm">Responsable de IVA</span>
                     </label>
-                    </div>
                 </div>
+            </div>
 
             {/* Fila Única: Email de Envío Factura y Teléfono (Proporción 50:50) */}
             <div className="grid-col-2 d-flex gap-3">
                 {/* Email de Envío Factura */}
                 <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label mb-1">Email de Envío Factura <span className="text-danger">*</span></label>
-                    <input 
-                    type="email" 
-                    className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`} 
-                    placeholder="cliente@correo.com"
-                    value={newCust.email} 
-                    onChange={(e) => {
-                      setNewCust({ ...newCust, email: e.target.value });
-                      if (validationErrors.email) setValidationErrors({ ...validationErrors, email: null });
-                    }} 
-                    required 
-                    />
+                    <label className="form-label">Email de Envío Factura <span className="text-danger">*</span></label>
+                    <div className="input-icon-wrapper">
+                        <Mail className="input-icon" />
+                        <input 
+                          type="email" 
+                          className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`} 
+                          placeholder="cliente@correo.com"
+                          value={newCust.email} 
+                          onChange={(e) => {
+                            setNewCust({ ...newCust, email: e.target.value });
+                            if (validationErrors.email) setValidationErrors({ ...validationErrors, email: null });
+                          }} 
+                          required 
+                        />
+                    </div>
                     {validationErrors.email && (
                       <span className="text-danger text-xs mt-1" style={{ display: 'block', fontSize: '11px' }}>
                         {validationErrors.email[0]}
@@ -298,17 +375,20 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                 </div>
                 {/* Teléfono */}
                 <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label mb-1">Número de Contacto</label>
-                    <input 
-                    type="text" 
-                    className={`form-control ${validationErrors.phone ? 'is-invalid' : ''}`} 
-                    placeholder="300 123 4567"
-                    value={newCust.phone} 
-                    onChange={(e) => {
-                      setNewCust({ ...newCust, phone: e.target.value });
-                      if (validationErrors.phone) setValidationErrors({ ...validationErrors, phone: null });
-                    }} 
-                    />
+                    <label className="form-label">Número de Contacto</label>
+                    <div className="input-icon-wrapper">
+                        <Phone className="input-icon" />
+                        <input 
+                          type="text" 
+                          className={`form-control ${validationErrors.phone ? 'is-invalid' : ''}`} 
+                          placeholder="300 123 4567"
+                          value={newCust.phone} 
+                          onChange={(e) => {
+                            setNewCust({ ...newCust, phone: e.target.value });
+                            if (validationErrors.phone) setValidationErrors({ ...validationErrors, phone: null });
+                          }} 
+                        />
+                    </div>
                     {validationErrors.phone && (
                       <span className="text-danger text-xs mt-1" style={{ display: 'block', fontSize: '11px' }}>
                         {validationErrors.phone[0]}
@@ -346,17 +426,70 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                 neighborhoodValue={newCust.location?.neighborhood}
                 onLocationChange={handleLocationChange}
                 disabled={submitting || gettingLocation}
+                variant="embedded"
               />
             </div>
-            <div className="form-group grid-col-2">
-                <label className="form-label mb-1">Dirección</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="Calle 100 # 15-20"
-                  value={newCust.location?.address || ''} 
-                  onChange={(e) => setNewCust({ ...newCust, location: { ...newCust.location, address: e.target.value } })} 
-                />
+            <div className="grid-col-2 d-flex gap-3">
+                {/* Dirección */}
+                <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">Dirección</label>
+                    <div className="input-icon-wrapper">
+                        <Home className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-control" 
+                          placeholder="Calle 100 # 15-20"
+                          value={newCust.location?.address || ''} 
+                          onChange={(e) => setNewCust({ ...newCust, location: { ...newCust.location, address: e.target.value } })} 
+                        />
+                    </div>
+                </div>
+
+                {/* IVA del país — Con soporte de iconos vectoriales interactivos */}
+                {newCust.location?.country_code && (
+                  <div className="form-group" style={{ flex: '0 0 150px' }}>
+                    <label className="form-label">
+                      IVA · {newCust.location?.country || 'país'}
+                    </label>
+                    <div
+                      className="country-tax-card"
+                      data-state={checkingCountryTax ? 'checking' : countryTaxInfo?.exists ? 'configured' : 'unconfigured'}
+                    >
+                      <span
+                        className="country-tax-card-icon country-tax-icon-tooltip"
+                        data-tooltip={
+                          checkingCountryTax
+                            ? 'Verificando...'
+                            : countryTaxInfo?.exists
+                              ? 'Configurado'
+                              : 'Se creará al registrar'
+                        }
+                      >
+                        {checkingCountryTax ? (
+                          <Loader2 className="animate-spin" width="13" height="13" />
+                        ) : countryTaxInfo?.exists ? (
+                          <Check width="13" height="13" />
+                        ) : (
+                          <AlertTriangle width="13" height="13" />
+                        )}
+                      </span>
+                      <div className="country-tax-input-pill">
+                        <input
+                          type="number"
+                          className="country-tax-input"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder={countryTaxInfo?.exists ? String(countryTaxInfo.default_tax_rate) : '0'}
+                          value={customTaxRate}
+                          onChange={(e) => setCustomTaxRate(e.target.value)}
+                          disabled={checkingCountryTax}
+                        />
+                        <span className="country-tax-input-suffix">%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
             </div>
 
             <div className="form-group grid-col-2" style={{ borderTop: '1px solid var(--border)', paddingTop: '6px' }}>
@@ -375,29 +508,35 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     
                     {/* Tipo de Descuento */}
                     <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label mb-1">Tipo de Descuento</label>
-                    <select className="form-select" value={newCust.discount_type || 'percent'}
-                        onChange={(e) => setNewCust({ ...newCust, discount_type: e.target.value })}>
-                        <option value="percent">Porcentaje (%)</option>
-                        <option value="fixed">Monto Fijo ($)</option>
-                    </select>
+                    <label className="form-label">Tipo de Descuento</label>
+                    <div className="input-icon-wrapper">
+                        <Tag className="input-icon" />
+                        <select className="form-select" value={newCust.discount_type || 'percent'}
+                            onChange={(e) => setNewCust({ ...newCust, discount_type: e.target.value })}>
+                            <option value="percent">Porcentaje (%)</option>
+                            <option value="fixed">Monto Fijo ($)</option>
+                        </select>
+                    </div>
                     </div>
 
                     {/* Valor de Descuento */}
                     <div className="form-group" style={{ flex: 1 }}>
-                    <label className="form-label mb-1">
+                    <label className="form-label">
                         {newCust.discount_type === 'fixed' ? 'Monto de Descuento ($)' : 'Porcentaje de Descuento (%)'}
                     </label>
-                    <input 
-                        type="number" 
-                        className="form-control"
-                        placeholder={newCust.discount_type === 'fixed' ? '50000' : '10'}
-                        value={newCust.discount_value === 0 ? '' : newCust.discount_value} 
-                        min="0"
-                        max={newCust.discount_type === 'percent' ? 100 : undefined}
-                        onFocus={(e) => e.target.select()} 
-                        onChange={(e) => setNewCust({ ...newCust, discount_value: parseFloat(e.target.value) || 0 })} 
-                    />
+                    <div className="input-icon-wrapper">
+                        <Tag className="input-icon" />
+                        <input 
+                            type="number" 
+                            className="form-control"
+                            placeholder={newCust.discount_type === 'fixed' ? '50000' : '10'}
+                            value={newCust.discount_value === 0 ? '' : newCust.discount_value} 
+                            min="0"
+                            max={newCust.discount_type === 'percent' ? 100 : undefined}
+                            onFocus={(e) => e.target.select()} 
+                            onChange={(e) => setNewCust({ ...newCust, discount_value: parseFloat(e.target.value) || 0 })} 
+                        />
+                    </div>
                     </div>
                 </div>
               </>

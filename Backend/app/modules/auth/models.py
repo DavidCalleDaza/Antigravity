@@ -45,9 +45,9 @@ class User(Base):
         index=True,
         nullable=False,
     )
-    hashed_password: Mapped[str] = mapped_column(
+    hashed_password: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=False,
+        nullable=True,
     )
     full_name: Mapped[str] = mapped_column(
         String(150),
@@ -96,5 +96,27 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    identities = relationship(
+        "UserIdentity",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id!r}, email={self.email!r}, role={self.role!r})>"
+
+
+from sqlalchemy import UniqueConstraint
+
+class UserIdentity(Base):
+    __tablename__ = "user_identities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    provider_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    user = relationship("User", back_populates="identities")
+
+    __table_args__ = (UniqueConstraint("provider", "provider_id", name="uq_provider_provider_id"),)

@@ -15,9 +15,10 @@ from app.modules.auth.crud import create_user, deactivate_user, delete_user, get
 from app.modules.auth.deps import get_current_user
 from app.modules.auth.models import User
 from app.modules.auth.schemas import TokenResponse, UserCreate, UserLogin, UserResponse, UserUpdateMe
+from app.modules.auth.google import router as google_router
 
 router = APIRouter()
-
+router.include_router(google_router)
 
 @router.post(
     "/register",
@@ -95,7 +96,13 @@ async def login(
     from app.core.security import create_access_token
 
     user = await get_user_by_email(db, credentials.email)
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user:
+        raise UnauthorizedException(detail="Credenciales inválidas.")
+
+    if user.hashed_password is None:
+        raise UnauthorizedException(detail="Credenciales inválidas.")
+
+    if not verify_password(credentials.password, user.hashed_password):
         raise UnauthorizedException(detail="Credenciales inválidas.")
 
     if not user.is_active:

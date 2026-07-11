@@ -10,8 +10,6 @@ import InvoiceForm from './InvoiceForm';
 import InvoiceDetail from './InvoiceDetail';
 import '../../../css/pages/billing.css';
 
-
-// Botón de acción por fila
 // Botón de acción por fila
 function RowActionButton({ icon: Icon, title, onClick, disabled, reason, iconClass = '', spinning = false }) {
   const [tooltipPos, setTooltipPos] = useState(null);

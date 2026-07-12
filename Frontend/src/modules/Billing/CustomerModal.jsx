@@ -32,24 +32,63 @@ const calculateDV = (nit) => {
   return mod === 0 || mod === 1 ? mod.toString() : (11 - mod).toString();
 };
 
-export default function CustomerModal({ isOpen, onClose, onSave }) {
+const EMPTY_CUSTOMER = {
+  id_type: 'NIT', id_number: '', dv: '', business_name: '', trade_name: '',
+  email: '', phone: '', tax_regime: 'Simplificado', is_tax_responsible: false,
+  is_preferred: false, discount_type: 'percent', discount_value: 0,
+  location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
+};
+
+// customerToEdit: si viene con datos, el modal entra en modo edición
+// (título, botón y llamada a la API cambian de crear -> actualizar).
+export default function CustomerModal({ isOpen, onClose, onSave, customerToEdit = null }) {
   const toast = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   
+  const isEditMode = !!customerToEdit;
+
   // Estado para capturar errores de duplicados/validación desde el backend
   const [validationErrors, setValidationErrors] = useState({});
 
-  const [newCust, setNewCust] = useState({
-    id_type: 'NIT', id_number: '', dv: '', business_name: '', trade_name: '',
-    email: '', phone: '', tax_regime: 'Simplificado', is_tax_responsible: false,
-    is_preferred: false, discount_type: 'percent', discount_value: 0,
-    location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
-  });
+  const [newCust, setNewCust] = useState(EMPTY_CUSTOMER);
 
   const [countryTaxInfo, setCountryTaxInfo] = useState(null); // { exists, default_tax_rate, is_active }
   const [checkingCountryTax, setCheckingCountryTax] = useState(false);
   const [customTaxRate, setCustomTaxRate] = useState('');
+
+  // Prellenar el formulario cuando se abre en modo edición
+  useEffect(() => {
+    if (isOpen && customerToEdit) {
+      setNewCust({
+        id_type: customerToEdit.id_type || 'NIT',
+        id_number: customerToEdit.id_number || '',
+        dv: customerToEdit.dv || '',
+        business_name: customerToEdit.business_name || '',
+        trade_name: customerToEdit.trade_name || '',
+        email: customerToEdit.email || '',
+        phone: customerToEdit.phone || '',
+        tax_regime: customerToEdit.tax_regime || 'Simplificado',
+        is_tax_responsible: !!customerToEdit.is_tax_responsible,
+        is_preferred: !!customerToEdit.is_preferred,
+        discount_type: customerToEdit.discount_type || 'percent',
+        discount_value: customerToEdit.discount_value || 0,
+        location: {
+          country: customerToEdit.location?.country || '',
+          country_code: customerToEdit.location?.country_code || '',
+          state: customerToEdit.location?.state || '',
+          state_code: customerToEdit.location?.state_code || '',
+          city: customerToEdit.location?.city || '',
+          neighborhood: customerToEdit.location?.neighborhood || '',
+          address: customerToEdit.location?.address || '',
+        },
+      });
+    } else if (isOpen && !customerToEdit) {
+      setNewCust(EMPTY_CUSTOMER);
+    }
+    setValidationErrors({});
+    setCustomTaxRate('');
+  }, [isOpen, customerToEdit]);
 
   const handleLocationChange = (loc) => {
     setNewCust(prev => ({
@@ -92,7 +131,6 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
         if (!cancelled) setCheckingCountryTax(false);
       }
     };
-    setCustomTaxRate('');
     fetchCountryTax();
     return () => { cancelled = true; };
   }, [newCust.location?.country_code]);
@@ -140,7 +178,23 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     );
   };
 
-  const handleCreateCustomer = async (e) => {
+  // Construye el payload a enviar a la API a partir de newCust, saneando la
+  // ubicación: si el usuario nunca completó ningún campo, se envía location=null
+  // en vez de un objeto con strings vacíos (un country_code='' viola la FK
+  // fk_locations_country_code_country_settings, que solo tolera NULL real).
+  const buildCustomerPayload = () => {
+    const loc = newCust.location || {};
+    const hasAnyLocationData = !!(loc.country || loc.country_code || loc.state || loc.city || loc.neighborhood || loc.address);
+
+    return {
+      ...newCust,
+      location: hasAnyLocationData
+        ? { ...loc, country_code: loc.country_code || null }
+        : null,
+    };
+  };
+
+  const handleSubmitCustomer = async (e) => {
     e.preventDefault();
     if (!newCust.business_name || !newCust.id_number || !newCust.email) {
       toast.error('Complete los campos obligatorios del cliente (Nombre, Documento, Email).');
@@ -170,10 +224,18 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
           default_tax_rate: rateNum,
         });
       }
-      
-      const created = await billingClient.createCustomer(newCust);
-      toast.success('Cliente creado exitosamente.');
-      onSave(created); 
+
+      const payload = buildCustomerPayload();
+
+      let result;
+      if (isEditMode) {
+        result = await billingClient.updateCustomer(customerToEdit.id, payload);
+        toast.success('Cliente actualizado exitosamente.');
+      } else {
+        result = await billingClient.createCustomer(payload);
+        toast.success('Cliente creado exitosamente.');
+      }
+      onSave(result);
       resetForm();
     } catch (err) {
       console.error(err);
@@ -187,7 +249,7 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
         setValidationErrors(backendErrors);
         toast.error('Corrija los campos duplicados o con errores en el formulario.');
       } else {
-        let message = 'Error al crear el cliente.';
+        let message = isEditMode ? 'Error al actualizar el cliente.' : 'Error al crear el cliente.';
         if (typeof data?.detail === 'string') {
           message = data.detail;
         } else if (typeof data?.detail === 'object' && data.detail !== null) {
@@ -204,12 +266,7 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
   };
 
   const resetForm = () => {
-    setNewCust({
-      id_type: 'NIT', id_number: '', dv: '', business_name: '', trade_name: '',
-      email: '', phone: '', tax_regime: 'Simplificado', is_tax_responsible: false,
-      is_preferred: false, discount_type: 'percent', discount_value: 0,
-      location: { country: '', country_code: '', state: '', state_code: '', city: '', neighborhood: '', address: '' }
-    });
+    setNewCust(EMPTY_CUSTOMER);
     setValidationErrors({});
     onClose();
   };
@@ -231,7 +288,7 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
         
         {/* HEADER */}
         <div className="modal-header">
-          <h3 className="modal-title">Registrar Nuevo Cliente</h3>
+          <h3 className="modal-title">{isEditMode ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}</h3>
           <button className="modal-close" onClick={resetForm} disabled={submitting}>
             <X width="16" height="16" />
           </button>
@@ -239,7 +296,7 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
 
         {/* CUERPO */}
         <div className="nested-modal-body">
-          <form onSubmit={handleCreateCustomer} className="grid grid-2 gap-4">
+          <form onSubmit={handleSubmitCustomer} className="grid grid-2 gap-4">
             
            {/* Fila Única: Tipo Documento y Número de Documento (Proporción 1:2) */}
             <div className="grid-col-2 d-flex gap-3">
@@ -545,7 +602,9 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
             <div className="grid-col-2 d-flex gap-3 justify-content-end mt-4 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
               <button type="button" className="btn btn-outline" onClick={resetForm} disabled={submitting}>Cancelar</button>
               <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? 'Registrando...' : 'Registrar Cliente'}
+                {submitting
+                  ? (isEditMode ? 'Guardando...' : 'Registrando...')
+                  : (isEditMode ? 'Guardar Cambios' : 'Registrar Cliente')}
               </button>
             </div>
           </form>

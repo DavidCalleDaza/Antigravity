@@ -19,6 +19,8 @@ import Profile from './modules/Profile/Profile';
 import VerifyPublic from './Pages/VerifyPublic';
 
 import CustomCursor from './components/common/CustomCursor';
+import Categories from './modules/Categories/Categories';
+import Customers from './modules/Billing/Customers';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -36,8 +38,10 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/categories" element={<Categories />} />
             <Route path="/products" element={<Products />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/customers" element={<Customers allowedRoles={[ADMIN, SELLER]} />} />
             <Route path="/billing" element={<Billing allowedRoles={[ADMIN, SELLER]} />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/wall" element={<Wall />} />

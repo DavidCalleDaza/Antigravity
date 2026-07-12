@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { Plus, CalendarPlus, Wrench } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Modal from '../../components/ui/Modal';
@@ -210,6 +210,7 @@ export default function Services() {
     <div className="page-content">
       <div className="page-header">
         <div>
+          <Wrench width="20" height="20" className="page-title-icon" />
           <h2 className="page-title">Servicios</h2>
           <p className="page-description">Gestiona los servicios que ofreces</p>
         </div>

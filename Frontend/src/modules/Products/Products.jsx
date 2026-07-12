@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, List, Grid3X3, PackageX, ShoppingCart } from 'lucide-react';
+import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
@@ -237,6 +237,7 @@ export default function Products() {
     <div className="page-content">
       <div className="page-header">
         <div>
+          <Package width="20" height="20" className="page-title-icon" />
           <h2 className="page-title">Productos</h2>
           <p className="page-description">Gestiona tu inventario de productos</p>
         </div>

@@ -282,6 +282,8 @@ export const categoryClient = {
     apiClient.get(`/categories?entity_type=${entityType}`),
   create: (data) =>
     apiClient.post('/categories', data),
+  update: (id, data) => apiClient.patch(`/categories/${id}`, data),
+  delete: (id) => apiClient.delete(`/categories/${id}`),
 };
 
 export const locationClient = {

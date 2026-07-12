@@ -20,8 +20,10 @@ const NAV_ITEMS = [
   {
     section: 'Gestión',
     items: [
+      { id: 'categories', label: 'Categorías', icon: 'FolderTree', page: '/categories', allowedRoles: [ADMIN, SELLER] },
       { id: 'products', label: 'Productos', icon: 'Package', page: '/products', allowedRoles: [ADMIN, SELLER, CLIENT] },
       { id: 'services', label: 'Servicios', icon: 'Wrench', page: '/services', allowedRoles: [ADMIN, SELLER, CLIENT] },
+      { id: 'customers', label: 'Clientes', icon: 'Users', page: '/customers', allowedRoles: [ADMIN, SELLER] },
       { id: 'billing', label: 'Facturación', icon: 'FileText', page: '/billing', allowedRoles: [ADMIN, SELLER] },
     ],
   },

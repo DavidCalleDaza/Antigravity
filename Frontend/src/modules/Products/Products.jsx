@@ -89,10 +89,8 @@ export default function Products() {
   const loadCategories = async () => {
     try {
       const data = await categoryClient.list('product');
-      console.log('Categorías recibidas:', data); // ← agrega esto
       setDbCategories(data);
     } catch (err) {
-      console.error('Error cargando categorías:', err);
     }
   };
 
@@ -102,12 +100,21 @@ export default function Products() {
     return products
       .filter(p => {
         if (categoryFilter && p.category_id !== categoryFilter) return false;
-        if (statusFilter && p.status !== statusFilter) return false;
+        if (statusFilter) {
+          if (statusFilter === 'out_of_stock') {
+            // "Agotado" cubre tanto productos marcados manualmente como
+            // productos cuyo stock real llegó a 0, aunque el status
+            // manual todavía diga 'active' (evita que se "pierdan" del filtro).
+            const isOutOfStock = (p.stock ?? 0) <= 0 || p.status === 'out_of_stock';
+            if (!isOutOfStock) return false;
+          } else if (p.status !== statusFilter) {
+            return false;
+          }
+        }
         return true;
       })
       .map(p => ({
         ...p,
-        // Si el backend incluye la relación cargada o la resolvemos localmente con dbCategories
         category: p.category?.name || dbCategories.find(c => c.id === p.category_id)?.name || 'Sin categoría'
       }));
   }, [products, categoryFilter, statusFilter, dbCategories]);
@@ -258,7 +265,7 @@ export default function Products() {
             className="form-select"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ width: 'auto', padding: 'var(--space-2) var(--space-4)' }}
+            style={{ width: 'auto' }} // <-- Se remueve el padding en línea para que use el del CSS
           >
             <option value="">Todas las categorías</option>
             {dbCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -267,7 +274,7 @@ export default function Products() {
             className="form-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: 'auto', padding: 'var(--space-2) var(--space-4)' }}
+            style={{ width: 'auto' }} // <-- Se remueve el padding en línea para que use el del CSS
           >
             <option value="">Todos los estados</option>
             <option value="active">Activo</option>
@@ -362,7 +369,7 @@ export default function Products() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', alignItems: 'end' }}>
             <div className="form-group">
               <label className="form-label">Categoría</label>
               <CategorySelect
@@ -472,56 +479,6 @@ export default function Products() {
         onClose={() => setShareModal({ isOpen: false, item: null })}
         item={shareModal.item}
       />
-
-      <style>{`
-        .loading-state, .error-state {
-          text-align: center;
-          padding: var(--space-12);
-          color: var(--text-secondary);
-        }
-        .error-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-4);
-        }
-        .error-state-icon {
-          font-size: var(--text-4xl);
-        }
-        .error-state-title {
-          font-size: var(--text-xl);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-        }
-        .error-state-text {
-          max-width: 400px;
-          color: var(--text-secondary);
-        }
-
-        .share-on-save {
-          border-top: 1px solid var(--neutral-700);
-          padding-top: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-networks-inline {
-          display: flex;
-          gap: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          cursor: pointer;
-          font-size: var(--text-sm);
-        }
-
-        .share-checkbox-label input {
-          accent-color: var(--gold);
-        }
-      `}</style>
     </div>
   );
 }

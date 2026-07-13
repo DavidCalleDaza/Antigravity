@@ -26,7 +26,7 @@ const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <CustomCursor />
       <Routes>
         <Route path="/" element={<Landing />} />

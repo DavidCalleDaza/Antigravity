@@ -285,7 +285,7 @@
    ========================================================================== */
 
 /* 1. Contenedor de la tabla: se oculta el scroll por defecto en pantallas normales/grandes */
-.table-container {
+.billing-invoices-card .table-container {
   width: 100% !important;
   overflow-x: hidden !important; 
   background: var(--surface) !important;
@@ -293,24 +293,24 @@
 }
 
 /* Tabla principal con diseño fijo para asegurar consistencia en anchos */
-.table {
+.billing-invoices-card .table {
   width: 100% !important;
   border-collapse: collapse !important;
   table-layout: fixed !important; 
 }
 
 /* 2. Definición de anchos fijos de columnas */
-.table th:nth-child(1), .table td:nth-child(1) { width: 115px !important; } /* FACTURA */
-.table th:nth-child(2), .table td:nth-child(2) { width: auto !important; }  /* CLIENTE */
-.table th:nth-child(3), .table td:nth-child(3) { width: 55px !important; }  /* ITEMS */
-.table th:nth-child(4), .table td:nth-child(4) { width: 95px !important; }  /* TOTAL */
-.table th:nth-child(5), .table td:nth-child(5) { width: 115px !important; } /* FECHA EMISIÓN */
-.table th:nth-child(6), .table td:nth-child(6) { width: 85px !important; }  /* ESTADO */
-.table th:nth-child(7), .table td:nth-child(7) { width: 105px !important; } /* ESTADO DIAN */
-.table th:last-child, .table td:last-child     { width: 135px !important; } /* ACCIONES */
+.billing-invoices-card .table th:nth-child(1), .billing-invoices-card .table td:nth-child(1) { width: 115px !important; } /* FACTURA */
+.billing-invoices-card .table th:nth-child(2), .billing-invoices-card .table td:nth-child(2) { width: auto !important; }  /* CLIENTE */
+.billing-invoices-card .table th:nth-child(3), .billing-invoices-card .table td:nth-child(3) { width: 55px !important; }  /* ITEMS */
+.billing-invoices-card .table th:nth-child(4), .billing-invoices-card .table td:nth-child(4) { width: 95px !important; }  /* TOTAL */
+.billing-invoices-card .table th:nth-child(5), .billing-invoices-card .table td:nth-child(5) { width: 115px !important; } /* FECHA EMISIÓN */
+.billing-invoices-card .table th:nth-child(6), .billing-invoices-card .table td:nth-child(6) { width: 85px !important; }  /* ESTADO */
+.billing-invoices-card .table th:nth-child(7), .billing-invoices-card .table td:nth-child(7) { width: 105px !important; } /* ESTADO DIAN */
+.billing-invoices-card .table th:last-child, .billing-invoices-card .table td:last-child     { width: 135px !important; } /* ACCIONES */
 
 /* 3. Cabeceras de la Tabla ( th ) */
-.table th {
+.billing-invoices-card .table th {
   padding: 5px 8px !important;
   font-family: var(--font-display) !important;
   font-size: 10px !important;
@@ -327,7 +327,7 @@
 }
 
 /* 4. Celdas de Datos ( td ) */
-.table td {
+.billing-invoices-card .table td {
   padding: 5px 8px !important;
   font-size: 11.5px !important;
   color: var(--text-primary) !important;
@@ -337,28 +337,28 @@
 }
 
 /* Truncado con puntos suspensivos */
-.table td:nth-child(1), /* FACTURA */
-.table td:nth-child(2)  /* CLIENTE */ {
+.billing-invoices-card .table td:nth-child(1), /* FACTURA */
+.billing-invoices-card .table td:nth-child(2)  /* CLIENTE */ {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
 
 /* Columna de acciones */
-.table td:last-child {
+.billing-invoices-card .table td:last-child {
   text-align: right !important;
   padding-right: 16px !important; 
   overflow: visible !important;   
 }
 
 /* Hover suave en filas */
-.table tbody tr:hover {
+.billing-invoices-card .table tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
 /* ==========================================================================
    Sección: Botones de Acción dentro de la celda
    ========================================================================== */
-.table td:last-child .d-flex {
+.billing-invoices-card .table td:last-child .d-flex {
   display: inline-flex !important;
   flex-wrap: nowrap !important;
   justify-content: flex-end !important;
@@ -594,7 +594,7 @@
 }
 
 /* Hover suave en filas */
-.table tbody tr:hover {
+.billing-invoices-card .table tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
@@ -680,7 +680,7 @@ tr.table-footer-row > td {
    -------------------------------------------------------------------- */
 @media (max-width: 768px) {
   /* EN MÓVILES: Se habilita el scroll de forma controlada y segura */
-  .table-container {
+  .billing-invoices-card .table-container {
     overflow-x: auto !important; /* Habilita el scroll horizontal únicamente en móviles */
     -webkit-overflow-scrolling: touch; /* Suavidad táctil en iOS */
   }
@@ -733,22 +733,22 @@ tr.table-footer-row > td {
      rectángulo vacío. Con table-layout:auto + width:100%, el navegador
      reparte el 100% del ancho solo entre las columnas que realmente
      existen (sin importar cuántas sean), y si el contenido no cabe,
-     el scroll horizontal del .table-container se encarga. */
-  .table {
+     el scroll horizontal del .billing-invoices-card .table-container se encarga. */
+  .billing-invoices-card .table {
     table-layout: auto !important;
     width: 100% !important;
     min-width: 0 !important;
   }
 
-  .table th,
-  .table td {
+  .billing-invoices-card .table th,
+  .billing-invoices-card .table td {
     white-space: nowrap !important;
   }
 
   /* Si existe una columna CLIENTE, se limita su ancho máximo para que no
      empuje demasiado a las demás; si no existe, esta regla simplemente
      no aplica a nada y no genera efectos secundarios. */
-  .table td:nth-child(2) {
+  .billing-invoices-card .table td:nth-child(2) {
     max-width: 160px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -785,7 +785,7 @@ tr.table-footer-row > td {
     height: 16px !important;
   }
 
-  .table td:last-child .d-flex,
+  .billing-invoices-card .table td:last-child .d-flex,
   .billing-row-actions {
     gap: 2px !important;
   }
@@ -807,7 +807,7 @@ tr.table-footer-row > td {
    solo cambia la disposición visual.
    -------------------------------------------------------------------- */
 @media (max-width: 640px) {
-  .table-container {
+  .billing-invoices-card .table-container {
     overflow-x: visible !important;
     background: transparent !important;
     border-radius: 0 !important;
@@ -815,30 +815,30 @@ tr.table-footer-row > td {
 
   /* Se anula el ancho fijo en px de cada columna (misma especificidad
      que la regla original, por eso gana al ir declarada después) */
-  .table th:nth-child(1), .table td:nth-child(1),
-  .table th:nth-child(2), .table td:nth-child(2),
-  .table th:nth-child(3), .table td:nth-child(3),
-  .table th:nth-child(4), .table td:nth-child(4),
-  .table th:nth-child(5), .table td:nth-child(5),
-  .table th:nth-child(6), .table td:nth-child(6),
-  .table th:nth-child(7), .table td:nth-child(7),
-  .table th:last-child, .table td:last-child {
+  .billing-invoices-card .table th:nth-child(1), .billing-invoices-card .table td:nth-child(1),
+  .billing-invoices-card .table th:nth-child(2), .billing-invoices-card .table td:nth-child(2),
+  .billing-invoices-card .table th:nth-child(3), .billing-invoices-card .table td:nth-child(3),
+  .billing-invoices-card .table th:nth-child(4), .billing-invoices-card .table td:nth-child(4),
+  .billing-invoices-card .table th:nth-child(5), .billing-invoices-card .table td:nth-child(5),
+  .billing-invoices-card .table th:nth-child(6), .billing-invoices-card .table td:nth-child(6),
+  .billing-invoices-card .table th:nth-child(7), .billing-invoices-card .table td:nth-child(7),
+  .billing-invoices-card .table th:last-child, .billing-invoices-card .table td:last-child {
     width: 100% !important;
   }
 
-  .table {
+  .billing-invoices-card .table {
     table-layout: auto !important;
     min-width: 0 !important;
   }
 
-  .table, .table tbody, .table tr, .table td {
+  .billing-invoices-card .table, .billing-invoices-card .table tbody, .billing-invoices-card .table tr, .billing-invoices-card .table td {
     display: block !important;
     width: 100% !important;
   }
 
   /* El encabezado se oculta visualmente pero sigue disponible para
      lectores de pantalla (no se usa display:none por accesibilidad) */
-  .table thead {
+  .billing-invoices-card .table thead {
     position: absolute !important;
     width: 1px !important;
     height: 1px !important;
@@ -850,7 +850,7 @@ tr.table-footer-row > td {
     margin: -1px !important;
   }
 
-  .table tbody tr {
+  .billing-invoices-card .table tbody tr {
     background: var(--surface-raised) !important;
     border: var(--border) !important;
     border-radius: var(--radius-lg, 8px) !important;
@@ -859,15 +859,15 @@ tr.table-footer-row > td {
     box-shadow: var(--shadow-sm) !important;
   }
 
-  .table tbody tr:last-child {
+  .billing-invoices-card .table tbody tr:last-child {
     margin-bottom: 0 !important;
   }
 
-  .table tbody tr:hover {
+  .billing-invoices-card .table tbody tr:hover {
     background-color: var(--surface-raised) !important; /* el hover de fila de escritorio ya no aplica en tarjetas */
   }
 
-  .table td {
+  .billing-invoices-card .table td {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -879,11 +879,11 @@ tr.table-footer-row > td {
     overflow: visible !important;
   }
 
-  .table td:first-child {
+  .billing-invoices-card .table td:first-child {
     padding-top: 0 !important;
   }
 
-  .table td:last-child {
+  .billing-invoices-card .table td:last-child {
     border-bottom: none !important;
     padding-top: var(--space-3) !important;
     padding-bottom: 0 !important;
@@ -892,7 +892,7 @@ tr.table-footer-row > td {
   /* Etiquetas por columna, generadas por CSS a partir del orden real
      de la tabla (FACTURA, CLIENTE, ITEMS, TOTAL, FECHA EMISIÓN,
      ESTADO, ESTADO DIAN, ACCIONES) */
-  .table td::before {
+  .billing-invoices-card .table td::before {
     font-family: var(--font-display);
     font-size: 10px;
     font-weight: var(--font-semibold);
@@ -903,17 +903,17 @@ tr.table-footer-row > td {
     flex-shrink: 0;
   }
 
-  .table td:nth-child(1)::before { content: "Factura"; }
-  .table td:nth-child(2)::before { content: "Cliente"; }
-  .table td:nth-child(3)::before { content: "Items"; }
-  .table td:nth-child(4)::before { content: "Total"; }
-  .table td:nth-child(5)::before { content: "Fecha emisión"; }
-  .table td:nth-child(6)::before { content: "Estado"; }
-  .table td:nth-child(7)::before { content: "Estado DIAN"; }
-  .table td:last-child::before { content: none; } /* la columna de acciones no necesita etiqueta */
+  .billing-invoices-card .table td:nth-child(1)::before { content: "Factura"; }
+  .billing-invoices-card .table td:nth-child(2)::before { content: "Cliente"; }
+  .billing-invoices-card .table td:nth-child(3)::before { content: "Items"; }
+  .billing-invoices-card .table td:nth-child(4)::before { content: "Total"; }
+  .billing-invoices-card .table td:nth-child(5)::before { content: "Fecha emisión"; }
+  .billing-invoices-card .table td:nth-child(6)::before { content: "Estado"; }
+  .billing-invoices-card .table td:nth-child(7)::before { content: "Estado DIAN"; }
+  .billing-invoices-card .table td:last-child::before { content: none; } /* la columna de acciones no necesita etiqueta */
 
   /* Cliente ya no necesita truncarse: hay todo el ancho de la tarjeta */
-  .table td:nth-child(2) {
+  .billing-invoices-card .table td:nth-child(2) {
     max-width: none !important;
     overflow: visible !important;
     text-overflow: clip !important;
@@ -921,7 +921,7 @@ tr.table-footer-row > td {
   }
 
   /* Botonera de acciones: se expande a todo el ancho de la tarjeta */
-  .table td:last-child .d-flex,
+  .billing-invoices-card .table td:last-child .d-flex,
   .billing-row-actions {
     width: 100% !important;
     justify-content: flex-end !important;
@@ -961,12 +961,12 @@ tr.table-footer-row > td {
 
   /* En este ancho la tabla ya está en modo tarjeta (ver breakpoint ≤640px);
      estos ajustes solo afinan tamaño de fuente y espaciado dentro de ella. */
-  .table td {
+  .billing-invoices-card .table td {
     font-size: 11px !important;
     padding: 6px 0 !important;
   }
 
-  .table td::before {
+  .billing-invoices-card .table td::before {
     font-size: 9.5px !important;
   }
 

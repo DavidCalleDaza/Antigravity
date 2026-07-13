@@ -42,7 +42,6 @@ export default function Customers() {
       setCustomers(data || []);
       setCurrentPage(1); 
     } catch (err) {
-      console.error(err);
       toast.error('Error al cargar los clientes.');
     } finally {
       setLoading(false);
@@ -74,7 +73,7 @@ export default function Customers() {
 
   const handleSaved = () => {
     closeModal();
-    loadCustomers(search, !showInactive);
+    loadCustomers(search, statusFilter);
   };
 
   const handleConfirmToggle = async () => {
@@ -85,9 +84,8 @@ export default function Customers() {
       await billingClient.updateCustomer(toggleTarget.id, { is_active: newActiveState });
       toast.success(newActiveState ? 'Cliente reactivado.' : 'Cliente desactivado.');
       setToggleTarget(null);
-      loadCustomers(search, !showInactive);
+      loadCustomers(search, statusFilter);
     } catch (err) {
-      console.error(err);
       toast.error(err.message || 'No se pudo actualizar el estado del cliente.');
     } finally {
       setToggling(false);

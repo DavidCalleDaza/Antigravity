@@ -41,6 +41,16 @@
   transition: transform var(--transition-fast);
 }
 
+.category-select-item-name {
+  font-size: 11px !important;
+  color: inherit;
+  flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .category-select-trigger[aria-expanded="true"] .category-select-chevron {
   transform: rotate(180deg);
 }

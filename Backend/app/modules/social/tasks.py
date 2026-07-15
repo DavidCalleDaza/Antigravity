@@ -16,11 +16,11 @@ import app.db.base  # Ensure all models are registered
 
 logger = logging.getLogger(__name__)
 
-
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import settings
 
 async def _publish_async(
+    engine,
     post_id_str: str,
     user_id_str: str,
     platform: str,
@@ -31,8 +31,6 @@ async def _publish_async(
     post_id = uuid.UUID(post_id_str)
     user_id = uuid.UUID(user_id_str)
     
-    # Create a local engine and session factory bound to this specific asyncio event loop
-    engine = create_async_engine(settings.DATABASE_URL)
     local_session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
     async with local_session_factory() as db:
@@ -168,8 +166,6 @@ async def _publish_async(
                 db, post_id, status="failed", error_message=str(e)
             )
             raise e
-        finally:
-            await engine.dispose()
 
 
 @celery_app.task(
@@ -192,6 +188,14 @@ def publish_to_social_task(
     """
     Celery task to publish content to social platforms in the background.
     """
-    return asyncio.run(
-        _publish_async(post_id_str, user_id_str, platform, local_path, caption, is_ai_generated)
-    )
+    loop = celery_app._worker_loop
+    engine = create_async_engine(settings.DATABASE_URL)
+
+    try:
+        loop.run_until_complete(
+            _publish_async(engine, post_id_str, user_id_str, platform, local_path, caption, is_ai_generated)
+        )
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=10)
+    finally:
+        loop.run_until_complete(engine.dispose())

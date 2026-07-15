@@ -50,3 +50,6 @@ htmlcov/
 # --- Application Data ---
 Backend/uploads/
 *.Identifier
+
+# --- Analysis Docs (do not push to remote) ---
+analisis-whatsapp.md

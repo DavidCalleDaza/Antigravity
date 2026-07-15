@@ -74,6 +74,10 @@ export const APP_CONFIG = {
     '#ec4899', '#64748b'
   ],
 
+  WHATSAPP: {
+    TEST_PHONE: '+1 555 180 3391',
+  },
+
   NAV_ITEMS: [
     {
       section: 'Principal',

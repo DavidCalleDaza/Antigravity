@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, User, Mail, Shield, AlertTriangle, Share2, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
+import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { authClient, locationClient } from '../../utils/apiClient';
@@ -8,6 +8,7 @@ import Helpers from '../../utils/helpers';
 import Modal from '../../components/ui/Modal';
 import ImageCropperModal from '../../components/ui/ImageCropperModal';
 import SocialSettings from './SocialSettings';
+import WhatsAppSettings from './WhatsAppSettings';
 import LocationSelects from '../../components/ui/LocationSelects';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
@@ -252,6 +253,13 @@ export default function Profile() {
           <Share2 width="18" height="18" />
           Redes Sociales
         </button>
+        <button
+          className={`profile-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
+          onClick={() => setActiveTab('whatsapp')}
+        >
+          <MessageCircle width="18" height="18" />
+          WhatsApp
+        </button>
       </div>
 
       <div className="profile-layout">
@@ -459,9 +467,13 @@ export default function Profile() {
           </div>
         </div>
       </>
-    ) : (
+    ) : activeTab === 'social' ? (
       <div className="profile-section-card">
         <SocialSettings />
+      </div>
+    ) : (
+      <div className="profile-section-card">
+        <WhatsAppSettings />
       </div>
     )}
   </div>

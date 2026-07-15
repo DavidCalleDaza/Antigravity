@@ -120,6 +120,12 @@ class Settings(BaseSettings):
     GCS_VIDEO_BUCKET: str = "servinow-ai-video-dev"
     AI_VIDEO_DAILY_LIMIT: int = 50
 
+    # --- WhatsApp Cloud API ---
+    WHATSAPP_ACCESS_TOKEN: str = ""
+    WHATSAPP_PHONE_ID: str = ""
+    WHATSAPP_BUSINESS_ACCOUNT_ID: str = ""
+    WHATSAPP_VERIFY_TOKEN: str = ""
+
 
 # Singleton instance — importable across the application.
 settings = Settings()

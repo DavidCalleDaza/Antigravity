@@ -308,3 +308,9 @@ export const aiClient = {
   generateVideo: (data) => apiClient.post('/ai/generate-video', data),
   getTaskStatus: (taskId) => apiClient.get(`/ai/task/${taskId}`),
 };
+
+export const whatsappClient = {
+  generateOtp: () => apiClient.post('/whatsapp/link/otp'),
+  getLinkStatus: () => apiClient.get('/whatsapp/link/status'),
+  unlink: () => apiClient.delete('/whatsapp/link'),
+};

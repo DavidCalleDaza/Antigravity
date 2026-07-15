@@ -27,6 +27,7 @@ from app.modules.billing.router import router as billing_router
 from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
 from app.modules.ai.router import router as ai_router
+from app.modules.whatsapp.router import router as whatsapp_router
 
 from app.db.base import Base
 from app.shared.schemas import HealthCheckResponse
@@ -163,6 +164,12 @@ app.include_router(
     ai_router,
     prefix="/api/v1/ai",
     tags=["AI Generation"],
+)
+
+app.include_router(
+    whatsapp_router,
+    prefix="/api/v1/whatsapp",
+    tags=["WhatsApp Integration"],
 )
 
 

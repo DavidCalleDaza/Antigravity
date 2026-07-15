@@ -39,4 +39,10 @@ def generate_video_task(self, task_id_str: str, image_gcs_uri: str, prompt: str)
     """
     Celery task to generate a video using Veo in the background.
     """
-    return asyncio.run(_process_video_task(task_id_str, image_gcs_uri, prompt))
+    loop = celery_app._worker_loop
+    try:
+        loop.run_until_complete(
+            _process_video_task(task_id_str, image_gcs_uri, prompt)
+        )
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=10)

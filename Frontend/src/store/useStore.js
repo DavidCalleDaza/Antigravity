@@ -66,6 +66,18 @@ export const useStore = create(
           benefit: { ...state.landingDrawers.benefit, isOpen: false },
         },
       })),
+
+      notifications: [],
+      unreadCount: 0,
+      setNotifications: (list) => set({ notifications: list, unreadCount: list.filter(n => !n.is_read).length }),
+      addNotification: (notification) => set((state) => ({
+        notifications: [notification, ...state.notifications],
+        unreadCount: state.unreadCount + 1,
+      })),
+      markAsRead: (id) => set((state) => {
+        const updated = state.notifications.map(n => n.id === id ? { ...n, is_read: true } : n);
+        return { notifications: updated, unreadCount: updated.filter(n => !n.is_read).length };
+      }),
     }),
     {
       name: 'antigravity-storage',

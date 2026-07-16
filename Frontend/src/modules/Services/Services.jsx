@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, CalendarPlus, List, Grid3X3 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, CalendarPlus, List, Grid3X3, Calendar } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
@@ -11,7 +12,7 @@ import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import { serviceClient, categoryClient, ApiError } from '../../utils/apiClient';
+import { serviceClient, categoryClient, agendaClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
 
@@ -21,6 +22,8 @@ export default function Services() {
   const { currentUser } = useStore();
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
+  const isClient = userRole === 'client';
+  const navigate = useNavigate();
 
   const [view, setView] = useState('table');
   const [services, setServices] = useState([]);
@@ -31,6 +34,9 @@ export default function Services() {
   const [editingService, setEditingService] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [sellerFilter, setSellerFilter] = useState('');
+  const [storeLocations, setStoreLocations] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     category_id: '',
@@ -38,6 +44,7 @@ export default function Services() {
     duration: '',
     status: 'active',
     description: '',
+    store_location_id: '',
   });
   const [mediaError, setMediaError] = useState(null);
   const [shareOnSave, setShareOnSave] = useState({ facebook: false, instagram: false, tiktok: false });
@@ -59,7 +66,16 @@ export default function Services() {
   useEffect(() => {
     loadServices();
     loadCategories();
+    if (isClient) {
+      agendaClient.listSellers().then(setSellers).catch(() => {});
+    } else {
+      agendaClient.listStoreLocations().then(setStoreLocations).catch(() => {});
+    }
   }, []);
+
+  useEffect(() => {
+    if (isClient) loadServices();
+  }, [sellerFilter]);
 
   const loadCategories = async () => {
     try {
@@ -74,7 +90,9 @@ export default function Services() {
     try {
       setLoading(true);
       setError(null);
-      const data = await serviceClient.list();
+      const params = {};
+      if (isClient && sellerFilter) params.seller_id = sellerFilter;
+      const data = await serviceClient.list(params);
       setServices(data);
     } catch (err) {
       const errorMessage = err instanceof ApiError && err.status === 500 && err.message?.includes('relation')
@@ -108,9 +126,10 @@ export default function Services() {
         name: formData.name,
         price: formData.price,
         status: formData.status,
-        description: String(formData.description || ''), 
+        description: String(formData.description || ''),
         duration: String(formData.duration || ''),
         category_id: formData.category_id === '' ? null : formData.category_id,
+        store_location_id: formData.store_location_id || null,
       };
 
       if (formData.image_url) payload.image_url = formData.image_url;
@@ -187,6 +206,7 @@ export default function Services() {
       duration: '',
       status: 'active',
       description: '',
+      store_location_id: '',
     });
     setShareOnSave({ facebook: false, instagram: false, tiktok: false });
     reset();
@@ -204,17 +224,23 @@ export default function Services() {
       description: service.description || '',
       image_url: service.image_url || null,
       video_url: service.video_url || null,
+      store_location_id: service.store_location_id || '',
     });
     setIsModalOpen(true);
   };
 
   const columns = [
     { key: 'name', label: 'Servicio', sortable: true, width: '180px' },
+    ...(isClient ? [
+      { key: 'seller_name', label: 'Vendedor', sortable: true, width: '150px' },
+      { key: 'seller_city', label: 'Ciudad', sortable: true, width: '120px' },
+      { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
+    ] : []),
     { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
     { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
     { key: 'duration', label: 'Duración', sortable: true, width: '110px' },
     { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
-  ];
+  ].flat();
 
   const statusBadge = (status) => {
     switch (status) {
@@ -239,9 +265,9 @@ export default function Services() {
           </button>
         </>
       )}
-      {userRole === CLIENT && (
-        <button className="btn btn-primary btn-sm" onClick={() => toast.success(`Cita para ${row.name} solicitada`)}>
-          <CalendarPlus width="14" height="14" />
+      {isClient && (
+        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/agenda?seller_id=${row.user_id}&service_id=${row.id}`)}>
+          <Calendar width="14" height="14" />
           Agendar
         </button>
       )}
@@ -262,7 +288,7 @@ export default function Services() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Servicio
             </button>
@@ -270,7 +296,20 @@ export default function Services() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+      <div className="products-toolbar">
+        <div className="products-filters">
+          {isClient && (
+            <select
+              className="form-select"
+              value={sellerFilter}
+              onChange={(e) => setSellerFilter(e.target.value)}
+              style={{ width: 'auto', padding: 'var(--space-2) var(--space-4)' }}
+            >
+              <option value="">Todos los vendedores</option>
+              {sellers.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+            </select>
+          )}
+        </div>
         <div className="view-toggle">
           <button
             className={`view-toggle-btn ${view === 'table' ? 'active' : ''}`}
@@ -395,6 +434,20 @@ export default function Services() {
               rows="3"
             />
           </div>
+
+          {storeLocations.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">Ubicación</label>
+              <select
+                className="form-select"
+                value={formData.store_location_id}
+                onChange={(e) => setFormData({ ...formData, store_location_id: e.target.value })}
+              >
+                <option value="">Sin ubicación</option>
+                {storeLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
+          )}
 
           <div className="share-on-save">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

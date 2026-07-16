@@ -8,6 +8,11 @@ from sqlalchemy.orm import selectinload
 
 from app.db.session import get_db
 from app.modules.agenda import crud
+from app.modules.agenda.models import Appointment
+from app.modules.agenda.tasks import (
+    send_appointment_request_notification,
+    send_appointment_confirmation_notification,
+)
 from app.modules.agenda.schemas import (
     AppointmentCreate,
     AppointmentResponse,
@@ -184,7 +189,9 @@ async def create_appointment(
         if not svc.scalar_one_or_none():
             raise HTTPException(status_code=404, detail="Servicio no encontrado")
 
-    return await crud.create_appointment(db, data, current_user.id)
+    apt = await crud.create_appointment(db, data, current_user.id)
+    send_appointment_request_notification.delay(str(apt.id))
+    return apt
 
 
 @router.patch("/appointments/{appointment_id}", response_model=AppointmentResponse)
@@ -194,10 +201,19 @@ async def update_appointment(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    stmt = select(Appointment).where(Appointment.id == appointment_id)
+    res = await db.execute(stmt)
+    old_apt = res.scalar_one_or_none()
+    old_status = old_apt.status if old_apt else None
+
     update_data = data.model_dump(exclude_unset=True)
     apt = await crud.update_appointment(db, appointment_id, update_data)
     if not apt:
         raise HTTPException(status_code=404, detail="Cita no encontrada")
+        
+    if old_status != "confirmed" and apt.status == "confirmed":
+        send_appointment_confirmation_notification.delay(str(apt.id))
+        
     return AppointmentResponse(
         id=apt.id,
         seller_id=apt.seller_id,

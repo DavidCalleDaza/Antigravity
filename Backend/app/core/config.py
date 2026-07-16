@@ -94,6 +94,20 @@ class Settings(BaseSettings):
     # --- Celery / Redis ---
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # --- Email / SMTP ---
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "ServiNow"
+    SMTP_USE_TLS: bool = True
+    COMPANY_NAME: str = ""
+    COMPANY_NIT: str = ""
+    COMPANY_ADDRESS: str = ""
+    COMPANY_CITY: str = ""
+    COMPANY_PHONE: str = ""
+
     # --- Cloudinary ---
     CLOUDINARY_CLOUD_NAME: str = ""
     CLOUDINARY_API_KEY: str = ""

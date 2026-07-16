@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, List, Grid3X3, PackageX, ShoppingCart } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, List, Grid3X3, PackageX, ShoppingCart, Calendar } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
@@ -12,7 +12,7 @@ import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import { productClient, categoryClient, ApiError } from '../../utils/apiClient';
+import { productClient, categoryClient, agendaClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
 
@@ -22,21 +22,25 @@ export default function Products() {
   const { currentUser } = useStore();
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
+  const isClient = userRole === CLIENT;
+  const navigate = useNavigate();
 
   const [view, setView] = useState('table');
   const [products, setProducts] = useState([]);
-  const [dbCategories, setDbCategories] = useState([]); // Nuevo estado para las categorías de la BD
+  const [dbCategories, setDbCategories] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [storeLocations, setStoreLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [sellerFilter, setSellerFilter] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  // Se inicializa category_id en lugar de category
   const [formData, setFormData] = useState({
     name: '',
     category_id: '',
@@ -44,6 +48,7 @@ export default function Products() {
     stock: 0,
     status: 'active',
     description: '',
+    store_location_id: '',
   });
   const [mediaError, setMediaError] = useState(null);
   const [shareOnSave, setShareOnSave] = useState({ facebook: false, instagram: false, tiktok: false });
@@ -86,14 +91,21 @@ export default function Products() {
 
   useEffect(() => {
     loadProducts();
-    loadCategories(); // Carga las categorías al iniciar
+    loadCategories();
+    if (isClient) {
+      agendaClient.listSellers().then(setSellers).catch(() => {});
+    } else {
+      agendaClient.listStoreLocations().then(setStoreLocations).catch(() => {});
+    }
   }, []);
 
   const loadProducts = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await productClient.list();
+      const params = {};
+      if (isClient && sellerFilter) params.seller_id = sellerFilter;
+      const data = await productClient.list(params);
       setProducts(data);
     } catch (err) {
       const errorMessage = err instanceof ApiError && err.status === 500 && err.message?.includes('relation')
@@ -108,19 +120,19 @@ export default function Products() {
     }
   };
 
-  // Función para obtener las categorías de la base de datos
   const loadCategories = async () => {
     try {
       const data = await categoryClient.list('product');
-      console.log('Categorías recibidas:', data); // ← agrega esto
       setDbCategories(data);
     } catch (err) {
       console.error('Error cargando categorías:', err);
     }
   };
 
-  // Se procesan los productos filtrados y se mapea "category" como string
-  // para mantener la compatibilidad con componentes que usen .category (como MediaCard)
+  useEffect(() => {
+    if (isClient) loadProducts();
+  }, [sellerFilter]);
+
   const filteredProducts = useMemo(() => {
     return products
       .filter(p => {
@@ -130,7 +142,6 @@ export default function Products() {
       })
       .map(p => ({
         ...p,
-        // Si el backend incluye la relación cargada o la resolvemos localmente con dbCategories
         category: p.category?.name || dbCategories.find(c => c.id === p.category_id)?.name || 'Sin categoría'
       }));
   }, [products, categoryFilter, statusFilter, dbCategories]);
@@ -153,7 +164,8 @@ export default function Products() {
       // Se asegura de enviar null en lugar de un string vacío si no se selecciona categoría
       const payload = { 
         ...formData,
-        category_id: formData.category_id || null 
+        category_id: formData.category_id || null,
+        store_location_id: formData.store_location_id || null 
       };
       let savedItem;
       if (editingProduct) {
@@ -203,6 +215,7 @@ export default function Products() {
       stock: 0,
       status: 'active',
       description: '',
+      store_location_id: '',
     });
     setShareOnSave({ facebook: false, instagram: false, tiktok: false });
     reset();
@@ -213,11 +226,12 @@ export default function Products() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      category_id: product.category_id || '', // Se asigna el ID de la categoría correspondiente
+      category_id: product.category_id || '',
       price: product.price,
       stock: product.stock,
       status: product.status,
       description: product.description || '',
+      store_location_id: product.store_location_id || '',
     });
     setIsModalOpen(true);
   };
@@ -229,11 +243,16 @@ export default function Products() {
 
   const columns = [
     { key: 'name', label: 'Producto', sortable: true, width: '180px' },
+    ...(isClient ? [
+      { key: 'seller_name', label: 'Vendedor', sortable: true, width: '150px' },
+      { key: 'seller_city', label: 'Ciudad', sortable: true, width: '120px' },
+      { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
+    ] : []),
     { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
     { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
     { key: 'stock', label: 'Stock', sortable: true, width: '90px' },
     { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
-  ];
+  ].flat();
 
   const tableActions = (row) => (
     <div className="d-flex gap-2">
@@ -250,11 +269,13 @@ export default function Products() {
           </button>
         </>
       )}
-      {userRole === CLIENT && (
-        <button className="btn btn-primary btn-sm">
-          <CartIcon />
-          Añadir
-        </button>
+      {isClient && (
+        <>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate(`/agenda?seller_id=${row.user_id}`)}>
+            <Calendar width="14" height="14" />
+            Ver Agenda
+          </button>
+        </>
       )}
     </div>
   );
@@ -268,7 +289,7 @@ export default function Products() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingProduct(null); setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingProduct(null); setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Producto
             </button>
@@ -278,7 +299,17 @@ export default function Products() {
 
       <div className="products-toolbar">
         <div className="products-filters">
-          {/* Selector de categorías dinámico para el filtro */}
+          {isClient && (
+            <select
+              className="form-select"
+              value={sellerFilter}
+              onChange={(e) => setSellerFilter(e.target.value)}
+              style={{ width: 'auto', padding: 'var(--space-2) var(--space-4)' }}
+            >
+              <option value="">Todos los vendedores</option>
+              {sellers.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+            </select>
+          )}
           <select
             className="form-select"
             value={categoryFilter}
@@ -481,6 +512,20 @@ export default function Products() {
               ))}
             </div>
           </div>
+
+          {storeLocations.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">Ubicación</label>
+              <select
+                className="form-select"
+                value={formData.store_location_id}
+                onChange={(e) => setFormData({ ...formData, store_location_id: e.target.value })}
+              >
+                <option value="">Sin ubicación</option>
+                {storeLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
+          )}
 
           <div style={{ border: 'none', padding: 0, marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)' }}>
             <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>

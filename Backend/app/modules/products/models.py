@@ -78,6 +78,13 @@ class Product(Base):
         onupdate=func.now(),
     )
 
-    # Opcional: relación SQLAlchemy para cargar los datos de la categoría mediante ORM
-    # Nota: Requiere que exista un modelo 'Category' con la propiedad 'products' definida.
+    store_location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("store_locations.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Sucursal donde se ofrece este producto",
+    )
+
     category = relationship("Category", back_populates="products", lazy="selectin")
+    user = relationship("User", lazy="joined", foreign_keys=[user_id])
+    store_location = relationship("StoreLocation", lazy="joined")

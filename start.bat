@@ -1,13 +1,11 @@
 @echo off
-echo Iniciando entorno de desarrollo de Servinow...
+echo Iniciando entorno de desarrollo de Servinow en Docker...
 
-:: Usamos Windows Terminal (wt.exe) para abrir pestañas/paneles divididos
-:: 1. Backend (Activa entorno virtual y corre uvicorn)
-:: 2. Frontend (npm run dev)
-:: 3. Ngrok (Expone el backend o frontend según tu necesidad)
+:: Usamos Windows Terminal (wt.exe) para abrir pestañas individuales (new-tab)
+:: 1. Backend: Levanta todos los servicios en Docker (db, redis, web, worker, flower)
+:: 2. Frontend: Corre pnpm dev de forma nativa
+:: 3. Ngrok: Expone el backend local a la web
 
-wt -p "Ubuntu" -d "\\wsl$\Ubuntu\home\davidcalle\Projects\Servinow\Backend" --title "Backend" wsl.exe -e bash -c "source venv/bin/activate && uvicorn app.main:app --reload; exec bash" ^
-; split-pane -H -d "\\wsl$\Ubuntu\home\davidcalle\Projects\Servinow\Frontend" --title "Frontend" wsl.exe -e bash -c "npm run dev; exec bash" ^
-; split-pane -V -d "\\wsl$\Ubuntu\home\davidcalle\Projects\Servinow" --title "Ngrok" wsl.exe -e bash -c "ngrok http --domain=limeade-legible-fifth.ngrok-free.dev 8000; exec bash"
-
-:: Nota: Puedes cambiar 8000 por 5173 en el comando de ngrok si lo que expones es el frontend.
+wt -p "Ubuntu" -d "\\wsl.localhost\Ubuntu\home\davidcalle\Projects\Servinow\Backend" --title "Backend (Docker)" wsl.exe -e bash -c "docker compose up; exec bash" ^
+; new-tab -p "Ubuntu" -d "\\wsl.localhost\Ubuntu\home\davidcalle\Projects\Servinow\Frontend" --title "Frontend" wsl.exe -e bash -c "pnpm dev || npm run dev; exec bash" ^
+; new-tab -p "Ubuntu" -d "\\wsl.localhost\Ubuntu\home\davidcalle\Projects\Servinow" --title "Ngrok" wsl.exe -e bash -c "ngrok http --domain=limeade-legible-fifth.ngrok-free.dev 8000; exec bash"

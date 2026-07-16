@@ -102,6 +102,27 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    store_locations = relationship(
+        "StoreLocation",
+        back_populates="user",
+        foreign_keys="[StoreLocation.user_id]",
+        cascade="all, delete-orphan",
+    )
+
+    availability_templates = relationship(
+        "AvailabilityTemplate",
+        back_populates="user",
+        foreign_keys="[AvailabilityTemplate.user_id]",
+        cascade="all, delete-orphan",
+    )
+
+    availability_overrides = relationship(
+        "AvailabilityOverride",
+        back_populates="user",
+        foreign_keys="[AvailabilityOverride.user_id]",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id!r}, email={self.email!r}, role={self.role!r})>"
 

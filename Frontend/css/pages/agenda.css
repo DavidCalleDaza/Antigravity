@@ -2,11 +2,15 @@
    SERVINOW — Agenda Page Styles
    Gold Theme
    ============================================ */
+
+/* ── Layout ── */
 .agenda-layout {
   display: grid;
   grid-template-columns: 1fr 320px;
   gap: var(--space-6);
 }
+
+/* ── Calendar grid (shared) ── */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -37,6 +41,8 @@
 .calendar-cell:hover { background: var(--primary-50); }
 .calendar-cell.other-month { opacity: 0.4; }
 .calendar-cell.today { background: var(--primary-50); }
+.calendar-cell.selected { outline: 2px solid var(--gold); outline-offset: -2px; }
+.calendar-cell.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
 .calendar-day {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
@@ -58,11 +64,17 @@
   text-overflow: ellipsis;
   cursor: pointer;
 }
-.calendar-event.busy { background: var(--primary-100); color: var(--gold); }
-.calendar-event.pending { background: var(--accent-50); color: var(--gold); }
+.calendar-event.busy { background: var(--primary-100); }
+.calendar-event.pending { background: var(--accent-50); }
 .calendar-event.free { background: var(--success-50); color: var(--success); }
 .calendar-event.blocked { background: var(--primary-50); color: var(--text-secondary); }
-/* Detail panel */
+.calendar-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+.calendar-nav-title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--font-semibold); color: var(--text-primary); }
+
+/* ── Detail panel (old layout) ── */
 .agenda-detail { padding: var(--space-5); }
 .agenda-detail-title { font-size: var(--text-lg); font-weight: var(--font-semibold); margin-bottom: var(--space-4); color: var(--text-primary); }
 .agenda-slot {
@@ -87,12 +99,290 @@
 .agenda-slot-status.pending { background: var(--gold); }
 .agenda-slot-status.free { background: var(--success); }
 .agenda-slot-status.blocked { background: var(--text-secondary); }
-.calendar-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: var(--space-4);
+
+/* ── Tabs ── */
+.agenda-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--gold-subtle);
 }
-.calendar-nav-title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--font-semibold); color: var(--text-primary); }
-@media (max-width: 1024px) { .agenda-layout { grid-template-columns: 1fr; } }
+.agenda-tab {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.agenda-tab:hover { color: var(--text-primary); }
+.agenda-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* ── Seller Templates ── */
+.agenda-templates {
+  padding: var(--space-4);
+}
+.agenda-day-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--gold-subtle);
+}
+.agenda-day-row:last-child { border-bottom: none; }
+.agenda-day-label {
+  min-width: 100px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+.agenda-day-slots {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.agenda-time-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background: var(--gold-subtle);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+.agenda-time-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.agenda-time-form .form-input {
+  width: 110px;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+}
+
+/* ── Seller Overrides ── */
+.agenda-overrides-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--gold-subtle);
+}
+.agenda-overrides-header h3 { font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--text-primary); margin: 0; }
+.agenda-override-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--gold-subtle);
+  background: var(--primary-50);
+}
+.agenda-override-form .form-input { width: auto; flex: 0 1 140px; font-size: var(--text-xs); padding: var(--space-1) var(--space-2); }
+.agenda-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.agenda-override-list {
+  padding: var(--space-2);
+}
+.agenda-override-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--gold-subtle);
+  font-size: var(--text-sm);
+}
+.agenda-override-item:last-child { border-bottom: none; }
+.agenda-override-date { min-width: 100px; font-weight: var(--font-medium); color: var(--text-primary); }
+.agenda-override-time { min-width: 80px; color: var(--text-secondary); }
+
+/* ── Seller Appointments ── */
+.agenda-appointments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--gold-subtle);
+}
+.agenda-appointments-header h3 { font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--text-primary); margin: 0; }
+.agenda-appointment-list {
+  padding: var(--space-2);
+}
+.agenda-appointment-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--gold-subtle);
+  font-size: var(--text-sm);
+  flex-wrap: wrap;
+}
+.agenda-appointment-item:last-child { border-bottom: none; }
+.agenda-appointment-date {
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+.agenda-appointment-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.agenda-appointment-info span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* ── Client Steps ── */
+.agenda-steps {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  font-size: var(--text-sm);
+}
+.agenda-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  background: var(--gold-subtle);
+  white-space: nowrap;
+}
+.agenda-step.active {
+  color: var(--text-primary);
+  background: var(--gold);
+}
+.agenda-step.completed {
+  color: var(--success);
+  background: var(--success-50);
+}
+.agenda-step-line {
+  flex: 0 0 24px;
+  height: 1px;
+  background: var(--gold-subtle);
+}
+
+/* ── Client Seller Grid ── */
+.agenda-seller-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+.agenda-seller-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+.agenda-seller-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.agenda-seller-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--gold-subtle);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  color: var(--text-secondary);
+}
+.agenda-seller-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.agenda-seller-name { font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--text-primary); }
+.agenda-seller-locations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  justify-content: center;
+}
+.agenda-seller-locations .badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 10px;
+}
+
+/* ── Client Date/Time Selection ── */
+.agenda-datetime-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--space-6);
+}
+
+/* ── Client Slot Pills ── */
+.agenda-slots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.agenda-slot-pill {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--gold-subtle);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.agenda-slot-pill:hover { border-color: var(--gold); }
+.agenda-slot-pill.selected {
+  background: var(--gold);
+  color: var(--text-primary);
+  border-color: var(--gold);
+}
+.agenda-booking-confirm {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-lg);
+  background: var(--success-50);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.agenda-booking-confirm p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .agenda-layout { grid-template-columns: 1fr; }
+  .agenda-datetime-layout { grid-template-columns: 1fr; }
+}
 @media (max-width: 768px) {
   .calendar-cell { min-height: 60px; }
   .calendar-event { display: none; }
@@ -103,8 +393,12 @@
     border-radius: 50%;
     margin: 2px auto 0;
   }
+  .agenda-day-row { flex-wrap: wrap; }
+  .agenda-day-label { min-width: 80px; }
+  .agenda-override-form { flex-direction: column; align-items: stretch; }
+  .agenda-override-form .form-input { flex: 1; width: 100%; }
+  .agenda-steps { flex-wrap: wrap; }
 }
-
 @media (max-width: 480px) {
   .calendar-header-cell {
     padding: var(--space-1) !important;
@@ -123,4 +417,3 @@
     height: 20px !important;
   }
 }
-

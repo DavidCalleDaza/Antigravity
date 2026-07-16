@@ -193,6 +193,46 @@ export const authClient = {
   },
 };
 
+export const agendaClient = {
+  // Sellers (public)
+  listSellers: () => apiClient.get('/agenda/sellers'),
+  getSeller: (id) => apiClient.get(`/agenda/sellers/${id}`),
+  // Available slots
+  getSlots: (sellerId, date, serviceId) => {
+    let query = `seller_id=${sellerId}&date=${date}`;
+    if (serviceId) query += `&service_id=${serviceId}`;
+    return apiClient.get(`/agenda/slots?${query}`);
+  },
+  // Templates (seller only)
+  listTemplates: () => apiClient.get('/agenda/availability/templates'),
+  createTemplate: (data) => apiClient.post('/agenda/availability/templates', data),
+  updateTemplate: (id, data) => apiClient.patch(`/agenda/availability/templates/${id}`, data),
+  deleteTemplate: (id) => apiClient.delete(`/agenda/availability/templates/${id}`),
+  // Overrides (seller only)
+  listOverrides: (dateFrom, dateTo) => {
+    let query = '';
+    if (dateFrom) query += `date_from=${dateFrom}`;
+    if (dateTo) query += `${query ? '&' : ''}date_to=${dateTo}`;
+    return apiClient.get(`/agenda/availability/overrides${query ? `?${query}` : ''}`);
+  },
+  createOverride: (data) => apiClient.post('/agenda/availability/overrides', data),
+  deleteOverride: (id) => apiClient.delete(`/agenda/availability/overrides/${id}`),
+  // Appointments
+  listAppointments: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/agenda/appointments${query ? `?${query}` : ''}`);
+  },
+  createAppointment: (data) => apiClient.post('/agenda/appointments', data),
+  updateAppointment: (id, data) => apiClient.patch(`/agenda/appointments/${id}`, data),
+  // Store locations (seller)
+  listStoreLocations: () => apiClient.get('/agenda/store-locations'),
+  createStoreLocation: (data) => {
+    const query = new URLSearchParams(data).toString();
+    return apiClient.post(`/agenda/store-locations?${query}`, {});
+  },
+  deleteStoreLocation: (id) => apiClient.delete(`/agenda/store-locations/${id}`),
+};
+
 export const productClient = {
   list: (params = {}) => {
     const query = new URLSearchParams(params).toString();

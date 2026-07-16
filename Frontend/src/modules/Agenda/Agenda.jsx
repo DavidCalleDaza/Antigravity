@@ -372,6 +372,98 @@ function SellerAppointments() {
 }
 
 function ClientAgendaView() {
+  const [tab, setTab] = useState('book');
+  return (
+    <div className="page-content">
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Citas</h2>
+          <p className="page-description">Agenda nuevas citas o revisa las que ya solicitaste</p>
+        </div>
+      </div>
+      <div className="agenda-tabs">
+        <button className={`agenda-tab ${tab === 'book' ? 'active' : ''}`} onClick={() => setTab('book')}>
+          Agendar Cita
+        </button>
+        <button className={`agenda-tab ${tab === 'my_appointments' ? 'active' : ''}`} onClick={() => setTab('my_appointments')}>
+          Mis Citas
+        </button>
+      </div>
+      {tab === 'book' && <ClientBookView />}
+      {tab === 'my_appointments' && <ClientAppointments />}
+    </div>
+  );
+}
+
+function ClientAppointments() {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const { notifications } = useStore();
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await agendaClient.listAppointments();
+      setAppointments(data);
+    } catch (e) {
+      toast.error('Error al cargar mis citas');
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Remove toast from dependencies to prevent infinite loop
+
+  useEffect(() => { load(); }, [load]);
+
+  // Refrescar cuando llegue notificación de confirmación
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latest = notifications[0];
+      if (latest.type === 'appointment_confirmed' && !latest.is_read) {
+        load();
+      }
+    }
+  }, [notifications, load]);
+
+  const sorted = [...appointments].sort((a, b) => a.date.localeCompare(b.date) || a.start_time.localeCompare(b.start_time));
+
+  return (
+    <div className="card">
+      <div className="agenda-appointments-header">
+        <h3>Mis Citas Solicitadas</h3>
+      </div>
+      {loading ? (
+        <div className="text-center p-4 text-tertiary">Cargando...</div>
+      ) : sorted.length === 0 ? (
+        <div className="empty-state" style={{ padding: 'var(--space-8)' }}>
+          <div className="empty-state-icon"><CalendarX width="40" height="40" /></div>
+          <div className="empty-state-title">Sin citas</div>
+          <div className="empty-state-text">No has solicitado ninguna cita aún.</div>
+        </div>
+      ) : (
+        <div className="agenda-appointment-list">
+          {sorted.map(a => (
+            <div key={a.id} className="agenda-appointment-item">
+              <div className="agenda-appointment-date">
+                <span className="text-sm font-semibold">{Helpers.formatDate(a.date)}</span>
+                <span className="text-sm">{a.start_time} - {a.end_time}</span>
+              </div>
+              <div className="agenda-appointment-info">
+                <span><User width="14" height="14" /> {a.seller_name || 'Vendedor'}</span>
+                {a.service_name && <span><Clock width="14" height="14" /> {a.service_name}</span>}
+              </div>
+              <span className={`badge ${a.status === 'confirmed' ? 'badge-success' : a.status === 'pending' ? 'badge-warning' : a.status === 'cancelled' ? 'badge-neutral' : 'badge-primary'}`}>
+                {APP_CONFIG.AGENDA_STATUS_LABELS?.[a.status] || a.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClientBookView() {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState('sellers');
@@ -482,14 +574,7 @@ function ClientAgendaView() {
   };
 
   return (
-    <div className="page-content">
-      <div className="page-header">
-        <div>
-          <h2 className="page-title">Agendar Cita</h2>
-          <p className="page-description">Selecciona un vendedor y elige el horario disponible</p>
-        </div>
-      </div>
-
+    <div>
       <div className="agenda-steps">
         <span className={`agenda-step ${step === 'sellers' ? 'active' : step !== 'sellers' ? 'completed' : ''}`}>
           {step !== 'sellers' ? <Check width="14" height="14" /> : '1'} Vendedor

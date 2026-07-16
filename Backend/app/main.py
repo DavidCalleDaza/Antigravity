@@ -28,6 +28,8 @@ from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
 from app.modules.ai.router import router as ai_router
 from app.modules.whatsapp.router import router as whatsapp_router
+from app.modules.agenda.router import router as agenda_router
+from app.modules.notifications.router import router as notifications_router
 
 from app.db.base import Base
 from app.shared.schemas import HealthCheckResponse
@@ -170,6 +172,18 @@ app.include_router(
     whatsapp_router,
     prefix="/api/v1/whatsapp",
     tags=["WhatsApp Integration"],
+)
+
+app.include_router(
+    agenda_router,
+    prefix="/api/v1/agenda",
+    tags=["Agenda"],
+)
+
+app.include_router(
+    notifications_router,
+    prefix="/api/v1/notifications",
+    tags=["Notifications"],
 )
 
 

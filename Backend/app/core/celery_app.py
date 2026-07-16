@@ -7,7 +7,7 @@ celery_app = Celery(
     "servinow_worker",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["app.modules.social.tasks", "app.modules.ai.tasks", "app.modules.whatsapp.tasks"]
+    include=["app.modules.social.tasks", "app.modules.ai.tasks", "app.modules.whatsapp.tasks", "app.modules.agenda.tasks"]
 )
 
 celery_app.conf.update(

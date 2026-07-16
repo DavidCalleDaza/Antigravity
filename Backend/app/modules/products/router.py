@@ -1,8 +1,5 @@
 """
 Servinow API — Products Module: API Routes.
-
-Defines endpoints for product management.
-Mounted under ``/api/v1/products`` via the main application.
 """
 
 import logging
@@ -33,24 +30,42 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _build_product_response(product) -> ProductResponse:
+    resp = ProductResponse.model_validate(product)
+    if product.user:
+        resp.seller_name = product.user.full_name
+        resp.seller_avatar = product.user.avatar_url
+        if product.user.location:
+            resp.seller_city = product.user.location.city
+    if product.store_location:
+        resp.store_name = product.store_location.name
+    return resp
+
+
 @router.get("", response_model=list[ProductResponse], status_code=status.HTTP_200_OK)
 async def list_products(
     skip: Annotated[int, Query(description="Número de registros a omitir.", ge=0)] = 0,
     limit: Annotated[int, Query(description="Máximo de productos a retornar.", ge=1, le=100)] = 50,
     category_id: Annotated[uuid.UUID | None, Query(description="Filtrar por ID de categoría (UUID).")] = None,
     status: Annotated[str | None, Query(description="Filtrar por estado.")] = None,
+    seller_id: Annotated[uuid.UUID | None, Query(description="Filtrar por vendedor (solo clientes).")] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[ProductResponse]:
     try:
-        logger.info(f"Fetching products: skip={skip}, limit={limit}, category_id={category_id}, status={status}, user_id={current_user.id}")
-        products = await get_products(db, skip=skip, limit=limit, category_id=category_id, status=status, user_id=current_user.id)
-        logger.info(f"Found {len(products)} products")
-        return [ProductResponse.model_validate(p) for p in products]
+        if current_user.role == "client":
+            products = await get_products(
+                db, skip=skip, limit=limit, category_id=category_id,
+                status=status, user_id=seller_id,
+            )
+        else:
+            products = await get_products(
+                db, skip=skip, limit=limit, category_id=category_id,
+                status=status, user_id=current_user.id,
+            )
+        return [_build_product_response(p) for p in products]
     except Exception as e:
         logger.error(f"Error fetching products: {e}")
-        logger.error(f"Exception type: {type(e).__name__}")
-        logger.error(f"Exception details: {str(e)}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise
@@ -62,15 +77,13 @@ async def create_new_product(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> ProductResponse:
+    if current_user.role not in ("admin", "seller"):
+        raise HTTPException(status_code=403, detail="Solo vendedores pueden crear productos")
     try:
-        logger.info(f"Creating product: {product_in.name}, category_id={product_in.category_id}, price={product_in.price}")
         product = await create_product(db, product_in, current_user.id)
-        logger.info(f"Product created successfully with id={product.id}")
-        return ProductResponse.model_validate(product)
+        return _build_product_response(product)
     except Exception as e:
         logger.error(f"Error creating product: {e}")
-        logger.error(f"Exception type: {type(e).__name__}")
-        logger.error(f"Exception details: {str(e)}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise
@@ -85,7 +98,7 @@ async def get_single_product(
     product = await get_product(db, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    return ProductResponse.model_validate(product)
+    return _build_product_response(product)
 
 
 @router.patch("/{product_id}", response_model=ProductResponse)
@@ -99,7 +112,7 @@ async def update_existing_product(
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
     product = await update_product(db, db_product, product_in)
-    return ProductResponse.model_validate(product)
+    return _build_product_response(product)
 
 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)

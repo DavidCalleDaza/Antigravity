@@ -77,6 +77,7 @@ async def create_product(db: AsyncSession, product_in: ProductCreate, user_id: u
         status=product_in.status,
         image_url=product_in.image_url,
         video_url=product_in.video_url,
+        store_location_id=product_in.store_location_id,
         user_id=user_id,
     )
     db.add(db_product)

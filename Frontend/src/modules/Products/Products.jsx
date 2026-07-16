@@ -137,7 +137,14 @@ export default function Products() {
     return products
       .filter(p => {
         if (categoryFilter && p.category_id !== categoryFilter) return false;
-        if (statusFilter && p.status !== statusFilter) return false;
+        if (statusFilter) {
+          if (statusFilter === 'out_of_stock') {
+            const isOutOfStock = (p.stock ?? 0) <= 0 || p.status === 'out_of_stock';
+            if (!isOutOfStock) return false;
+          } else if (p.status !== statusFilter) {
+            return false;
+          }
+        }
         return true;
       })
       .map(p => ({

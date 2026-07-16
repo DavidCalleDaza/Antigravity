@@ -101,11 +101,11 @@ def build_ubl_xml(invoice: Invoice) -> bytes:
 
     c_physical_loc = etree.SubElement(c_party, "{urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2}PhysicalLocation")
     c_address = etree.SubElement(c_physical_loc, "{urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2}Address")
-    etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}AddressLine").text = customer.address or "N/A"
-    etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}CityName").text = customer.city or "N/A"
-    etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}CountrySubentity").text = customer.department or "N/A"
+    etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}AddressLine").text = (customer.location.address if customer.location else "N/A") or "N/A"
+    etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}CityName").text = (customer.location.city if customer.location else "N/A") or "N/A"
+    etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}CountrySubentity").text = (customer.location.state if customer.location else "N/A") or "N/A"
     c_country = etree.SubElement(c_address, "{urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2}Country")
-    etree.SubElement(c_country, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}IdentificationCode").text = customer.country_code
+    etree.SubElement(c_country, "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}IdentificationCode").text = (customer.location.country_code if customer.location else "CO") or "CO"
 
     # Payment Means
     pay_means = etree.SubElement(root, "{urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2}PaymentMeans")

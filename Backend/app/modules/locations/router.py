@@ -23,13 +23,14 @@ async def get_neighborhoods(
     Retrieve all neighborhoods associated with a specific city.
     Uses case-insensitive matching for the city identifier.
     """
-    result = await db.execute(
+    stmt = (
         select(Neighborhood)
-        .filter(func.lower(Neighborhood.city_identifier) == city_identifier.lower())
+        .where(func.lower(Neighborhood.city_identifier) == city_identifier.lower())
         .order_by(Neighborhood.name)
     )
-    neighborhoods = result.scalars().all()
-    return neighborhoods
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
 
 @router.post(
     "/neighborhoods",
@@ -47,25 +48,24 @@ async def create_neighborhood(
     By default, is_verified will be set to False since this is user-submitted.
     """
     # Check if it already exists (case-insensitive for both city and name)
-    result = await db.execute(
-        select(Neighborhood).filter(
-            func.lower(Neighborhood.city_identifier) == neighborhood_in.city_identifier.lower(),
-            func.lower(Neighborhood.name) == neighborhood_in.name.lower()
-        )
+    stmt = select(Neighborhood).where(
+        func.lower(Neighborhood.city_identifier) == neighborhood_in.city_identifier.lower(),
+        func.lower(Neighborhood.name) == neighborhood_in.name.lower()
     )
-    existing = result.scalars().first()
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
 
     if existing:
         return existing
-        
+
     db_obj = Neighborhood(
         name=neighborhood_in.name,
         city_identifier=neighborhood_in.city_identifier,
         is_verified=False
     )
-    
+
     db.add(db_obj)
     await db.commit()
     await db.refresh(db_obj)
-    
+
     return db_obj

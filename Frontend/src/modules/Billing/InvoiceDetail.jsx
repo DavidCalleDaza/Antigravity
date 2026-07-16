@@ -53,6 +53,8 @@ function DianEventIcon({ type }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const DIAN_SUBMISSION_ENABLED = false;
+
 export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChange, onEdit }) {
   const toast = useToast();
 
@@ -213,7 +215,7 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
 
   if (!isOpen) return null;
 
-  const canSendToDian  = invoice?.dian_status === 'none'     && invoice?.status !== 'void';
+  const canSendToDian  = DIAN_SUBMISSION_ENABLED && invoice?.dian_status === 'none' && invoice?.status !== 'void';
   const canMarkPaid    = invoice?.status === 'sent'          || invoice?.status === 'issued';
   const canVoidDraft   = invoice?.status === 'draft';
   const canCreditNote  = invoice?.dian_status === 'accepted' && invoice?.status !== 'void';
@@ -385,34 +387,36 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                       </select>
                     </div>
 
-                    <table className="invoice-table">
-                      <thead>
-                        <tr>
-                          <th>Descripción</th>
-                          <th className="text-right" style={{ width: 80 }}>Cant.</th>
-                          <th className="text-right" style={{ width: 120 }}>Precio</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {cnItems.map((item, idx) => (
-                          <tr key={idx}>
-                            <td>{item.description}</td>
-                            <td>
-                              <input
-                                type="number"
-                                className="form-control form-control--compact text-right"
-                                value={item.quantity}
-                                min="0.01"
-                                max={invoice.items[idx].quantity}
-                                step="any"
-                                onChange={e => updateCnItemQty(idx, e.target.value)}
-                              />
-                            </td>
-                            <td className="text-right">{Helpers.formatCurrency(item.unit_price)}</td>
+                    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+                      <table className="invoice-table" style={{ minWidth: '450px' }}>
+                        <thead>
+                          <tr>
+                            <th>Descripción</th>
+                            <th className="text-right" style={{ width: 80 }}>Cant.</th>
+                            <th className="text-right" style={{ width: 120 }}>Precio</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {cnItems.map((item, idx) => (
+                            <tr key={idx}>
+                              <td>{item.description}</td>
+                              <td>
+                                <input
+                                  type="number"
+                                  className="form-control form-control--compact text-right"
+                                  value={item.quantity}
+                                  min="0.01"
+                                  max={invoice.items[idx].quantity}
+                                  step="any"
+                                  onChange={e => updateCnItemQty(idx, e.target.value)}
+                                />
+                              </td>
+                              <td className="text-right">{Helpers.formatCurrency(item.unit_price)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
                     <div className="credit-note-form__footer">
                       <button type="button" className="btn btn-outline btn-sm" onClick={() => setShowCNForm(false)}>
@@ -433,7 +437,7 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                   <strong className="info-card__name">{invoice.customer.business_name}</strong>
                   <span className="info-card__sub">{invoice.customer.id_type}: {invoice.customer.id_number}</span>
                   <div className="info-card__rows">
-                    <div><b>Dirección:</b> {invoice.customer.address || 'N/A'}, {invoice.customer.city}</div>
+                    <div><b>Dirección:</b> {invoice.customer.location?.address || 'N/A'}, {invoice.customer.location?.city || 'N/A'}</div>
                     <div><b>Email:</b> {invoice.customer.email}</div>
                   </div>
                 </div>

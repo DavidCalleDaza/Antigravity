@@ -1,0 +1,375 @@
+/* ==========================================================================
+   Página de Categorías
+   ========================================================================== */
+
+.categories-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ---- Header ---- */
+.categories-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.categories-title-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+}
+
+.categories-title-block h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* ---- Tabs ---- */
+.categories-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+
+.categories-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-family: 'Verdana', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.categories-tab:hover {
+    color: var(--text-primary);
+}
+
+.categories-tab.is-active {
+    color: var(--text-gold, #d4af37);
+    border-bottom-color: var(--text-gold, #d4af37);
+}
+
+/* ---- Lista / Tabla ---- */
+.categories-list-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.categories-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.categories-table th {
+    text-align: left;
+    font-family: 'Verdana', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.categories-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.categories-table tr:last-child td {
+    border-bottom: none;
+}
+
+.categories-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.categories-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.categories-tree-marker {
+    color: var(--text-secondary);
+    opacity: 0.6;
+    font-size: 12px;
+}
+
+.categories-description-cell {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.categories-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+/* ---- Hint de arrastrar y soltar ---- */
+.categories-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 12px 0px 12px 0px;
+    font-style: italic;
+}
+
+/* ---- Zona de soltar para nivel raíz ---- */
+.categories-root-dropzone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    margin: 12px;
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: 'Verdana', sans-serif;
+    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.categories-root-dropzone.is-active {
+    border-color: var(--text-gold, #d4af37);
+    background: rgba(212, 175, 55, 0.08);
+    color: var(--text-gold, #d4af37);
+}
+
+/* ---- Filas arrastrables ---- */
+.categories-table tr.is-draggable {
+    cursor: grab;
+   
+}
+
+.categories-table tr.is-dragging {
+    opacity: 0.4;
+}
+
+.categories-table tr.is-drag-over td {
+    background: rgba(212, 175, 55, 0.12) !important;
+    box-shadow: inset 0 0 0 1px var(--text-gold, #d4af37);
+}
+
+/* ---- Estado vacío / carga ---- */
+.categories-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ---- Error del formulario ---- */
+.categories-form-error {
+    color: #ef4444;
+    font-size: 12px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+/* ---- Modal de confirmación de borrado ---- */
+.categories-confirm-modal {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 92%;
+    max-width: 400px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+.categories-confirm-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.categories-confirm-modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.categories-confirm-modal p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+.categories-confirm-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.categories-confirm-actions .btn {
+    flex: 1;
+}
+
+.btn-danger {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.btn-danger:hover {
+    background: #dc2626 !important;
+}
+
+/* ---- Zona de soltar para nivel raíz (Sticky Overlay) ---- */
+.categories-list-card {
+    position: relative;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: visible; /* Permite que el dropzone sticky funcione correctamente */
+}
+
+.categories-root-dropzone {
+    position: sticky;
+    top: 0;
+    z-index: 50; /* Por encima de las cabeceras de la tabla */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px; /* Reducido a 8px arriba/abajo para una altura compacta */
+    margin: 0;
+    border: none;
+    border-bottom: 2px dashed rgba(225, 177, 19, 0.25);
+    background: rgba(18, 18, 24, 0.95);
+    backdrop-filter: blur(8px);
+    color: var(--text-secondary);
+    font-size: 11px; /* Letra ligeramente más pequeña y elegante */
+    font-family: 'Verdana', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.categories-root-dropzone.is-active {
+    border-bottom: 2px solid var(--text-gold, #f3be11);
+    background: rgba(212, 175, 55, 0.12);
+    color: var(--text-gold, #d4af37);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+}
+
+/* ---- Estado / Badges ---- */
+.categories-status-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.02em;
+}
+
+/* Verde Esmeralda para Activo */
+.categories-status-badge.is-active {
+    background: rgba(34, 197, 94, 0.15) !important;
+    color: #22c55e !important;
+}
+
+/* Rojo Suave para Inactivo (fácil de leer en modo oscuro) */
+.categories-status-badge.is-inactive {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #ef4444 !important;
+}
+
+/* ---- Opacidad en filas inactivas ---- */
+/* Hace que toda la fila inactiva se vea atenuada/opaca de forma elegante */
+.categories-table tr.is-inactive-row td {
+    opacity: 0.5 !important;
+}
+
+/* Fila contenedora para alinear pestañas y filtro de estado */
+.categories-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+/* Reutiliza la misma estructura estética del filtro segmentado */
+.categories-status-filter-group {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    padding: 3px;
+    border-radius: 8px;
+    gap: 2px;
+}
+
+/* Los botones heredan las clases generales de status-filter-btn ya definidas */
+@media (max-width: 600px) {
+    .categories-filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .categories-status-filter-group {
+        justify-content: center;
+    }
+}
+
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+    .categories-page {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .categories-header {
+        flex-wrap: wrap;
+    }
+
+    .categories-table th:nth-child(2),
+    .categories-table td:nth-child(2) {
+        display: none; /* Ocultamos descripción en móvil para dar espacio */
+    }
+}

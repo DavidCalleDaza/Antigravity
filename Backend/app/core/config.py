@@ -94,6 +94,8 @@ class Settings(BaseSettings):
     # --- Celery / Redis ---
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    PUBLIC_VERIFY_BASE_URL: str = "https://tudominio.com/verify"
+
     # --- Email / SMTP ---
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587

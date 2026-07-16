@@ -1,0 +1,473 @@
+/* ==========================================================================
+   Página de Clientes
+   ========================================================================== */
+
+.customers-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+
+}
+
+/* ---- Header ---- */
+.customers-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.customers-title-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+}
+
+.customers-title-block h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Selecciona el primer div dentro de page-header que contiene el icono, título y descripción */
+.page-header > div:first-child {
+    display: grid;
+    grid-template-areas: 
+        "icon title"
+        "desc desc";
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 10px;   /* Espacio horizontal entre el icono y el título */
+    row-gap: 6px;      /* Espacio vertical hacia la descripción abajo */
+    padding-bottom: 0px;
+}
+
+/* Asigna cada elemento a su posición en la cuadrícula */
+.page-title-icon {
+    grid-area: icon;
+}
+
+.page-title {
+    grid-area: title;
+    margin: 0;
+}
+
+.page-description {
+    grid-area: desc;
+    margin: 0;
+}
+
+/* ---- Filtros ---- */
+.customers-filters {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.customers-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 300%; /* Tamaño límite para que sea más pequeño */
+    flex: 1;
+    min-width: 600px;
+    margin-bottom: 0px;
+}
+
+.customers-search-icon {
+    position: absolute;
+    left: 10px;
+    color: var(--text-secondary);
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Reducción de tamaño del input de búsqueda */
+.customers-search-box .form-input {
+    width: 250%;
+    height: 34px; /* Altura más compacta */
+    padding-left: 32px;
+    padding-right: 32px; /* Espacio para el botón "X" */
+    font-size: 12.5px;
+}
+
+/* Botón para borrar búsqueda (X) */
+.customers-search-clear {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.customers-search-clear:hover {
+    color: var(--text-primary);
+    opacity: 1;
+}
+
+
+/* ---- Lista / Tabla ---- */
+.customers-list-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    overflow-x: auto;
+}
+
+.customers-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.customers-table th {
+    text-align: left;
+    font-family: 'Verdana', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    white-space: nowrap;
+}
+
+.customers-table td {
+    padding: 3px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-primary);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.customers-table tr:last-child td {
+    border-bottom: none;
+}
+
+.customers-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.customers-table tr.is-inactive-row td {
+    opacity: 0.5;
+}
+
+.customers-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.customers-name {
+    font-weight: 500;
+}
+
+.customers-pref-badge {
+    background: #f59e0b;
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.customers-status-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.customers-status-badge.is-active {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+}
+
+.customers-status-badge.is-inactive {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.customers-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.text-success {
+    color: #22c55e !important;
+}
+
+/* ---- Estado vacío / carga ---- */
+.customers-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ---- Modal de confirmación activar/desactivar ---- */
+.customers-confirm-modal {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 92%;
+    max-width: 400px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+}
+
+.customers-confirm-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.customers-confirm-icon.is-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.customers-confirm-icon.is-success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.customers-confirm-modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.customers-confirm-modal p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+.customers-confirm-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.customers-confirm-actions .btn {
+    flex: 1;
+}
+
+/* ---- Efecto Skeleton Shimmer para Carga ---- */
+.skeleton-row td {
+    padding: 16px !important;
+}
+
+.skeleton-line {
+    height: 12px;
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.03) 25%, 
+        rgba(255, 255, 255, 0.08) 50%, 
+        rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ---- Paginación ---- */
+.customers-pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 12px;
+    border-top: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.01);
+    font-size: 12px;
+    color: var(--text-secondary);
+    user-select: none;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.customers-pagination-info strong {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.customers-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
+.pagination-btn.is-active {
+    background: #f59e0b; /* Color amarillo/dorado acorde a la identidad */
+    color: #000;
+    border-color: #f59e0b;
+    font-weight: 600;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* ---- Contador del Título ---- */
+.customers-count-badge {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 8px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+
+/* Contenedor del grupo segmentado */
+.customers-status-filter-group {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    padding: 3px;
+    border-radius: 8px;
+    gap: 2px;
+}
+
+/* Botones individuales */
+.status-filter-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    justify-content: space-between !important;
+}
+
+/* ---- Filtros Clientes ---- */
+.customers-filters {
+    display: flex;
+    align-items: center;
+    /* Esto empuja el buscador a la izquierda y el grupo de filtros a la derecha */
+    justify-content: space-between; 
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+/* Asegúrate de que el buscador tenga un ancho máximo para que no ocupe todo el espacio */
+.customers-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 320px; /* Ajusta este valor según prefieras el tamaño del buscador */
+    flex: 1;
+    min-width: 240px;
+}
+
+/* El contenedor de los botones de estado se mantendrá a la derecha por el space-between */
+.customers-status-filter-group {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    padding: 3px;
+    border-radius: 8px;
+    gap: 2px;
+}
+
+
+.status-filter-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Estado activo/seleccionado */
+.status-filter-btn.is-active {
+    background: #f59e0b; /* Color dorado para combinar con tu tema */
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .customers-page {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .customers-header {
+        flex-wrap: wrap;
+    }
+
+    .customers-table th:nth-child(3),
+    .customers-table td:nth-child(3),
+    .customers-table th:nth-child(4),
+    .customers-table td:nth-child(4) {
+        display: none; /* Ocultamos Email y Teléfono en móvil; quedan visibles al editar */
+    }
+}

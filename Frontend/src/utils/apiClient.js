@@ -282,6 +282,9 @@ export const billingClient = {
   },
   createCustomer: (data) => apiClient.post('/billing/customers', data),
   updateCustomer: (id, data) => apiClient.patch(`/billing/customers/${id}`, data),
+  getCustomerTaxRate: (id) => apiClient.get(`/billing/customers/${id}/tax-rate`),
+  getCountrySettings: (countryCode) => apiClient.get(`/billing/country-settings/${countryCode}`),
+  upsertCountrySettings: (countryCode, payload) => apiClient.put(`/billing/country-settings/${countryCode}`, payload),
 
   // Invoices
   listInvoices: (params = {}) => {

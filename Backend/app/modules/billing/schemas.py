@@ -116,7 +116,7 @@ class InvoiceItemCreate(BaseModel):
     unit_price: Annotated[Decimal, Field(..., ge=0, description="Precio unitario.")]
     discount: Annotated[Decimal, Field(default=Decimal("0"), ge=0, description="Descuento por línea.")]
     tax_rate: Annotated[
-        Decimal, Field(default=Decimal("19.00"), ge=0, le=100, description="Porcentaje de IVA."),
+        Decimal | None, Field(default=None, ge=0, le=100, description="Porcentaje de IVA. Si no se especifica, se usa el IVA por defecto del país del cliente.")
     ]
     product_id: Annotated[uuid.UUID | None, Field(None)] = None
     service_id: Annotated[uuid.UUID | None, Field(None)] = None
@@ -427,3 +427,32 @@ class InvoiceEmailSendResponse(BaseModel):
     success: bool
     message: str
     email: str | None = None
+
+
+# —— Country Settings Schemas ————————————————————————————————————————————————
+
+class CountrySettingUpsert(BaseModel):
+    """Schema para crear o actualizar la configuración tributaria de un país."""
+
+    country_name: Annotated[str, Field(..., min_length=1, max_length=100)]
+    default_tax_rate: Annotated[
+        Decimal, Field(..., ge=0, le=100, description="Porcentaje de IVA por defecto para el país.")
+    ]
+    currency_code: Annotated[str | None, Field(None, max_length=10)] = None
+    currency_symbol: Annotated[str | None, Field(None, max_length=10)] = None
+    is_active: Annotated[bool, Field(default=True)] = True
+
+
+class CountrySettingResponse(BaseModel):
+    """Schema for country settings in API responses."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    country_code: str
+    country_name: str
+    default_tax_rate: Decimal
+    currency_code: str | None = None
+    currency_symbol: str | None = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime | None = None

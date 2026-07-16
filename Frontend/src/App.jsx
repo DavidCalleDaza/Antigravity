@@ -19,14 +19,16 @@ import Statistics from './modules/Statistics/Statistics';
 import Market from './modules/Market/Market';
 import Profile from './modules/Profile/Profile';
 import SocialAccountsAdmin from './modules/Admin/SocialAccountsAdmin';
+import VerifyPublic from './Pages/VerifyPublic';
 
 import CustomCursor from './components/common/CustomCursor';
+import Customers from './modules/Billing/Customers';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <CustomCursor />
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -34,13 +36,15 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/auth/callback" element={<GoogleCallback />} />
+        <Route path="/verify/:cufe" element={<VerifyPublic />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/categories" element={<Categories />} />
             <Route path="/products" element={<Products />} />
             <Route path="/services" element={<Services />} />
-            <Route path="/categories" element={<Categories allowedRoles={[ADMIN, SELLER]} />} />
+            <Route path="/customers" element={<Customers allowedRoles={[ADMIN, SELLER]} />} />
             <Route path="/billing" element={<Billing allowedRoles={[ADMIN, SELLER]} />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/wall" element={<Wall />} />

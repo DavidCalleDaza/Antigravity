@@ -17,6 +17,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import select
 from app.db.session import get_db
 from app.modules.auth.deps import get_current_user
 from app.modules.auth.models import User
@@ -35,6 +36,7 @@ from app.modules.billing.crud import (
     create_credit_note,
     get_billing_summary,
     get_top_selling_products_and_services,
+    get_customer_default_tax_rate,
 )
 from app.modules.billing.schemas import (
     CustomerCreate,
@@ -51,6 +53,7 @@ from app.modules.billing.schemas import (
     InvoiceSummary,
     TopSellingItem,
     TopSellingResponse,
+    CountrySettingResponse,
 )
 from app.modules.billing.pdf_service import (
     generate_invoice_pdf,
@@ -144,6 +147,20 @@ async def update_billing_customer(
             detail=str(val_err)
         )
 
+@router.get("/customers/{customer_id}/tax-rate")
+async def get_customer_tax_rate(
+    customer_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> dict:
+    """
+    Retorna el IVA sugerido para un cliente, según el país de su ubicación.
+    El frontend lo consulta al seleccionar un cliente en el formulario de
+    facturación, para pre-llenar automáticamente el tax_rate de las nuevas
+    líneas.
+    """
+    tax_rate = await get_customer_default_tax_rate(db, customer_id)
+    return {"tax_rate": tax_rate}
 
 # --- Invoices ---
 
@@ -461,3 +478,49 @@ async def get_top_selling_endpoint(
         products=[TopSellingItem(**dict(r._mapping)) for r in products],
         services=[TopSellingItem(**dict(r._mapping)) for r in services],
     )
+
+
+# --- Country Settings ---
+
+from app.modules.billing.models import CountrySetting
+from app.modules.billing.crud import upsert_country_setting
+from app.modules.billing.schemas import CountrySettingUpsert
+
+
+@router.get("/country-settings/{country_code}", response_model=CountrySettingResponse)
+async def get_country_settings_endpoint(
+    country_code: str,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> CountrySettingResponse:
+    """Retrieve settings and tax details for a given country code (e.g. CO, US)."""
+    normalized_code = country_code.strip().upper()
+    stmt = select(CountrySetting).where(
+        CountrySetting.country_code == normalized_code,
+        CountrySetting.is_active == True
+    )
+    result = await db.execute(stmt)
+    setting = result.scalar_one_or_none()
+    if not setting:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No se encontró configuración tributaria activa para el país '{normalized_code}'."
+        )
+    return CountrySettingResponse.model_validate(setting)
+
+
+@router.put("/country-settings/{country_code}", response_model=CountrySettingResponse)
+async def upsert_country_settings_endpoint(
+    country_code: str,
+    setting_in: CountrySettingUpsert,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> CountrySettingResponse:
+    """
+    Crea o actualiza la configuración tributaria (IVA por defecto) de un país.
+
+    Se usa desde el formulario de creación de cliente cuando el usuario
+    define o corrige el IVA de un país sin configuración previa.
+    """
+    setting = await upsert_country_setting(db, country_code, setting_in)
+    return CountrySettingResponse.model_validate(setting)

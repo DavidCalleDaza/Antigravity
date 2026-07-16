@@ -33,7 +33,7 @@ export default function Services() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const [categories, setCategories] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [sellerFilter, setSellerFilter] = useState('');
   const [storeLocations, setStoreLocations] = useState([]);
@@ -80,12 +80,12 @@ export default function Services() {
   const loadCategories = async () => {
     try {
       const data = await categoryClient.list('service');
-      setCategories(data);
+      setDbCategories(data);
     } catch (err) {
       console.error('Error loading categories:', err);
     }
   };
-
+ 
   const loadServices = async () => {
     try {
       setLoading(true);
@@ -276,7 +276,7 @@ export default function Services() {
 
   const enrichedServices = services.map(s => ({
     ...s,
-    category: categories.find(c => c.id === s.category_id)?.name || ''
+    category: dbCategories.find(c => c.id === s.category_id)?.name || ''
   }));
 
   return (
@@ -391,14 +391,14 @@ export default function Services() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', alignItems: 'end' }}>
             <div className="form-group">
               <label className="form-label">Categoría</label>
               <CategorySelect
                 value={formData.category_id}
                 onChange={(val) => setFormData({ ...formData, category_id: val })}
                 entityType="service"
-                categories={categories}
+                categories={dbCategories}
                 onCategoryCreated={loadCategories}
               />
             </div>
@@ -414,15 +414,28 @@ export default function Services() {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Duración</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-              placeholder="30 min, 1 hora..."
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+            <div className="form-group">
+              <label className="form-label">Duración</label>
+              <input
+                type="text"
+                className="form-input"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                placeholder="30 min, 1 hora..."
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Estado</label>
+              <select
+                className="form-select"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              >
+                <option value="active">Activo</option>
+                <option value="inactive">Inactivo</option>
+              </select>
+            </div>
           </div>
 
           <div className="form-group">
@@ -432,6 +445,7 @@ export default function Services() {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows="3"
+              style={{ resize: 'vertical' }}
             />
           </div>
 

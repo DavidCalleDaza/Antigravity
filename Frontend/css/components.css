@@ -452,6 +452,7 @@
 
 .table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   table-layout: fixed;
 }

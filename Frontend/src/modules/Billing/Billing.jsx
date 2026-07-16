@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FilePlus, Eye, FileText, Send, Calendar, Search, X, Loader2 } from 'lucide-react';
+import { Download, FilePlus, Eye, Send, Calendar, Search, X, Loader2, FileText} from 'lucide-react';
 import { AiOutlineClear } from "react-icons/ai";
 import { billingClient, triggerBlobDownload } from '../../utils/apiClient';
 import Helpers from '../../utils/helpers';
@@ -10,8 +10,6 @@ import InvoiceForm from './InvoiceForm';
 import InvoiceDetail from './InvoiceDetail';
 import '../../../css/pages/billing.css';
 
-
-// Botón de acción por fila
 // Botón de acción por fila
 function RowActionButton({ icon: Icon, title, onClick, disabled, reason, iconClass = '', spinning = false }) {
   const [tooltipPos, setTooltipPos] = useState(null);
@@ -446,6 +444,7 @@ export default function Billing() {
       {/* Header */}
       <div className="page-header">
         <div>
+          <FileText width="20" height="20" className="page-title-icon" />
           <h2 className="page-title">Facturación</h2>
           <p className="page-description">Administración de Facturación Electrónica</p>
         </div>

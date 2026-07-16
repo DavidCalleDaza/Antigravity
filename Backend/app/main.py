@@ -30,6 +30,7 @@ from app.modules.ai.router import router as ai_router
 from app.modules.whatsapp.router import router as whatsapp_router
 from app.modules.agenda.router import router as agenda_router
 from app.modules.notifications.router import router as notifications_router
+from app.modules.billing.public_verify_router import router as public_verify_router
 
 from app.db.base import Base
 from app.shared.schemas import HealthCheckResponse
@@ -186,6 +187,11 @@ app.include_router(
     tags=["Notifications"],
 )
 
+app.include_router(
+    public_verify_router,
+    prefix="/api/v1",
+    tags=["Public Verification"],
+)
 
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
 app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")

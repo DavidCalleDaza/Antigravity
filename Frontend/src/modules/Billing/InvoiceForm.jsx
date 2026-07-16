@@ -11,6 +11,7 @@ import Helpers from '../../utils/helpers';
 import "../../../css/pages/InvoiceModal.css";
 import { usePaymentMeans } from '../../hooks/usePaymentMeans';
 import CustomerModal from './CustomerModal'; 
+import SearchableSelect from '../../components/common/SearchableSelect';
 
 const ITEM_UNITS = ["UND", "KG", "LT", "MT", "HR", "SRV", "MES", "CJA", "PAR", "ROL"];
 const UNIT_LABELS = {
@@ -110,6 +111,26 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
     const found = customers.find(c => c.id === customerId) || null;
     setSelectedCustomer(found);
   }, [customerId, customers]);
+
+  // Consultar configuración del país y auto-asignar el IVA por defecto del país a todas las líneas
+  useEffect(() => {
+    if (!selectedCustomer) return;
+    const countryCode = selectedCustomer.location?.country_code;
+    if (!countryCode) return;
+
+    const fetchCountryTax = async () => {
+      try {
+        const cs = await billingClient.getCountrySettings(countryCode);
+        if (cs && cs.default_tax_rate !== undefined) {
+          const rate = parseFloat(cs.default_tax_rate);
+          setItems(prevItems => prevItems.map(item => ({ ...item, tax_rate: rate })));
+        }
+      } catch (err) {
+        console.warn("No se pudo obtener el IVA por defecto del país del cliente:", err);
+      }
+    };
+    fetchCountryTax();
+  }, [selectedCustomer]);
 
   // Sincronizar el buscador de texto con el cliente seleccionado (evita que quede en blanco al cargar o seleccionar)
   useEffect(() => {
@@ -321,7 +342,19 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
   return { subtotal, lineDiscount, preferredDiscount, discount_total, tax_base, tax_total, taxesGrouped, total };
 }, [items, selectedCustomer]);
 
-  const handleAddItem = () => setItems([...items, { ...EMPTY_ITEM }]);
+  const handleAddItem = async () => {
+    let rate = 19.00; // default general fallback si no hay cliente seleccionado
+    if (selectedCustomer) {
+      try {
+        const { tax_rate } = await billingClient.getCustomerTaxRate(selectedCustomer.id);
+        const parsed = parseFloat(tax_rate);
+        if (!isNaN(parsed)) rate = parsed;
+      } catch (err) {
+        console.warn("No se pudo obtener el IVA del cliente para la nueva línea:", err);
+      }
+    }
+    setItems([...items, { ...EMPTY_ITEM, tax_rate: rate }]);
+  };
 
   const handleRemoveItem = (index) => {
     if (items.length === 1) { toast.warning('La factura debe tener al menos una línea de detalle.'); return; }
@@ -337,21 +370,23 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
     }
   };
 
-  const handleItemChange = (index, field, value) => {
+  const handleItemChange = (index, field, value) => { 
     const updated = [...items];
     if (field === 'product_select') {
       if (value) {
         const prod = products.find(p => p.id === value);
         if (prod) updated[index] = { ...updated[index], description: prod.name, code: prod.sku || '', unit_price: parseFloat(prod.price) || 0, quantity: 1, product_id: prod.id, service_id: null };
       } else {
-        updated[index] = { ...updated[index], product_id: null };
+        // Deseleccionado: limpiar campos que eran autocompletados por el producto
+        updated[index] = { ...updated[index], product_id: null, description: '', code: '', unit_price: 0 };
       }
     } else if (field === 'service_select') {
       if (value) {
         const serv = services.find(s => s.id === value);
         if (serv) updated[index] = { ...updated[index], description: serv.name, code: serv.code || '', unit_price: parseFloat(serv.price) || 0, quantity: 1, service_id: serv.id, product_id: null };
       } else {
-        updated[index] = { ...updated[index], service_id: null };
+        // Deseleccionado: limpiar campos que eran autocompletados por el servicio
+        updated[index] = { ...updated[index], service_id: null, description: '', code: '', unit_price: 0 };
       }
     } else {
       updated[index][field] = value;
@@ -493,6 +528,13 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
 
   const disabledStyle   = { opacity: 0.4, cursor: 'not-allowed', pointerEvents: 'none' };
   const baseSelectStyle = { height: '28px', padding: '2px 6px', flex: 1, appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' };
+
+  const lockedFieldStyle = {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    color: 'var(--text-secondary)',
+    cursor: 'not-allowed',
+  };  
+
 
   return (
     <div 
@@ -697,6 +739,7 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                     {items.map((item, index) => {
                       const productLocked = !!item.service_id;
                       const serviceLocked = !!item.product_id;
+                      const hasSelection = !!(item.product_id || item.service_id);
 
                       const availableProducts = products.filter(
                         p => !selectedProductIds.includes(p.id) || item.product_id === p.id
@@ -710,13 +753,21 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                           {/* PRODUCTO */}
                           <td style={{ width: '220px' }}>
                             <div className="d-flex align-items-center gap-1">
-                              <select className="form-select text-xs"
-                                style={{ ...baseSelectStyle, cursor: productLocked ? 'not-allowed' : 'pointer', opacity: productLocked ? 0.4 : 1 }}
-                                value={item.product_id || ''} disabled={productLocked}
-                                onChange={(e) => handleItemChange(index, 'product_select', e.target.value)}>
-                                <option value="">Seleccionar...</option>
-                                {availableProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                              </select>
+                              <div style={{ flex: 1 }}>
+                                <SearchableSelect
+                                  value={item.product_id || ''}
+                                  onChange={(id) => handleItemChange(index, 'product_select', id || '')}
+                                  options={availableProducts}
+                                  getLabel={(p) => p.name}
+                                  getValue={(p) => p.id}
+                                  placeholder="Seleccionar..."
+                                  searchPlaceholder="Buscar producto..."
+                                  emptyText="Sin productos disponibles"
+                                  disabled={productLocked}
+                                  clearable
+                                  size="compact"
+                                />
+                              </div>
                               <button type="button" className="btn btn-ghost btn-sm btn-icon-only text-primary"
                                 style={{ padding: '2px', height: '28px', width: '28px', ...(productLocked ? disabledStyle : {}) }}
                                 disabled={productLocked}
@@ -729,13 +780,21 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                           {/* SERVICIO */}
                           <td style={{ width: '220px' }}>
                             <div className="d-flex align-items-center gap-1">
-                              <select className="form-select text-xs"
-                                style={{ ...baseSelectStyle, cursor: serviceLocked ? 'not-allowed' : 'pointer', opacity: serviceLocked ? 0.4 : 1 }}
-                                value={item.service_id || ''} disabled={serviceLocked}
-                                onChange={(e) => handleItemChange(index, 'service_select', e.target.value)}>
-                                <option value="">Seleccionar...</option>
-                                {availableServices.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                              </select>
+                              <div style={{ flex: 1 }}>
+                                <SearchableSelect
+                                  value={item.service_id || ''}
+                                  onChange={(id) => handleItemChange(index, 'service_select', id || '')}
+                                  options={availableServices}
+                                  getLabel={(s) => s.name}
+                                  getValue={(s) => s.id}
+                                  placeholder="Seleccionar..."
+                                  searchPlaceholder="Buscar servicio..."
+                                  emptyText="Sin servicios disponibles"
+                                  disabled={serviceLocked}
+                                  clearable
+                                  size="compact"
+                                />
+                              </div>
                               <button type="button" className="btn btn-ghost btn-sm btn-icon-only text-primary"
                                 style={{ padding: '2px', height: '28px', width: '28px', ...(serviceLocked ? disabledStyle : {}) }}
                                 disabled={serviceLocked}
@@ -748,7 +807,9 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                           {/* DESCRIPCIÓN */}
                           <td>
                             <input type="text" className="form-control text-sm" placeholder="Ej: Consultoría, Producto A, etc."
-                              value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} required />
+                            style={{ height: '28px', fontSize: '10px', padding: '2px 6px', ...(hasSelection ? lockedFieldStyle : {}) }}
+                            value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                            disabled={hasSelection} required />
                           </td>
                           {/* CANTIDAD */}
                           <td>
@@ -766,17 +827,24 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                           {/* PRECIO */}
                           <td>
                             <input type="number" className="form-control text-sm text-right"
-                              value={item.unit_price} min="0" step="any"
-                              onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)} required />
+                            style={hasSelection ? lockedFieldStyle : undefined}
+                            value={item.unit_price} min="0" step="any"
+                            onChange={(e) => handleItemChange(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                            disabled={hasSelection} required />
                           </td>
                           {/* IVA */}
                           <td>
-                            <select className="form-select text-sm" value={item.tax_rate}
-                              onChange={(e) => handleItemChange(index, 'tax_rate', parseFloat(e.target.value) || 0)}>
-                              <option value="19">19%</option>
-                              <option value="5">5%</option>
-                              <option value="0">0%</option>
-                            </select>
+                            <input
+                              type="number"
+                              className="form-control text-sm text-right"
+                              style={hasSelection ? lockedFieldStyle : undefined}
+                              value={item.tax_rate}
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              onChange={(e) => handleItemChange(index, 'tax_rate', parseFloat(e.target.value) || 0)}
+                              disabled={hasSelection}
+                            />
                           </td>
                           {/* SUBTOTAL */}
                           <td style={{ textAlign: 'right' }}>

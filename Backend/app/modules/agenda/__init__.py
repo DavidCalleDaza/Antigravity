@@ -1,1 +1,1 @@
-"""Servinow API — Agenda module."""
+"""Servinow API — Agenda module (availability + appointments)."""

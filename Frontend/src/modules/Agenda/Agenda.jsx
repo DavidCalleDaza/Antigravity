@@ -56,6 +56,135 @@ function SellerAgendaView() {
   );
 }
 
+/* ─── Time Slot Picker Helpers ─── */
+function generateAllSlots() {
+  const slots = [];
+  for (let h = 0; h < 24; h++)
+    for (let m = 0; m < 60; m += 15)
+      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  return slots;
+}
+const ALL_SLOTS = generateAllSlots();
+
+function slotToMin(s) {
+  if (!s) return 0;
+  const [h, m] = s.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function formatDur(start, end) {
+  const diff = slotToMin(end) - slotToMin(start);
+  if (diff <= 0) return '';
+  const h = Math.floor(diff / 60), m = diff % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+}
+
+function TimeSlotPicker({ startTime, endTime, onStartChange, onEndChange }) {
+  const [phase, setPhase] = useState('start'); // 'start' | 'end' | 'done'
+  const duration = formatDur(startTime, endTime);
+
+  const getState = (slot) => {
+    const sm = slotToMin(slot);
+    const s  = slotToMin(startTime);
+    const e  = slotToMin(endTime);
+    if (slot === startTime && slot === endTime) return 'both';
+    if (slot === startTime) return 'is-start';
+    if (slot === endTime)   return 'is-end';
+    if (startTime && endTime && sm > s && sm < e) return 'in-range';
+    return '';
+  };
+
+  const handleClick = (slot) => {
+    if (phase === 'start') {
+      onStartChange(slot);
+      const ni = ALL_SLOTS.indexOf(slot) + 4;
+      if (!endTime || slotToMin(slot) >= slotToMin(endTime))
+        onEndChange(ALL_SLOTS[Math.min(ni, ALL_SLOTS.length - 1)]);
+      setPhase('end');
+    } else {
+      if (slotToMin(slot) <= slotToMin(startTime)) {
+        onStartChange(slot);
+        setPhase('end');
+      } else {
+        onEndChange(slot);
+        setPhase('done');
+      }
+    }
+  };
+
+  return (
+    <div className="tsp-wrapper">
+      {/* Summary bar */}
+      <div className="tsp-summary">
+        <div
+          className={`tsp-time-box${phase === 'start' ? ' active' : ''}`}
+          onClick={() => setPhase('start')}
+        >
+          <span className="tsp-time-label">INICIO</span>
+          <span className="tsp-time-val">{startTime || '--:--'}</span>
+        </div>
+        <span className="tsp-arrow">→</span>
+        <div
+          className={`tsp-time-box${phase === 'end' || phase === 'done' ? ' active' : ''}`}
+          onClick={() => { if (startTime) setPhase('end'); }}
+        >
+          <span className="tsp-time-label">FIN</span>
+          <span className="tsp-time-val">{endTime || '--:--'}</span>
+        </div>
+        {duration && (
+          <div className="tsp-dur">
+            <Clock width="11" height="11" />
+            {duration}
+          </div>
+        )}
+      </div>
+
+      {/* Instruction */}
+      <div className="tsp-hint">
+        <span>
+          {phase === 'start' && '👆 Selecciona la hora de inicio'}
+          {phase === 'end'   && '👆 Ahora selecciona la hora de fin'}
+          {phase === 'done'  && '✓ Horario seleccionado — puedes ajustar haciendo clic'}
+        </span>
+        {phase !== 'start' && (
+          <button type="button" className="tsp-reset" onClick={() => setPhase('start')}>
+            Reiniciar
+          </button>
+        )}
+      </div>
+
+      {/* Grid */}
+      <div className="tsp-grid-wrap">
+        <div className="tsp-grid">
+          {Array.from({ length: 24 }, (_, h) => (
+            <div key={h} className="tsp-row">
+              <span className="tsp-h-label">{String(h).padStart(2,'0')}h</span>
+              {['00','15','30','45'].map(m => {
+                const slot = `${String(h).padStart(2,'0')}:${m}`;
+                const st = getState(slot);
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`tsp-btn${st ? ` ${st}` : ''}`}
+                    onClick={() => handleClick(slot)}
+                    title={slot}
+                  >
+                    :{m}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Seller Templates (Horario Semanal) ─── */
 function SellerTemplates() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,11 +217,15 @@ function SellerTemplates() {
       toast.error('Debes seleccionar hora de inicio y fin');
       return;
     }
+    if (slotToMin(form.end_time) <= slotToMin(form.start_time)) {
+      toast.error('La hora de fin debe ser posterior al inicio');
+      return;
+    }
     try {
       const data = await agendaClient.createTemplate({
         day_of_week: dayOfWeek,
-        start_time: form.start_time,
-        end_time: form.end_time,
+        start_time: form.start_time + ':00',
+        end_time:   form.end_time   + ':00',
         is_available: form.is_available,
       });
       setTemplates(prev => [...prev, data]);
@@ -124,46 +257,67 @@ function SellerTemplates() {
               {grouped[idx].length === 0 && !loading && (
                 <span className="text-tertiary text-sm">Sin horario</span>
               )}
-              {grouped[idx].map(t => (
-                <div key={t.id} className="agenda-time-badge">
-                  <span>{t.start_time.slice(0, 5)} - {t.end_time.slice(0, 5)}</span>
-                  <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => handleDelete(t.id)}>
-                    <X width="12" height="12" />
-                  </button>
-                </div>
-              ))}
-              {editingDay === idx && (
-                <div className="agenda-time-form">
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={form.start_time}
-                    onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
-                  />
-                  <span className="text-sm">a</span>
-                  <input
-                    type="time"
-                    className="form-input"
-                    value={form.end_time}
-                    onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))}
-                  />
-                  <button className="btn btn-primary btn-sm" onClick={() => handleAdd(idx)}>
-                    <Check width="14" height="14" />
-                  </button>
-                  <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => setEditingDay(null)}>
-                    <X width="14" height="14" />
-                  </button>
-                </div>
-              )}
+              {grouped[idx].map(t => {
+                const dur = formatDur(t.start_time.slice(0,5), t.end_time.slice(0,5));
+                return (
+                  <div key={t.id} className="agenda-time-badge">
+                    <Clock width="11" height="11" style={{opacity:0.6}} />
+                    <span>{t.start_time.slice(0, 5)} — {t.end_time.slice(0, 5)}</span>
+                    {dur && <span className="agenda-time-dur">{dur}</span>}
+                    <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => handleDelete(t.id)}>
+                      <X width="12" height="12" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
-            {editingDay !== idx && (
-              <button className="btn btn-ghost btn-sm" onClick={() => { setEditingDay(idx); setForm({ start_time: '', end_time: '', is_available: true }); }}>
+            {editingDay !== idx ? (
+              <button
+                className="btn btn-ghost btn-sm agenda-add-btn"
+                onClick={() => { setEditingDay(idx); setForm({ start_time: '', end_time: '', is_available: true }); }}
+              >
                 <Plus width="14" height="14" /> Agregar
+              </button>
+            ) : (
+              <button className="btn btn-ghost btn-sm agenda-add-btn" onClick={() => setEditingDay(null)}>
+                <X width="14" height="14" /> Cerrar
               </button>
             )}
           </div>
         ))}
       </div>
+
+      {/* Inline slot picker panel */}
+      {editingDay !== null && (
+        <div className="agenda-tsp-panel">
+          <div className="agenda-tsp-panel-header">
+            <Clock width="15" height="15" style={{color:'var(--gold)'}} />
+            <span>Nueva franja — <strong>{DAYS[editingDay]}</strong></span>
+          </div>
+          <TimeSlotPicker
+            startTime={form.start_time}
+            endTime={form.end_time}
+            onStartChange={v => setForm(f => ({...f, start_time: v}))}
+            onEndChange={v   => setForm(f => ({...f, end_time:   v}))}
+          />
+          <div className="agenda-tsp-panel-footer">
+            <label className="agenda-checkbox-label">
+              <input
+                type="checkbox"
+                checked={form.is_available}
+                onChange={e => setForm(f => ({...f, is_available: e.target.checked}))}
+              />
+              Marcar como disponible
+            </label>
+            <div style={{display:'flex', gap:'8px'}}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setEditingDay(null)}>Cancelar</button>
+              <button className="btn btn-primary btn-sm" onClick={() => handleAdd(editingDay)}>
+                <Check width="13" height="13" /> Guardar franja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -227,18 +381,35 @@ function SellerOverrides() {
       </div>
 
       {showForm && (
-        <div className="agenda-override-form">
-          <input type="date" className="form-input" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
-          <input type="time" className="form-input" value={form.start_time} onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))} />
-          <input type="time" className="form-input" value={form.end_time} onChange={e => setForm(f => ({ ...f, end_time: e.target.value }))} />
-          <label className="agenda-checkbox-label">
-            <input type="checkbox" checked={!form.is_available} onChange={e => setForm(f => ({ ...f, is_available: !e.target.checked }))} />
-            Bloquear (no disponible)
-          </label>
-          <input type="text" className="form-input" placeholder="Motivo (opcional)" value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} />
-          <div className="d-flex gap-2">
-            <button className="btn btn-primary btn-sm" onClick={handleAdd}>Guardar</button>
-            <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancelar</button>
+        <div className="agenda-tsp-panel">
+          <div className="agenda-tsp-panel-header">
+            <Clock width="15" height="15" style={{color:'var(--gold)'}} />
+            <span>Nueva excepción de disponibilidad</span>
+          </div>
+          <div style={{display:'flex', flexDirection:'column', gap:'12px', padding:'4px 0'}}>
+            <div className="form-group">
+              <label className="form-label">Fecha</label>
+              <input type="date" className="form-input" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+            </div>
+            <TimeSlotPicker
+              startTime={form.start_time}
+              endTime={form.end_time}
+              onStartChange={v => setForm(f => ({...f, start_time: v}))}
+              onEndChange={v   => setForm(f => ({...f, end_time:   v}))}
+            />
+            <input type="text" className="form-input" placeholder="Motivo (opcional)" value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} />
+          </div>
+          <div className="agenda-tsp-panel-footer">
+            <label className="agenda-checkbox-label">
+              <input type="checkbox" checked={!form.is_available} onChange={e => setForm(f => ({ ...f, is_available: !e.target.checked }))} />
+              Bloquear (no disponible)
+            </label>
+            <div style={{display:'flex', gap:'8px'}}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>Cancelar</button>
+              <button className="btn btn-primary btn-sm" onClick={handleAdd}>
+                <Check width="13" height="13" /> Guardar excepción
+              </button>
+            </div>
           </div>
         </div>
       )}

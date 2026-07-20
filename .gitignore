@@ -48,6 +48,7 @@ htmlcov/
 *.sublime-workspace
 
 # --- Application Data ---
+uploads/
 Backend/uploads/
 *.Identifier
 

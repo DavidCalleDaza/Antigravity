@@ -43,20 +43,34 @@ class ApiClient {
       data = { detail: `HTTP ${response.status}` };
     }
 
-    if (!response.ok) {
-      if (response.status === 401) {
+    if (response.status === 401) {
+      console.warn("401 recibido:", endpoint);
+
+      // Solo forzar logout si SÍ había un token y el backend lo rechazó.
+      // Si no había token (ej. carrera con la rehidratación de Zustand al
+      // recargar en dev), no es una sesión inválida real — solo propaga el error.
+      if (endpoint === "/auth/me" && token) {
         useStore.getState().logout();
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
+
       throw new ApiError(
-        data.detail || `HTTP ${response.status}`,
-        response.status,
-        data
+          data.detail || "No autorizado",
+          response.status,
+          data
       );
     }
 
+    if (!response.ok) {
+        throw new ApiError(
+            data.detail || `HTTP ${response.status}`,
+            response.status,
+            data
+        );
+    }
+
     return data;
-  }
+}
 
   async requestFormData(endpoint, body, method = 'POST') {
     const token = useStore.getState().currentUser?.token;
@@ -80,14 +94,14 @@ class ApiClient {
 
     if (!response.ok) {
       if (response.status === 401) {
-        useStore.getState().logout();
-        window.location.href = '/login';
+        console.warn("401 recibido:", endpoint);
+
+        throw new ApiError(
+            data.detail || "No autorizado",
+            response.status,
+            data
+        );
       }
-      throw new ApiError(
-        data.detail || `HTTP ${response.status}`,
-        response.status,
-        data
-      );
     }
     return data;
   }
@@ -120,17 +134,15 @@ class ApiClient {
       }
 
       if (response.status === 401) {
-        useStore.getState().logout();
-        window.location.href = '/login';
+        console.warn("401 recibido:", endpoint);
+
+        throw new ApiError(
+            data.detail || "No autorizado",
+            response.status,
+            data
+        );
       }
-
-      throw new ApiError(
-        data.detail || `HTTP ${response.status}`,
-        response.status,
-        data
-      );
     }
-
     return response.blob();
   }
 
@@ -264,10 +276,16 @@ export const billingClient = {
     return apiClient.get(`/billing/summary${query ? `?${query}` : ''}`);
   },
 
-  // Medios de pago
+  // Medios de pago (opciones validas para formularios de factura)
   getPaymentMeans: (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return apiClient.get(`/billing/payment-means${query ? `?${query}` : ''}`);
+  },
+
+  // Estadisticas de metodos de pago (distribucion de ingresos por metodo)
+  getPaymentStats: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/payment-stats${query ? `?${query}` : ''}`);
   },
 
   // Top productos y servicios más vendidos (separados)
@@ -275,6 +293,19 @@ export const billingClient = {
     const query = new URLSearchParams(params).toString();
     return apiClient.get(`/billing/top-selling${query ? `?${query}` : ''}`);
   },
+
+  // Ingresos mensuales separados por producto vs servicio.
+  getRevenueByLine: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/billing/revenue-by-line${query ? `?${query}` : ''}`);
+  },
+
+  // Distribución de ingresos por categoría, separado por tipo de entidad.
+  getCategoryDistribution: (entityType, params = {}) => {
+  const query = new URLSearchParams({ entity_type: entityType, ...params }).toString();
+  return apiClient.get(`/billing/category-distribution${query ? `?${query}` : ''}`);
+},
+
 };
 
 export const categoryClient = {

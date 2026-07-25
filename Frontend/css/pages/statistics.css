@@ -1,80 +1,1394 @@
-/* ============================================
-   SERVINOW — Statistics Page Styles
-   Gold Theme
-   ============================================ */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
-}
-.stats-full { grid-column: 1 / -1; }
-.suggestion-card {
+/* =======================================================================
+   SERVINOW — Módulo de Estadísticas (Paleta de Identificación de Alto Contraste)
+   ================================================================─────── */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1. WRAPPER PRINCIPAL
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-dashboard-wrapper {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-xl);
-  background: rgba(28, 25, 36, 0.35);
+  flex-direction: column;
+  gap: var(--space-6, 1.5rem);
+  padding: var(--space-6, 1.5rem);
+  background: var(--surface, #111015);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2. ENCABEZADO
+   El título/ícono/descripción usan las clases genéricas compartidas
+   (.page-header, .page-title, .page-description, .page-title-icon) que
+   vienen del layout general de Servinow (mismas que Productos/Servicios/
+   Billing). Aquí solo se sobreescribe el layout de esa fila para que,
+   dentro de Estadísticas, los botones CSV/Excel (.actions-button-group)
+   queden pegados a la derecha en la misma línea del título.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-dashboard-wrapper .page-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.stats-dashboard-wrapper .page-header > div:first-child {
+  flex: 0 1 auto;
+}
+
+.stats-dashboard-wrapper .actions-button-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: auto;        /* anula cualquier width: 100% que lo empuje a otra fila */
+  margin-left: auto;  /* lo pega a la derecha */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3. FILTROS, CONTROLES Y BOTONERAS (período, comparación, CSV/Excel)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Fila de filtros (Período / Comparar con), debajo del header,
+   alineada a la derecha. */
+.stats-filters-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: -25px;
+  margin-bottom: -8px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.35rem);
+}
+
+.control-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+  font-size: var(--text-xxs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.control-select, .control-date-input {
+  height: 36px;
+  border-radius: var(--radius-md, 8px);
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  background-color: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  backdrop-filter: blur(20px);
+  padding: 0 var(--space-3, 0.75rem);
+  font-size: var(--text-xs, 0.85rem);
+  color: var(--text-primary, #ffffff);
+  transition: all var(--transition-fast, 0.15s) ease;
+}
+
+/* .control-select es un <select> nativo: quitamos el control por defecto
+   del navegador (que en algunos builds referencia una imagen de flecha rota,
+   de ahí el ícono de "imagen no encontrada" gris) y dibujamos nuestra propia
+   flecha con un SVG inline — nunca depende de un archivo externo. */
+.control-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3, 0.75rem) center;
+  background-size: 10px 6px;
+  padding-right: calc(var(--space-3, 0.75rem) * 2 + 10px);
+  /* Fuerza que el navegador dibuje la lista de <option> con paleta oscura
+     en vez del gris claro del SO. Soportado en Chrome/Edge/Firefox. */
+  color-scheme: dark;
+}
+
+/* El fondo/color real de cada fila de la lista abierta se controla aquí,
+   no en .control-select — el navegador solo respeta esto en el <option>
+   directamente. */
+.control-select option {
+  background-color: var(--surface-raised, #1a1826);
+  color: var(--text-primary, #ffffff);
+}
+
+.control-select option:checked,
+.control-select option:hover {
+  background-color: var(--primary, #6366f1);
+  color: #ffffff;
+}
+
+.control-select:focus, .control-date-input:focus {
+  outline: none;
+  border-color: var(--primary, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.date-input-pair {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.date-separator {
+  font-size: var(--text-xs, 0.8rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+.actions-button-group {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+}
+
+.stats-action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  height: 36px;
+  padding: 0 var(--space-4, 1rem);
+  background: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-medium, 500);
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s) ease;
+  backdrop-filter: blur(20px);
+}
+
+.stats-action-btn:hover {
+  background: rgba(28, 25, 36, 0.6);
+  border-color: var(--primary, #6366f1);
+}
+
+/* Estilos para el boton de exportar*/
+.export-menu-wrapper {
+  position: relative;
+}
+
+.export-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  width: 130px;
+  background: var(--surface-overlay, rgba(20, 18, 28, 0.98));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-left: 4px solid var(--gold);
-  transition: all var(--transition-fast);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-md, 10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-[data-theme="light"] .suggestion-card {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+.export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-primary, #ffffff);
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-medium, 500);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
 }
 
-.suggestion-card:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+.export-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.export-menu-icon svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.export-menu-item:hover {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.export-menu-item:first-child .export-menu-icon svg {
+  color: var(--gold, #d4af37);
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   3.1 Dropdown Custom 
+   Control total de colores — no depende del renderizado del navegador/SO.
+   NOTA: Statistics.jsx actualmente sigue usando <select className="control-select">
+   nativo para Período/Comparar con. Estas clases quedan listas para cuando
+   se conecte el componente Dropdown.jsx reutilizable — no se están
+   renderizando todavía, así que si no ves este estilo en pantalla es
+   normal, no es un bug.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.custom-dropdown {
+  position: relative;
+  min-width: 200px;
+}
+
+/* Trigger: mismo lenguaje visual que el resto de inputs de formulario del
+   sistema (surface-overlay, radius-lg, borde 0.1, foco en gold) — NO estilos
+   propios inventados. Además: outline: none explícito en todos los estados
+   (base, :hover, :focus, .open) para que nunca aparezca el rectángulo azul
+   nativo del navegador cuando el <div role="button" tabIndex={0}> recibe foco. */
+.stats-dashboard-wrapper .custom-dropdown-trigger {
+  width: 100%;
+  height: 36px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 0.5rem);
+  border-radius: var(--radius-lg, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--surface-overlay, #1a1a1e);
+  padding: 0 var(--space-3, 0.75rem);
+  font-size: var(--text-xs, 0.85rem);
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+  transition: border-color var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s);
+}
+
+.stats-dashboard-wrapper .custom-dropdown-trigger:hover,
+.stats-dashboard-wrapper .custom-dropdown-trigger:focus,
+.stats-dashboard-wrapper .custom-dropdown-trigger:focus-visible,
+.stats-dashboard-wrapper .custom-dropdown-trigger.open {
+  border-color: var(--gold, #d4af37);
+  box-shadow: 0 0 0 0px var(--gold, #d4af37);
+  outline: none;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-trigger.open .custom-dropdown-chevron {
+  transform: rotate(180deg);
+  color: var(--gold, #d4af37);
+}
+
+.stats-dashboard-wrapper .custom-dropdown-menu {
+  position: absolute !important;
+  top: calc(100% + 6px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 99999 !important;
+  isolation: isolate !important;
+  background-color: var(--surface-overlay, rgba(28, 25, 36, 0.35)) !important;
+  background: var(--surface-overlay, rgba(28, 25, 36, 0.35)) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  padding: 4px;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-option {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--space-3, 0.75rem) !important;
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  outline: none;
+  background-color: transparent !important;
+  transition: background-color 0.1s ease;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-option span {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  text-align: left;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-size: 12px !important;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-option:hover,
+.stats-dashboard-wrapper .custom-dropdown-option:focus {
+  background-color: rgba(16, 21, 162, 0.2) !important;
+}
+
+.stats-dashboard-wrapper .custom-dropdown-option.selected {
+  background-color: rgba(212, 175, 55, 0.15);
+}
+
+.stats-dashboard-wrapper .custom-dropdown-option.selected .custom-dropdown-option-label {
+  color: #ffffff;
+  font-weight: var(--font-semibold, 600);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4. INDICADOR DE CARGA (barra de sincronización)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-system-loader-bar {
+  position: relative;
+  width: 100%;
+  height: 32px;
+  background-color: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+}
+
+.loader-inner-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--primary, #6366f1), transparent);
+  animation: stats-loading-scan 1.5s infinite linear;
+}
+
+.loader-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 0.5rem);
+  font-size: var(--text-xs, 0.8rem);
+  font-weight: var(--font-medium, 500);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+[data-theme="light"] .loader-content {
+  color: #52525b;
+}
+
+[data-theme="light"] .stats-system-loader-bar {
+  background-color: #f4f4f5;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes stats-loading-scan {
+  0% { left: -30%; }
+  100% { left: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5. TARJETAS KPI (con acentos de color por indicador)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-kpi-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4, 1rem);
+}
+
+.stats-metric-card {
+  position: relative;
+  background: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl, 14px);
+  padding: var(--space-5, 1.25rem);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Identificaciones visuales exclusivas por tarjeta KPI para evitar la monotonía */
+.stats-metric-card:nth-child(1) { border-left: 3px solid var(--accent, #8b5cf6); }     /* Ingresos Netos -> Violeta */
+.stats-metric-card:nth-child(2) { border-left: 3px solid var(--primary, #6366f1); }    /* Facturación Total -> Azul */
+.stats-metric-card:nth-child(3) { border-left: 3px solid var(--success, #10b981); }    /* Documentos -> Esmeralda */
+.stats-metric-card:nth-child(4) { border-left: 3px solid var(--gold, #d4af37); }  /* Clientes -> Dorado */
+
+.stats-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   background: rgba(28, 25, 36, 0.45);
 }
 
-[data-theme="light"] .suggestion-card {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
+.stats-card-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--gold, #d4af37), var(--primary, #6366f1), var(--success, #10b981));
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
-[data-theme="light"] .suggestion-card:hover {
-  background: rgba(255, 255, 255, 0.2);
+.stats-metric-card:hover .stats-card-glow {
+  opacity: 1;
 }
 
-.suggestion-card:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  background: rgba(28, 25, 36, 0.65);
+.stats-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.suggestion-icon {
-  width: 40px; height: 40px; border-radius: var(--radius-lg);
-  display: flex; align-items: center; justify-content: center;
-  background: var(--primary-50); color: var(--gold); flex-shrink: 0;
-}
-.suggestion-title { font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-1); color: var(--text-primary); }
-.suggestion-text { font-size: var(--text-xs); color: var(--text-secondary); line-height: var(--leading-relaxed); }
-.rank-list { display: flex; flex-direction: column; gap: var(--space-3); }
-.rank-item {
-  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3);
-  border-radius: var(--radius-lg); transition: background var(--transition-fast);
-  background: rgba(28, 25, 36, 0.3);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-.rank-item:hover { background: rgba(212, 175, 55, 0.1); }
 
-[data-theme="light"] .rank-item { background: rgba(255, 255, 255, 0.08); }
-[data-theme="light"] .rank-item:hover { background: rgba(255, 255, 255, 0.15); }
-.rank-number {
-  width: 28px; height: 28px; border-radius: var(--radius-full);
-  display: flex; align-items: center; justify-content: center;
-  font-size: var(--text-xs); font-weight: var(--font-bold);
-  background: var(--primary-50); color: var(--text-secondary); flex-shrink: 0;
+.stats-card-label {
+  font-size: var(--text-xs, 0.8rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
 }
-.rank-item:nth-child(1) .rank-number { background: var(--accent-50); color: var(--gold); }
-.rank-item:nth-child(2) .rank-number { background: var(--primary-100); color: var(--gold); }
-.rank-item:nth-child(3) .rank-number { background: var(--primary-50); color: var(--text-secondary); }
-.rank-name { font-size: var(--text-sm); font-weight: var(--font-medium); flex: 1; color: var(--text-primary); }
-.rank-value { font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--gold); }
-@media (max-width: 1024px) { .stats-grid { grid-template-columns: 1fr; } }
+
+.stats-card-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md, 8px);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Colores de iconos específicos por tarjeta */
+.stats-metric-card:nth-child(1) .stats-card-icon-wrapper { color: var(--accent, #8b5cf6); }
+.stats-metric-card:nth-child(2) .stats-card-icon-wrapper { color: var(--primary, #6366f1); }
+.stats-metric-card:nth-child(3) .stats-card-icon-wrapper { color: var(--success, #10b981); }
+.stats-metric-card:nth-child(4) .stats-card-icon-wrapper { color: var(--gold, #d4af37); }
+
+.stats-metric-card:nth-child(1) .stats-card-number { color: var(--accent, #8b5cf6); }   /* Ingresos Netos */
+.stats-metric-card:nth-child(2) .stats-card-number { color: var(--primary, #6366f1); }  /* Facturación Total */
+.stats-metric-card:nth-child(3) .stats-card-number { color: var(--success, #10b981); }  /* Documentos */
+.stats-metric-card:nth-child(4) .stats-card-number { color: var(--gold, #d4af37); }     /* Clientes */
+
+.stats-card-content {
+  margin-top: var(--space-3, 0.75rem);
+}
+
+.stats-card-number {
+  font-size: var(--text-2xl, 1.75rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary, #ffffff);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.stats-card-currency-symbol {
+  font-size: var(--text-lg, 1.25rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.4));
+  margin-right: 2px;
+}
+
+.stats-card-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.stats-growth-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.growth-up {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: var(--success, #10b981);
+}
+
+.growth-down {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--danger, #ef4444);
+}
+
+.stats-card-context-text {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6. PANELES DE GRÁFICOS Y VISUALIZACIÓN INTEGRADA
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-charts-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-5, 1.25rem);
+}
+
+.stats-panel-card {
+  background: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl, 14px);
+  padding: var(--space-5, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(20px);
+}
+
+.panel-header {
+  margin-bottom: var(--space-5, 1.25rem);
+}
+
+.panel-header.flex-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.panel-title {
+  font-size: var(--text-sm, 0.95rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary, #ffffff);
+  margin: 0;
+}
+
+.panel-subtitle {
+  font-size: var(--text-xs, 0.8rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  margin: var(--space-1, 0.15rem) 0 0 0;
+}
+
+/* Control Segmentado (Alternador Área/Barras en Evolución de Ingresos) */
+.panel-segmented-control {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 2px;
+  border-radius: var(--radius-md, 6px);
+}
+
+.segmented-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  border-radius: var(--radius-sm, 4px);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s) ease;
+}
+
+.segmented-btn.active {
+  background-color: var(--surface-overlay, rgba(28, 25, 36, 0.55));
+  color: var(--primary, #6366f1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.chart-wrapper-container {
+  width: 100%;
+}
+
+.flex-body-centered {
+  justify-content: center;
+  align-items: center;
+}
+
+/* Leyenda Interactiva (Mix de Ingresos: donut Productos vs Servicios) */
+.chart-interactive-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.custom-chart-legend {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+  margin-top: var(--space-4, 1rem);
+}
+
+.legend-indicator-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2, 0.5rem);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.legend-indicator-row:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.indicator-label-side {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.indicator-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Colores específicos de la leyenda interactiva (Productos / Servicios) */
+.legend-indicator-row:nth-child(1) .indicator-color-dot { background-color: var(--gold, #d4af37); }
+.legend-indicator-row:nth-child(2) .indicator-color-dot { background-color: var(--primary, #6366f1); }
+
+.indicator-name {
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-medium, 500);
+  color: var(--text-primary, #ffffff);
+}
+
+.indicator-value {
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+}
+
+
+.status-funnel-hover-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  text-align: center;
+  margin-bottom: var(--space-2, 0.5rem);
+}
+
+.status-funnel-hover-name {
+  font-size: var(--text-sm, 0.9rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary, #ffffff);
+}
+
+.status-funnel-hover-value {
+  font-size: var(--text-xs, 0.8rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  margin-top: 2px;
+}
+
+.status-funnel-hover-placeholder {
+  font-size: var(--text-xs, 0.8rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.4));
+}
+
+.donut-hover-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 14px));
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7. ÁREA DE TRABAJO CON PESTAÑAS (Línea de Productos / Línea de Servicios)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-segmented-workspace-card {
+  background: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl, 14px);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.workspace-tab-header {
+  border-bottom: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  background-color: rgba(28, 25, 36, 0.15);
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+}
+
+.workspace-tab-switcher {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+}
+
+.workspace-tab-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  border-radius: var(--radius-md, 8px);
+  border: none;
+  background: transparent;
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.15s) ease;
+}
+
+.workspace-tab-trigger.active {
+  background-color: var(--surface-overlay, rgba(28, 25, 36, 0.45));
+  color: var(--primary, #6366f1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.workspace-tab-body {
+  padding: var(--space-5, 1.25rem);
+}
+
+.workspace-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 1.25rem);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. LISTAS DE RANKING (Top 5 Productos / Servicios)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.ranking-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem);
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.ranking-list-item:hover {
+  transform: translateX(4px);
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.item-position-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: var(--text-xs, 0.8rem);
+  font-weight: var(--font-bold, 700);
+}
+
+/* Diferenciación visual de puestos usando escala de colores */
+.ranking-list-item:nth-child(1) .item-position-badge { background-color: rgba(99, 102, 241, 0.15); color: var(--primary, #6366f1); }
+.ranking-list-item:nth-child(2) .item-position-badge { background-color: rgba(16, 185, 129, 0.15); color: var(--success, #10b981); }
+.ranking-list-item:nth-child(3) .item-position-badge { background-color: rgba(139, 92, 246, 0.15); color: var(--accent, #8b5cf6); }
+.ranking-list-item:nth-child(4) .item-position-badge { background-color: rgba(245, 158, 11, 0.15); color: var(--warning, #f59e0b); }
+.ranking-list-item:nth-child(5) .item-position-badge { background-color: rgba(255, 255, 255, 0.05); color: var(--text-primary, #ffffff); }
+
+/* Nota: en la pestaña de Servicios, el badge de posición usa .service-accent
+   en vez de la escala numérica anterior (los primeros 5 elementos del
+   ranking de servicios comparten el mismo acento esmeralda). */
+.item-position-badge.service-accent {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--success, #10b981);
+}
+
+.item-meta-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.item-title-name {
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary, #ffffff);
+}
+
+.item-secondary-count {
+  font-size: var(--text-xxs, 0.75rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.4));
+  margin-top: 0.1rem;
+}
+
+.item-primary-value {
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary, #ffffff);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9. NIVELES DE STOCK DE INVENTARIO (agotado / stock bajo)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-inventory-scroller {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.inventory-metric-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem);
+  border-radius: var(--radius-md, 10px);
+  border-left: 3px solid transparent;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.inventory-metric-row.border-danger { border-left-color: var(--danger, #ef4444); }
+.inventory-metric-row.border-warning { border-left-color: var(--warning, #f59e0b); }
+
+.metric-row-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.bg-danger { background-color: var(--danger, #ef4444); }
+.bg-warning { background-color: var(--warning, #f59e0b); }
+
+.metric-row-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.metric-item-name {
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary, #ffffff);
+}
+
+.metric-item-desc {
+  font-size: var(--text-xxs, 0.75rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.4));
+}
+
+.metric-badge-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.badge-danger { background-color: rgba(239, 68, 68, 0.12); color: var(--danger, #ef4444); }
+.badge-warning { background-color: rgba(245, 158, 11, 0.12); color: var(--warning, #f59e0b); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10. INDICADORES OPERATIVOS DE SERVICIOS (duración media, servicio estrella)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-operational-insights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.operational-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem);
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md, 10px);
+}
+
+.op-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm, 8px);
+}
+
+.icon-emerald { background-color: rgba(16, 185, 129, 0.1); color: var(--success, #10b981); }
+.icon-indigo  { background-color: rgba(212, 175, 55, 0.12); color: var(--gold, #d4af37); }
+.icon-purple  { background-color: rgba(139, 92, 246, 0.1); color: var(--accent, #8b5cf6); }
+
+.op-card-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.op-card-val {
+  font-size: var(--text-xs, 0.9rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary, #ffffff);
+}
+
+.op-card-label {
+  font-size: var(--text-xxs, 0.75rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.4));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11. TABLA DE CLIENTES DESTACADOS (Top 5)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-top-clients-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border-bottom: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+}
+
+.table-data-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: center;
+  padding: var(--space-3, 0.75rem);
+  border-bottom: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+}
+
+.table-data-row:last-child {
+  border-bottom: none;
+}
+
+.client-data-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+}
+
+.client-avatar-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #ffffff);
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.client-primary-name {
+  display: block;
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary, #ffffff);
+}
+
+.client-rank-label {
+  display: block;
+  font-size: var(--text-xxs, 0.7rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.4));
+}
+
+.transaction-pill {
+  display: inline-block;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-medium, 500);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #ffffff);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.client-count-col {
+  text-align: center;
+}
+
+.client-total-col {
+  text-align: right;
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--gold, #d4af37);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12. SUGERENCIAS OPERATIVAS (panel de inteligencia de negocio)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-insights-panel {
+  background: linear-gradient(180deg, var(--surface-overlay, rgba(28, 25, 36, 0.35)) 0%, rgba(28, 25, 36, 0.15) 100%);
+}
+
+.insights-badge {
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  background-color: rgba(212, 175, 55, 0.1);
+  color: var(--gold, #d4af37);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.stats-suggestions-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+.stats-suggestion-item-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-3, 0.75rem);
+  border-radius: var(--radius-md, 10px);
+  background-color: rgba(28, 25, 36, 0.25);
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08));
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stats-suggestion-item-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: rgba(28, 25, 36, 0.35);
+}
+
+/* Acento por tipo de sugerencia (borde izquierdo asignado inline en el JSX
+   vía style, pero el anillo del ícono también debe reflejarlo) */
+.stats-suggestion-item-row.type-growth .suggestion-icon-ring { color: var(--gold, #d4af37); }
+.stats-suggestion-item-row.type-alert .suggestion-icon-ring { color: var(--danger, #ef4444); }
+.stats-suggestion-item-row.type-idle .suggestion-icon-ring { color: var(--warning, #f59e0b); }
+
+.suggestion-icon-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm, 8px);
+  background-color: rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.suggestion-text-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestion-title-label {
+  font-size: var(--text-xs, 0.85rem);
+  font-weight: var(--font-semibold, 600);
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 var(--space-1, 0.15rem) 0;
+}
+
+.suggestion-body-desc {
+  font-size: var(--text-xs, 0.8rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  margin: 0;
+  line-height: var(--leading-relaxed, 1.35);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   13. TOOLTIPS Y ESTRUCTURAS COMUNES (tooltip de gráficos, placeholders vacíos)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.stats-custom-tooltip {
+  background-color: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: var(--space-3, 0.75rem);
+  border-radius: var(--radius-md, 8px);
+  color: #ffffff;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-title {
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-semibold, 600);
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.35rem;
+}
+
+.tooltip-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  font-size: var(--text-xs, 0.8rem);
+}
+
+.tooltip-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tooltip-key {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tooltip-val {
+  font-weight: 700;
+}
+
+.stats-placeholder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6, 3rem) var(--space-4, 1.5rem);
+  text-align: center;
+}
+
+.placeholder-icon-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  margin-bottom: var(--space-3, 0.75rem);
+}
+
+.placeholder-text-muted {
+  font-size: var(--text-xs, 0.8rem);
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  max-width: 260px;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   14. TEMA CLARO (overrides puntuales — Royal Velvet es dark-first;
+   estos ajustes solo aplican si el shell general soporta [data-theme="light"])
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .stats-dashboard-wrapper {
+  background: var(--surface, #f9f9fb);
+}
+
+[data-theme="light"] .stats-metric-card,
+[data-theme="light"] .stats-panel-card,
+[data-theme="light"] .stats-segmented-workspace-card {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .stats-metric-card:hover {
+  background: #f4f4f5;
+}
+
+/* 14.1 Textos principales en tema claro (Gris oscuro / Negro) */
+
+[data-theme="light"] .panel-title,
+[data-theme="light"] .item-title-name,
+[data-theme="light"] .item-primary-value,
+[data-theme="light"] .metric-item-name,
+[data-theme="light"] .client-primary-name,
+[data-theme="light"] .suggestion-title-label,
+[data-theme="light"] .op-card-val,
+[data-theme="light"] .control-select,
+[data-theme="light"] .control-date-input,
+[data-theme="light"] .stats-action-btn,
+[data-theme="light"] .workspace-tab-trigger.active,
+[data-theme="light"] .indicator-name {
+  color: #18181b !important;
+}
+
+/* 14.2 Textos secundarios, etiquetas y subtítulos (Gris medio) */
+[data-theme="light"] .control-label,
+[data-theme="light"] .stats-card-label,
+[data-theme="light"] .panel-subtitle,
+[data-theme="light"] .item-secondary-count,
+[data-theme="light"] .client-rank-label,
+[data-theme="light"] .suggestion-body-desc,
+[data-theme="light"] .op-card-label,
+[data-theme="light"] .table-header-row,
+[data-theme="light"] .indicator-value,
+[data-theme="light"] .workspace-tab-trigger {
+  color: #71717a !important;
+}
+
+/* 14.3 Controles y botones en tema claro */
+[data-theme="light"] .control-select,
+[data-theme="light"] .control-date-input,
+[data-theme="light"] .stats-action-btn {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #18181b;
+}
+
+[data-theme="light"] .control-select option {
+  background-color: #ffffff;
+  color: #18181b;
+}
+
+[data-theme="light"] .control-select {
+  /* Se cambia el icono de la flecha del select por uno más oscuro para mejor visibilidad */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: light;
+}
+
+[data-theme="light"] .custom-dropdown-trigger,
+[data-theme="light"] .custom-dropdown-value,
+[data-theme="light"] .custom-dropdown-chevron {
+  color: #18181b;
+}
+
+[data-theme="light"] .custom-dropdown-trigger {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .custom-dropdown-menu {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .custom-dropdown-option span {
+  color: #18181b !important;
+}
+
+[data-theme="light"] .custom-dropdown-option:hover,
+[data-theme="light"] .custom-dropdown-option:focus {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   15. INTERACCIÓN EN EMBUDO DE ESTADO (sin JS)
+   ═══════════════════════════════════════════════════════════════════════ */
+/* Hover directo sobre el embudo: al pasar el mouse por un trapezoide,
+   los demás se atenúan. Recharts renderiza cada segmento como
+   hermano dentro de .recharts-funnel-trapezoids, así que basta con
+   selectores de hermano — no hace falta JS. */
+.status-funnel-wrapper .recharts-funnel-trapezoids:hover .recharts-funnel-trapezoid path {
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+}
+.status-funnel-wrapper .recharts-funnel-trapezoids .recharts-funnel-trapezoid:hover path {
+  opacity: 1;
+}
+
+/* Vínculo leyenda -> gráfico, usando :has() (Chrome/Edge/Safari actuales).
+   Al pasar el mouse por la fila N de la leyenda, resalta el trapezoide N
+   y atenúa el resto, asumiendo que el orden coincide (mismo array `data`). */
+.status-funnel-wrapper:has(.legend-indicator-row:nth-of-type(1):hover)
+  .recharts-funnel-trapezoid:not(:nth-of-type(1)) path { opacity: 0.35; transition: opacity 0.2s ease; }
+.status-funnel-wrapper:has(.legend-indicator-row:nth-of-type(2):hover)
+  .recharts-funnel-trapezoid:not(:nth-of-type(2)) path { opacity: 0.35; transition: opacity 0.2s ease; }
+.status-funnel-wrapper:has(.legend-indicator-row:nth-of-type(3):hover)
+  .recharts-funnel-trapezoid:not(:nth-of-type(3)) path { opacity: 0.35; transition: opacity 0.2s ease; }
+.status-funnel-wrapper:has(.legend-indicator-row:nth-of-type(4):hover)
+  .recharts-funnel-trapezoid:not(:nth-of-type(4)) path { opacity: 0.35; transition: opacity 0.2s ease; }
+.status-funnel-wrapper:has(.legend-indicator-row:nth-of-type(5):hover)
+  .recharts-funnel-trapezoid:not(:nth-of-type(5)) path { opacity: 0.35; transition: opacity 0.2s ease; }
+.status-funnel-wrapper:has(.legend-indicator-row:nth-of-type(6):hover)
+  .recharts-funnel-trapezoid:not(:nth-of-type(6)) path { opacity: 0.35; transition: opacity 0.2s ease; }
+
+
+  /* Leyenda del embudo de estado en cuadrícula (2 columnas) en vez de lista
+   vertical — con 5-6 estados, una lista vertical infla demasiado la altura
+   del panel y desbalancea el grid contra "Métodos de Pago" (ambos paneles
+   se estiran a la altura del más alto por el stretch por defecto del grid). */
+.status-funnel-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  min-height: 15px;
+  height: 10px;
+  padding-bottom: 10px;
+  padding-top: 8px;
+  width: 100%;
+}
+
+.status-funnel-hover-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  text-align: center;
+  margin-bottom: 0px;
+  margin-top: 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   16. MEDIA QUERIES (responsive — todas agrupadas al final del archivo)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  /* Paneles principales: Evolución de Ingresos (3fr) + Mix de Ingresos (2fr) */
+  .stats-charts-row {
+    grid-template-columns: 3fr 2fr;
+  }
+  /* Filas secundarias (.mt-4: Distribución de Categorías + Inventario,
+     y la fila de Métodos de Pago + Estado de Facturación): 50/50 */
+  .stats-charts-row.mt-4,
+  .stats-charts-row.mt-6 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Tabla de Clientes Destacados: en mobile la grilla de 3 columnas queda
+   demasiado apretada (avatar + nombre + 2 columnas numéricas), así que
+   se apila en tarjetas verticales por debajo de 640px. */
+@media (max-width: 639px) {
+  .table-header-row {
+    display: none;
+  }
+
+  .table-data-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2, 0.5rem);
+    padding: var(--space-4, 1rem) var(--space-3, 0.75rem);
+  }
+
+  .client-count-col,
+  .client-total-col {
+    text-align: left;
+  }
+
+  .client-total-col {
+    font-size: var(--text-sm, 1rem);
+  }
+}

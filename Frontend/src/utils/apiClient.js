@@ -191,6 +191,9 @@ export const authClient = {
     formData.append('file', file);
     return apiClient.requestFormData('/auth/me/avatar', formData, 'POST');
   },
+  requestPasswordReset: (email) => apiClient.post('/auth/password-recovery/request', { email }),
+  resetPassword: (email, code, newPassword) =>
+    apiClient.post('/auth/password-recovery/reset', { email, code, new_password: newPassword }),
 };
 
 export const agendaClient = {

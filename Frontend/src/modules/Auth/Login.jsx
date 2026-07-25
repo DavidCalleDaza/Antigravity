@@ -116,7 +116,7 @@ export default function Login() {
               <label className="d-flex items-center gap-2 cursor-pointer text-muted">
                 <input type="checkbox" className="custom-checkbox" /> Recordarme
               </label>
-              <Link to="/forgot-password" title="Proximamente" className="auth-link">¿Olvidaste tu contraseña?</Link>
+              <Link to="/forgot-password" className="auth-link">¿Olvidaste tu contraseña?</Link>
             </div>
 
             <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{marginTop: '10px'}}>

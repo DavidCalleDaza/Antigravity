@@ -5,6 +5,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute';
 import Landing from './modules/Landing/Landing';
 import Login from './modules/Auth/Login';
 import Register from './modules/Auth/Register';
+import ForgotPassword from './modules/Auth/ForgotPassword';
 import Unauthorized from './modules/Auth/Unauthorized';
 import GoogleCallback from './modules/Auth/GoogleCallback';
 import MainLayout from './components/layout/MainLayout';
@@ -34,6 +35,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/auth/callback" element={<GoogleCallback />} />
         <Route path="/verify/:cufe" element={<VerifyPublic />} />

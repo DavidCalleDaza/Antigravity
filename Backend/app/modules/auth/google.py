@@ -181,7 +181,8 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
             jwks,
             algorithms=["RS256"],
             audience=settings.GOOGLE_CLIENT_ID,
-            issuer=["accounts.google.com", "https://accounts.google.com"]
+            issuer=["accounts.google.com", "https://accounts.google.com"],
+            access_token=token_data.get("access_token")
         )
     except JWTError as e:
         logger.warning(f"SECURITY EVENT: Failed to validate Google id_token: {e}")

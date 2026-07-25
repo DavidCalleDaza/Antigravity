@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Store, User, Shield, HeartHandshake } from 'lucide-react';
-import { authClient } from '../../utils/apiClient';
+import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
 import ServinowLogo from '../../components/ui/ServinowLogo';
@@ -165,7 +165,7 @@ export default function Register() {
             </div>
 
             <a 
-              href={`${import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1'}/auth/google/authorize?role=${role}`} 
+              href={`${apiClient.baseUrl}/auth/google/authorize?role=${role}`} 
               className="btn btn-outline w-full d-flex items-center justify-center gap-2"
               style={{ padding: '0.75rem', marginTop: '15px' }}
             >

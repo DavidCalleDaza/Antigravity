@@ -37,6 +37,7 @@ from app.modules.billing.crud import (
     get_billing_summary,
     get_top_selling_products_and_services,
     get_customer_default_tax_rate,
+    get_revenue_by_line,
 )
 from app.modules.billing.schemas import (
     CustomerCreate,
@@ -54,6 +55,8 @@ from app.modules.billing.schemas import (
     TopSellingItem,
     TopSellingResponse,
     CountrySettingResponse,
+    CategoryDistributionItem,
+    RevenueByLineItem
 )
 from app.modules.billing.pdf_service import (
     generate_invoice_pdf,
@@ -74,10 +77,23 @@ from app.modules.billing.schemas import InvoiceEmailSendResponse  # si no está 
 from app.modules.billing.dian_service import submit_invoice_to_dian, get_dian_status as fetch_dian_status
 from .payment_means_rules import get_valid_payment_means, is_payment_means_valid
 
+from fastapi.responses import StreamingResponse as ExportStreamingResponse
+from app.modules.exports.service import ExportService
+from app.modules.exports.templates import (
+    ChartSpec,
+    ColumnDef,
+    ColumnFormat,
+    ReportData,
+    ReportMetadata,
+    SummaryItem,
+)
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-
+from app.modules.billing.crud import (
+    get_category_distribution,
+)
 # --- Customers ---
 
 @router.get("/customers", response_model=list[CustomerResponse])
@@ -479,7 +495,17 @@ async def get_top_selling_endpoint(
         services=[TopSellingItem(**dict(r._mapping)) for r in services],
     )
 
-
+@router.get("/revenue-by-line", response_model=list[RevenueByLineItem])
+async def get_revenue_by_line_endpoint(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[RevenueByLineItem]:
+    """Retrieve monthly revenue broken down by business line (products vs services)."""
+    rows = await get_revenue_by_line(db, date_from=date_from, date_to=date_to)
+    return [RevenueByLineItem(**row) for row in rows]
+    
 # --- Country Settings ---
 
 from app.modules.billing.models import CountrySetting
@@ -524,3 +550,190 @@ async def upsert_country_settings_endpoint(
     """
     setting = await upsert_country_setting(db, country_code, setting_in)
     return CountrySettingResponse.model_validate(setting)
+
+
+@router.get("/category-distribution", response_model=list[CategoryDistributionItem])
+async def get_category_distribution_endpoint(
+    entity_type: str = Query(..., pattern="^(product|service)$"),
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    return await get_category_distribution(
+        db=db,
+        entity_type=entity_type,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+# --- Exports ---
+
+async def _build_billing_report_data(
+    db: AsyncSession,
+    current_user: User,
+    date_from: date | None,
+    date_to: date | None,
+    status_filter: str | None,
+) -> ReportData:
+    """Ensambla el ReportData de facturación. Compartido por /export/excel y /export/csv."""
+    invoices = await get_invoices(
+        db, skip=0, limit=5000, status=status_filter, date_from=date_from, date_to=date_to
+    )
+    summary_data = await get_billing_summary(db, date_from=date_from, date_to=date_to)
+
+    columns = [
+        ColumnDef(key="full_number", label="Factura"),
+        ColumnDef(key="customer_name", label="Cliente"),
+        ColumnDef(key="status", label="Estado"),
+        ColumnDef(key="subtotal", label="Subtotal", format=ColumnFormat.CURRENCY),
+        ColumnDef(key="tax_total", label="IVA", format=ColumnFormat.CURRENCY),
+        ColumnDef(key="total", label="Total", format=ColumnFormat.CURRENCY),
+        ColumnDef(key="issued_at", label="Fecha", format=ColumnFormat.DATE),
+    ]
+
+    rows = [
+        {
+            "full_number": inv.full_number or "Borrador",
+            "customer_name": inv.customer.business_name if inv.customer else "N/A",
+            "status": inv.status,
+            "subtotal": inv.subtotal,
+            "tax_total": inv.tax_total,
+            "total": inv.total,
+            "issued_at": inv.issued_at,
+        }
+        for inv in invoices
+    ]
+
+    filters = {}
+    if status_filter:
+        filters["Estado"] = status_filter
+
+    metadata = ReportMetadata(
+        report_title="Reporte de Facturación",
+        generated_by=current_user.full_name if hasattr(current_user, "full_name") else str(current_user.id),
+        period_label=f"{date_from} - {date_to}" if date_from and date_to else None,
+        filters=filters,
+    )
+
+    summary = [
+        SummaryItem("Total Facturas", summary_data["invoice_count"], ColumnFormat.INTEGER),
+        SummaryItem("Total Ingresos", summary_data["income"], ColumnFormat.CURRENCY),
+        SummaryItem("Total Pendiente", summary_data["pending"], ColumnFormat.CURRENCY),
+        SummaryItem("Total Vencido", summary_data["overdue"], ColumnFormat.CURRENCY),
+    ]
+
+    charts = [ChartSpec(chart_type="bar", title="Total por Factura", category_column="full_number", value_column="total")]
+
+    return ReportData(metadata=metadata, columns=columns, rows=rows, summary=summary, charts=charts)
+
+
+@router.get("/export/excel")
+async def export_billing_excel(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    status: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Exporta el listado de facturación a Excel, con los mismos filtros que la vista de Billing."""
+    report = await _build_billing_report_data(db, current_user, date_from, date_to, status)
+    buffer = ExportService.export_excel(report)
+    return ExportStreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="Reporte_Facturacion.xlsx"'},
+    )
+
+
+@router.get("/export/csv")
+async def export_billing_csv(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    status: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Exporta el listado de facturación a CSV, con los mismos filtros que la vista de Billing."""
+    report = await _build_billing_report_data(db, current_user, date_from, date_to, status)
+    csv_bytes = ExportService.export_csv(report)
+    return ExportStreamingResponse(
+        BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="Reporte_Facturacion.csv"'},
+    )
+
+@router.get("/statistics/export/excel")
+async def export_statistics_excel(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Exporta el reporte de estadísticas (top productos/servicios) a Excel."""
+    products, services = await get_top_selling_products_and_services(db, limit=20, date_from=date_from, date_to=date_to)
+
+    columns = [
+        ColumnDef(key="tipo", label="Tipo"),
+        ColumnDef(key="description", label="Descripción"),
+        ColumnDef(key="total_quantity", label="Cantidad", format=ColumnFormat.INTEGER),
+        ColumnDef(key="total_amount", label="Ingresos", format=ColumnFormat.CURRENCY),
+    ]
+
+    rows = [
+        {"tipo": "Producto", "description": r.description, "total_quantity": r.total_quantity, "total_amount": r.total_amount}
+        for r in products
+    ] + [
+        {"tipo": "Servicio", "description": r.description, "total_quantity": r.total_quantity, "total_amount": r.total_amount}
+        for r in services
+    ]
+
+    metadata = ReportMetadata(
+        report_title="Reporte de Estadísticas",
+        generated_by=current_user.full_name if hasattr(current_user, "full_name") else str(current_user.id),
+        period_label=f"{date_from} - {date_to}" if date_from and date_to else None,
+    )
+
+    charts = [ChartSpec(chart_type="bar", title="Ingresos por Ítem ($)", category_column="description", value_column="total_amount", top_n=10,) ]
+
+    report = ReportData(metadata=metadata, columns=columns, rows=rows, charts=charts)
+    buffer = ExportService.export_excel(report)
+    return ExportStreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="Reporte_Estadisticas.xlsx"'},
+    )
+
+
+@router.get("/statistics/export/csv")
+async def export_statistics_csv(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Exporta el reporte de estadísticas (top productos/servicios) a CSV."""
+    products, services = await get_top_selling_products_and_services(db, limit=20, date_from=date_from, date_to=date_to)
+
+    columns = [
+        ColumnDef(key="tipo", label="Tipo"),
+        ColumnDef(key="description", label="Descripción"),
+        ColumnDef(key="total_quantity", label="Cantidad"),
+        ColumnDef(key="total_amount", label="Ingresos"),
+    ]
+    rows = [
+        {"tipo": "Producto", "description": r.description, "total_quantity": r.total_quantity, "total_amount": r.total_amount}
+        for r in products
+    ] + [
+        {"tipo": "Servicio", "description": r.description, "total_quantity": r.total_quantity, "total_amount": r.total_amount}
+        for r in services
+    ]
+
+    metadata = ReportMetadata(report_title="Reporte de Estadísticas", generated_by=str(current_user.id))
+    report = ReportData(metadata=metadata, columns=columns, rows=rows)
+    csv_bytes = ExportService.export_csv(report)
+    return ExportStreamingResponse(
+        BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="Reporte_Estadisticas.csv"'},
+    )

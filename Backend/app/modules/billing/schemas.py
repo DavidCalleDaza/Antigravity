@@ -212,6 +212,8 @@ class InvoiceUpdate(BaseModel):
     payment_means: Annotated[str | None, Field(None, max_length=5)] = None
     notes: Annotated[str | None, Field(None)] = None
     items: Annotated[list[InvoiceItemCreate] | None, Field(None)] = None
+    status: Annotated[str | None, Field(None)] = None
+    
 
 
 class InvoiceListResponse(BaseModel):
@@ -456,3 +458,50 @@ class CountrySettingResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime | None = None
+
+
+class CategoryDistributionItem(BaseModel):
+    """
+    Item individual del reporte de distribución por categoría.
+    """
+    category: str
+    quantity: Decimal
+    revenue: Decimal
+    percentage: float
+
+
+class CategoryDistributionResponse(BaseModel):
+    """
+    Respuesta completa del reporte de distribución por categoría.
+    """
+    entity_type: Literal["product", "service"]
+    total_quantity: Decimal
+    total_revenue: Decimal
+    total_percentage: float
+    distribution: list[CategoryDistributionItem]
+
+
+# —- Analytics Endpoints Schemas ————————————————————————————————————————————————
+
+# -- Revenue By Line Schema ----------------------------------------------------
+
+class RevenueByLineItem(BaseModel):
+    """
+    Ingreso mensual desagregado por linea de negocio (Productos vs Servicios).
+    """
+    month: str
+    sortKey: int
+    products: Decimal = Decimal("0")
+    services: Decimal = Decimal("0")
+    total: Decimal = Decimal("0")
+
+
+# -- Payment Stats Schema ------------------------------------------------------
+
+class PaymentStatItem(BaseModel):
+    """
+    Distribucion de ingresos por metodo de pago.
+    """
+    method: str
+    total: Decimal = Decimal("0")
+    count: int = 0

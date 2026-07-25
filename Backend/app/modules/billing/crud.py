@@ -15,6 +15,10 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.modules.products.models import Product
+from app.modules.services.models import Service
+from app.modules.categories.models import Category
+
 from app.core.config import settings
 
 from app.modules.billing.models import (
@@ -697,17 +701,20 @@ async def update_invoice(
                 unit=unit,
                 quantity=item_data.quantity,
                 unit_price=item_data.unit_price,
-                discount=item_data.discount + extra,  # 👈
+                discount=item_data.discount + extra,
                 tax_rate=line_tax_rate,
                 product_id=item_data.product_id,
                 service_id=item_data.service_id,
             )
             db.add(db_item)
 
-        db.add(db_invoice)
-        await db.flush()
-        await db.refresh(db_invoice)
-        return await get_invoice(db, db_invoice.id)
+    # ── EL ARREGLO ──
+    # Sacamos estas 4 líneas fuera del bloque "if invoice_in.items is not None:"
+    # alineándolas con el nivel principal de la función (mismo nivel de indentación que el "if")
+    db.add(db_invoice)
+    await db.flush()
+    await db.refresh(db_invoice)
+    return await get_invoice(db, db_invoice.id)
 
 async def cancel_invoice(db: AsyncSession, db_invoice: Invoice) -> Invoice:
     """
@@ -964,3 +971,196 @@ async def get_top_selling_products_and_services(
     products = await _get_top_selling(db, InvoiceItem.product_id, limit, date_from, date_to)
     services = await _get_top_selling(db, InvoiceItem.service_id, limit, date_from, date_to)
     return products, services
+
+
+# —- Category Distribution —————————————————————————————————————————————————————————
+
+async def get_category_distribution(
+    db: AsyncSession,
+    entity_type: str,
+    date_from: date | None = None,
+    date_to: date | None = None,
+):
+    """
+    Retorna la distribución de categorías para productos o servicios.
+
+    Response:
+    [
+        {
+            "category": "Tecnología",
+            "quantity": 25,
+            "revenue": Decimal("1250000.00"),
+            "percentage": 41.6
+        }
+    ]
+    """
+
+    if entity_type not in ("product", "service"):
+        raise ValueError("entity_type debe ser 'product' o 'service'.")
+
+    if entity_type == "product":
+        entity_model = Product
+        fk_column = InvoiceItem.product_id
+    else:
+        entity_model = Service
+        fk_column = InvoiceItem.service_id
+
+    stmt = (
+        select(
+            Category.id.label("category_id"),
+            func.coalesce(Category.name, "Sin categoría").label("category"),
+            func.sum(InvoiceItem.quantity).label("quantity"),
+            func.sum(InvoiceItem.total).label("revenue"),
+        )
+        .select_from(InvoiceItem)
+        .join(Invoice, Invoice.id == InvoiceItem.invoice_id)
+        .join(entity_model, entity_model.id == fk_column)
+        .outerjoin(Category, Category.id == entity_model.category_id)
+        .where(Invoice.status != "void")
+        .group_by(Category.id, Category.name)
+        .order_by(func.sum(InvoiceItem.total).desc())
+    )
+
+    if date_from:
+        stmt = stmt.where(func.date(Invoice.issued_at) >= date_from)
+
+    if date_to:
+        stmt = stmt.where(func.date(Invoice.issued_at) <= date_to)
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    if not rows:
+        return []
+
+    total_revenue = sum((row.revenue or Decimal("0")) for row in rows)
+
+    response = []
+
+    for row in rows:
+        revenue = row.revenue or Decimal("0")
+
+        percentage = (
+            float((revenue / total_revenue) * Decimal("100"))
+            if total_revenue > 0
+            else 0.0
+        )
+
+        response.append(
+            {
+                "category": row.category,
+                "quantity": int(row.quantity or 0),
+                "revenue": revenue,
+                "percentage": round(percentage, 2),
+            }
+        )
+
+    return response
+
+# -- Revenue By Line (products vs services, por mes) ---------------------------
+
+async def get_revenue_by_line(
+    db: AsyncSession,
+    date_from: date | None = None,
+    date_to: date | None = None,
+) -> list[dict]:
+    """
+    Retorna ingresos mensuales desglosados por linea de negocio
+    (productos vs servicios) para el periodo indicado.
+    """
+    from sqlalchemy import extract, case
+
+    MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+    stmt = (
+        select(
+            extract('year', Invoice.issued_at).label('year'),
+            extract('month', Invoice.issued_at).label('month'),
+            func.sum(
+                case(
+                    (InvoiceItem.product_id.isnot(None), InvoiceItem.total),
+                    else_=Decimal('0'),
+                )
+            ).label('products_total'),
+            func.sum(
+                case(
+                    (InvoiceItem.service_id.isnot(None), InvoiceItem.total),
+                    else_=Decimal('0'),
+                )
+            ).label('services_total'),
+        )
+        .join(InvoiceItem, InvoiceItem.invoice_id == Invoice.id)
+        .where(Invoice.status != 'void')
+        .group_by(
+            extract('year', Invoice.issued_at),
+            extract('month', Invoice.issued_at),
+        )
+        .order_by(
+            extract('year', Invoice.issued_at),
+            extract('month', Invoice.issued_at),
+        )
+    )
+
+    if date_from:
+        stmt = stmt.where(func.date(Invoice.issued_at) >= date_from)
+    if date_to:
+        stmt = stmt.where(func.date(Invoice.issued_at) <= date_to)
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    response = []
+    for row in rows:
+        year = int(row.year)
+        month_idx = int(row.month) - 1
+        products_total = row.products_total or Decimal('0')
+        services_total = row.services_total or Decimal('0')
+        response.append({
+            'month': MONTH_LABELS[month_idx],
+            'sortKey': year * 12 + month_idx,
+            'products': products_total,
+            'services': services_total,
+            'total': products_total + services_total,
+        })
+
+    return response
+
+
+# -- Payment Statistics (distribucion de ingresos por metodo de pago) ----------
+
+async def get_payment_stats(
+    db: AsyncSession,
+    date_from: date | None = None,
+    date_to: date | None = None,
+) -> list[dict]:
+    """
+    Retorna la distribucion de ingresos por metodo de pago para el periodo.
+    """
+    stmt = (
+        select(
+            Invoice.payment_method.label('method'),
+            func.sum(Invoice.total).label('total'),
+            func.count(Invoice.id).label('count'),
+        )
+        .where(Invoice.status != 'void')
+        .group_by(Invoice.payment_method)
+        .order_by(func.sum(Invoice.total).desc())
+    )
+
+    if date_from:
+        stmt = stmt.where(func.date(Invoice.issued_at) >= date_from)
+    if date_to:
+        stmt = stmt.where(func.date(Invoice.issued_at) <= date_to)
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    return [
+        {
+            'method': row.method or 'Sin especificar',
+            'total': row.total or Decimal('0'),
+            'count': row.count or 0,
+        }
+        for row in rows
+    ]

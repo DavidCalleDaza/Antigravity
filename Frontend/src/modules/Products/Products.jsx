@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart, Power } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
-import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
@@ -14,6 +14,8 @@ import { useStore } from '../../store/useStore';
 import { productClient, categoryClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
+import Dropdown from '../../components/ui/Dropdown';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -24,18 +26,19 @@ export default function Products() {
 
   const [view, setView] = useState('grid');
   const [products, setProducts] = useState([]);
-  const [dbCategories, setDbCategories] = useState([]); // Nuevo estado para las categorías de la BD
+  const [dbCategories, setDbCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  
+  // Estado para controlar activación/desactivación
+  const [toggleTarget, setToggleTarget] = useState(null);
+  const [toggling, setToggling] = useState(false);
 
-  // Se inicializa category_id en lugar de category
   const [formData, setFormData] = useState({
     name: '',
     category_id: '',
@@ -47,6 +50,18 @@ export default function Products() {
   const [mediaError, setMediaError] = useState(null);
   const [shareOnSave, setShareOnSave] = useState({ facebook: false, instagram: false, tiktok: false });
   const [shareModal, setShareModal] = useState({ isOpen: false, item: null });
+
+  const categoryOptions = [
+    { value: '', label: 'Todas las categorías' },
+    ...dbCategories.map(c => ({ value: c.id, label: c.name })),
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'Todos los estados' },
+    { value: 'active', label: 'Activo' },
+    { value: 'inactive', label: 'Inactivo' },
+    { value: 'out_of_stock', label: 'Agotado' },
+  ];
 
   const toast = useToast();
 
@@ -63,7 +78,7 @@ export default function Products() {
 
   useEffect(() => {
     loadProducts();
-    loadCategories(); // Carga las categorías al iniciar
+    loadCategories();
   }, []);
 
   const loadProducts = async () => {
@@ -85,26 +100,19 @@ export default function Products() {
     }
   };
 
-  // Función para obtener las categorías de la base de datos
   const loadCategories = async () => {
     try {
       const data = await categoryClient.list('product');
       setDbCategories(data);
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
-  // Se procesan los productos filtrados y se mapea "category" como string
-  // para mantener la compatibilidad con componentes que usen .category (como MediaCard)
   const filteredProducts = useMemo(() => {
     return products
       .filter(p => {
         if (categoryFilter && p.category_id !== categoryFilter) return false;
         if (statusFilter) {
           if (statusFilter === 'out_of_stock') {
-            // "Agotado" cubre tanto productos marcados manualmente como
-            // productos cuyo stock real llegó a 0, aunque el status
-            // manual todavía diga 'active' (evita que se "pierdan" del filtro).
             const isOutOfStock = (p.stock ?? 0) <= 0 || p.status === 'out_of_stock';
             if (!isOutOfStock) return false;
           } else if (p.status !== statusFilter) {
@@ -134,7 +142,6 @@ export default function Products() {
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     try {
-      // Se asegura de enviar null en lugar de un string vacío si no se selecciona categoría
       const payload = { 
         ...formData,
         category_id: formData.category_id || null 
@@ -152,9 +159,6 @@ export default function Products() {
       const hasShareSelected = Object.values(shareOnSave).some(Boolean);
       resetForm();
       if (hasShareSelected) {
-        const networks = Object.entries(shareOnSave)
-          .filter(([, v]) => v)
-          .map(([k]) => k);
         setTimeout(() => {
           setShareModal({ isOpen: true, item: { ...savedItem, type: 'producto' } });
         }, 100);
@@ -164,16 +168,22 @@ export default function Products() {
     }
   };
 
-  const handleDelete = async () => {
+  // Función para activar o desactivar el producto en base de datos
+  const handleConfirmToggle = async () => {
+    if (!toggleTarget) return;
+    setToggling(true);
     try {
-      await productClient.delete(deletingId);
-      setProducts(products.filter(p => p.id !== deletingId));
-      toast.success('Producto eliminado.');
+      const newStatus = toggleTarget.status === 'active' ? 'inactive' : 'active';
+      const updated = await productClient.update(toggleTarget.id, { status: newStatus });
+      
+      setProducts(products.map(p => p.id === toggleTarget.id ? updated : p));
+      toast.success(newStatus === 'active' ? 'Producto reactivado.' : 'Producto desactivado.');
     } catch (err) {
-      toast.error('Error al eliminar');
+      console.error(err);
+      toast.error('No se pudo cambiar el estado del producto.');
     } finally {
-      setIsConfirmOpen(false);
-      setDeletingId(null);
+      setToggling(false);
+      setToggleTarget(null);
     }
   };
 
@@ -197,7 +207,7 @@ export default function Products() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      category_id: product.category_id || '', // Se asigna el ID de la categoría correspondiente
+      category_id: product.category_id || '',
       price: product.price,
       stock: product.stock,
       status: product.status,
@@ -213,7 +223,7 @@ export default function Products() {
 
   const columns = [
     { key: 'name', label: 'Producto', sortable: true },
-    { key: 'category', label: 'Categoría', sortable: true }, // Muestra el string resuelto en filteredProducts
+    { key: 'category', label: 'Categoría', sortable: true },
     { key: 'price', label: 'Precio', sortable: true, render: (v) => Helpers.formatCurrency(v) },
     { key: 'stock', label: 'Stock', sortable: true },
     { key: 'status', label: 'Estado', sortable: true, render: (v) => statusBadge(v) }
@@ -223,11 +233,15 @@ export default function Products() {
     <div className="d-flex gap-2">
       {canManage && (
         <>
-          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)}>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">
             <PencilIcon />
           </button>
-          <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => { setDeletingId(row.id); setIsConfirmOpen(true); }}>
-            <TrashIcon />
+          <button 
+            className={`btn btn-ghost btn-sm btn-icon-only ${row.status === 'active' ? 'text-danger' : 'text-success'}`} 
+            onClick={() => setToggleTarget(row)}
+            title={row.status === 'active' ? 'Desactivar' : 'Activar'}
+          >
+            <Power width="14" height="14" />
           </button>
         </>
       )}
@@ -260,27 +274,16 @@ export default function Products() {
 
       <div className="products-toolbar">
         <div className="products-filters">
-          {/* Selector de categorías dinámico para el filtro */}
-          <select
-            className="form-select"
+          <Dropdown
+            options={categoryOptions}
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ width: 'auto' }} // <-- Se remueve el padding en línea para que use el del CSS
-          >
-            <option value="">Todas las categorías</option>
-            {dbCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select
-            className="form-select"
+            onChange={setCategoryFilter}
+          />
+          <Dropdown
+            options={statusOptions}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: 'auto' }} // <-- Se remueve el padding en línea para que use el del CSS
-          >
-            <option value="">Todos los estados</option>
-            <option value="active">Activo</option>
-            <option value="inactive">Inactivo</option>
-            <option value="out_of_stock">Agotado</option>
-          </select>
+            onChange={setStatusFilter}
+          />
         </div>
         <div className="view-toggle">
           <button
@@ -325,7 +328,7 @@ export default function Products() {
                 variant="product"
                 canManage={canManage}
                 onEdit={openEditModal}
-                onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
+                onDelete={(item) => setToggleTarget(item)} // Reutilizamos onDelete de MediaCard para abrir el toggle modal
                 onAction={(product) => toast.success(`${product.name} añadido`)}
                 onShare={(item) => setShareModal({ isOpen: true, item })}
                 actionLabel="Añadir"
@@ -335,11 +338,13 @@ export default function Products() {
           )}
         </div>
       ) : (
-        <Table
-          columns={columns}
-          data={filteredProducts}
-          actions={tableActions}
-        />
+        <div className="products-table-wrapper">
+          <Table
+            columns={columns}
+            data={filteredProducts}
+            actions={tableActions}
+          />
+        </div>
       )}
 
       <Drawer
@@ -461,25 +466,30 @@ export default function Products() {
         </form>
       </Drawer>
 
-      <Modal
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        title="Eliminar Producto"
-        size="sm"
-        actions={[
-          { label: 'Cancelar', onClick: () => setIsConfirmOpen(false) },
-          { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
-        ]}
-      >
-        <p style={{ color: 'var(--text-secondary)' }}>¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.</p>
-      </Modal>
-
       <ShareModal
         isOpen={shareModal.isOpen}
         onClose={() => setShareModal({ isOpen: false, item: null })}
         item={shareModal.item}
       />
+
+      {/* MODAL DE CONFIRMACIÓN MODERNO (Toggle de Estado) */}
+      <ConfirmModal
+        isOpen={!!toggleTarget}
+        onClose={() => setToggleTarget(null)}
+        onConfirm={handleConfirmToggle}
+        title={toggleTarget?.status === 'active' ? '¿Desactivar este producto?' : '¿Reactivar este producto?'}
+        confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
+        isDanger={toggleTarget?.status === 'active'}
+        loading={toggling}
+      >
+        {toggleTarget?.status === 'active' ? (
+          <>¿Está seguro de que desea desactivar <strong>{toggleTarget?.name}</strong>? Este producto ya no aparecerá disponible para ser añadido al carrito.</>
+        ) : (
+          <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este producto volverá a estar disponible.</>
+        )}
+      </ConfirmModal>
     </div>
+
   );
 }
 
@@ -487,14 +497,6 @@ function PencilIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
     </svg>
   );
 }

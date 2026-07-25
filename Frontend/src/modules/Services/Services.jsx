@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon, Power } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
-import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
@@ -14,14 +14,17 @@ import { useStore } from '../../store/useStore';
 import { serviceClient, categoryClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
+import Dropdown from '../../components/ui/Dropdown';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
-// Labels locales de estado (los servicios no manejan "out_of_stock" como los productos)
 const SERVICE_STATUS_LABELS = {
   active: 'Activo',
   inactive: 'Inactivo',
 };
+
+// ─── Sub-componente de Confirmación Estilo Estándar ───────────────────────────
 
 export default function Services() {
   const { currentUser } = useStore();
@@ -37,9 +40,11 @@ export default function Services() {
   const [statusFilter, setStatusFilter] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  
+  // Estado para el control de activación/desactivación
+  const [toggleTarget, setToggleTarget] = useState(null);
+  const [toggling, setToggling] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -65,6 +70,17 @@ export default function Services() {
       toast.error(err);
     },
   });
+
+  const categoryOptions = [
+    { value: '', label: 'Todas las categorías' },
+    ...dbCategories.map(c => ({ value: c.id, label: c.name })),
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'Todos los estados' },
+    { value: 'active', label: 'Activo' },
+    { value: 'inactive', label: 'Inactivo' },
+  ];
 
   useEffect(() => {
     loadServices();
@@ -94,12 +110,9 @@ export default function Services() {
     try {
       const data = await categoryClient.list('service');
       setDbCategories(data);
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
-  // Se procesan los servicios filtrados y se mapea "category" como string
-  // para mantener la compatibilidad con componentes que usen .category (como MediaCard)
   const filteredServices = useMemo(() => {
     return services
       .filter(s => {
@@ -159,43 +172,26 @@ export default function Services() {
         }, 100);
       }
     } catch (err) {
-      const isApiError = err && (err.name === 'ApiError' || typeof err.status === 'number');
-
-      if (isApiError) {
-        if (err.status === 422) {
-          const validationErrors = err.data?.detail;
-          if (Array.isArray(validationErrors)) {
-            const errorMessages = validationErrors.map(error => {
-              const field = error.loc[error.loc.length - 1];
-              return `"${field}": ${error.msg}`;
-            }).join(', ');
-            toast.error(`Error de validación en: ${errorMessages}`);
-          } else {
-            toast.error(err.message || 'Datos no procesables por el servidor.');
-          }
-        } else {
-          toast.error(err.message || `Error del servidor (Código ${err.status})`);
-        }
-      } else {
-        if (err instanceof TypeError && err.message?.includes('fetch')) {
-          toast.error('No se pudo conectar con el servidor. ¿Está encendido el backend?');
-        } else {
-          toast.error('Error de conexión o fallo inesperado.');
-        }
-      }
+      toast.error('Error al guardar el servicio.');
     }
   };
 
-  const handleDelete = async () => {
+  // Función para activar o desactivar el servicio en base de datos
+  const handleConfirmToggle = async () => {
+    if (!toggleTarget) return;
+    setToggling(true);
     try {
-      await serviceClient.delete(deletingId);
-      setServices(services.filter(s => s.id !== deletingId));
-      toast.success('Servicio eliminado.');
+      const newStatus = toggleTarget.status === 'active' ? 'inactive' : 'active';
+      const updated = await serviceClient.update(toggleTarget.id, { status: newStatus });
+      
+      setServices(services.map(s => s.id === toggleTarget.id ? updated : s));
+      toast.success(newStatus === 'active' ? 'Servicio activado.' : 'Servicio desactivado.');
     } catch (err) {
-      toast.error('Error al eliminar');
+      console.error(err);
+      toast.error('No se pudo cambiar el estado del servicio.');
     } finally {
-      setIsConfirmOpen(false);
-      setDeletingId(null);
+      setToggling(false);
+      setToggleTarget(null);
     }
   };
 
@@ -247,11 +243,15 @@ export default function Services() {
     <div className="d-flex gap-2">
       {canManage && (
         <>
-          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)}>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">
             <PencilIcon />
           </button>
-          <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => { setDeletingId(row.id); setIsConfirmOpen(true); }}>
-            <TrashIcon />
+          <button 
+            className={`btn btn-ghost btn-sm btn-icon-only ${row.status === 'active' ? 'text-danger' : 'text-success'}`} 
+            onClick={() => setToggleTarget(row)}
+            title={row.status === 'active' ? 'Desactivar' : 'Activar'}
+          >
+            <Power width="14" height="14" />
           </button>
         </>
       )}
@@ -284,25 +284,16 @@ export default function Services() {
 
       <div className="products-toolbar">
         <div className="products-filters">
-          <select
-            className="form-select"
+          <Dropdown
+            options={categoryOptions}
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ width: 'auto' }}
-          >
-            <option value="">Todas las categorías</option>
-            {dbCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select
-            className="form-select"
+            onChange={setCategoryFilter}
+          />
+          <Dropdown
+            options={statusOptions}
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: 'auto' }}
-          >
-            <option value="">Todos los estados</option>
-            <option value="active">Activo</option>
-            <option value="inactive">Inactivo</option>
-          </select>
+            onChange={setStatusFilter}
+          />
         </div>
         <div className="view-toggle">
           <button
@@ -347,7 +338,7 @@ export default function Services() {
                 variant="service"
                 canManage={canManage}
                 onEdit={openEditModal}
-                onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
+                onDelete={(item) => setToggleTarget(item)} // Reutilizamos onDelete de MediaCard para abrir el toggle modal
                 onAction={(service) => toast.success(`Cita para ${service.name} solicitada`)}
                 onShare={(item) => setShareModal({ isOpen: true, item })}
                 actionLabel="Agendar"
@@ -357,11 +348,13 @@ export default function Services() {
           )}
         </div>
       ) : (
-        <Table
-          columns={columns}
-          data={filteredServices}
-          actions={tableActions}
-        />
+         <div className="services-table-wrapper">
+          <Table
+            columns={columns}
+            data={filteredServices}
+            actions={tableActions}
+          />
+        </div>
       )}
 
       <Drawer
@@ -481,24 +474,28 @@ export default function Services() {
         </form>
       </Drawer>
 
-      <Modal
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        title="Eliminar Servicio"
-        size="sm"
-        actions={[
-          { label: 'Cancelar', onClick: () => setIsConfirmOpen(false) },
-          { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
-        ]}
-      >
-        <p style={{ color: 'var(--text-secondary)' }}>¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.</p>
-      </Modal>
-
       <ShareModal
         isOpen={shareModal.isOpen}
         onClose={() => setShareModal({ isOpen: false, item: null })}
         item={shareModal.item}
       />
+
+      {/* MODAL DE CONFIRMACIÓN MODERNO (Toggle de Estado) */}
+        <ConfirmModal
+          isOpen={!!toggleTarget}
+          onClose={() => setToggleTarget(null)}
+          onConfirm={handleConfirmToggle}
+          title={toggleTarget?.status === 'active' ? '¿Desactivar este servicio?' : '¿Reactivar este servicio?'}
+          confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
+          isDanger={toggleTarget?.status === 'active'}
+          loading={toggling}
+        >
+          {toggleTarget?.status === 'active' ? (
+            <>¿Está seguro de que desea desactivar <strong>{toggleTarget?.name}</strong>? Este servicio ya no aparecerá disponible para ser agendado.</>
+          ) : (
+            <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este servicio volverá a estar disponible.</>
+          )}
+        </ConfirmModal>
     </div>
   );
 }
@@ -507,14 +504,6 @@ function PencilIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
     </svg>
   );
 }

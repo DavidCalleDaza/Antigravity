@@ -204,6 +204,10 @@ class UserResponse(UserBase):
         bool,
         Field(description="Whether the user account is active."),
     ]
+    is_staff: Annotated[
+        bool,
+        Field(description="Whether the user is a staff member.", default=False),
+    ] = False
     created_at: Annotated[
         datetime,
         Field(description="Timestamp of account creation."),

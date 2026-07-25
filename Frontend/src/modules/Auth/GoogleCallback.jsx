@@ -41,6 +41,8 @@ export default function GoogleCallback() {
           role: response.user.role,
           avatar: response.user.avatar_url,
           token: response.access_token,
+          location: response.user.location,
+          is_staff: response.user.is_staff,
         });
         toast.success('Sesión iniciada con Google', 'Bienvenido');
         navigate('/dashboard');

@@ -203,7 +203,7 @@ MAX_AVATAR_SIZE = 10 * 1024 * 1024
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
     summary="Subir avatar",
-    description="Permite subir una imagen de perfil (jpg, png, gif, webp, max 2MB).",
+    description="Permite subir una imagen de perfil (jpg, png, gif, webp, max 10MB).",
 )
 async def upload_avatar(
     file: UploadFile,
@@ -213,7 +213,7 @@ async def upload_avatar(
     """
     Upload a profile avatar image.
 
-    Validates file type (image only) and size (max 2MB).
+    Validates file type (image only) and size (max 10MB).
     Saves to /uploads/avatars/{user_id}/{filename}.
 
     Args:
@@ -234,10 +234,18 @@ async def upload_avatar(
 
     contents = await file.read()
     if len(contents) > MAX_AVATAR_SIZE:
-        raise BadRequestException(detail="El archivo excede el tamaño máximo de 2MB.")
+        raise BadRequestException(detail="El archivo excede el tamaño máximo de 10MB.")
 
     user_id_str = str(current_user.id)
     upload_dir = os.path.join("uploads", "avatars", user_id_str)
+
+    # Remove old avatar file if it exists
+    if current_user.avatar_url:
+        old_filename = os.path.basename(current_user.avatar_url)
+        old_path = os.path.join(upload_dir, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
     os.makedirs(upload_dir, exist_ok=True)
 
     ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"

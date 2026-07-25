@@ -47,6 +47,8 @@ export default function Register() {
         role: response.user.role,
         avatar: response.user.avatar_url,
         token: response.access_token,
+        location: response.user.location,
+        is_staff: response.user.is_staff,
       });
       toast.success('¡Cuenta creada con éxito!', 'Bienvenido');
       navigate('/dashboard');

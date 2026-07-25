@@ -6,6 +6,9 @@ All functions receive an ``AsyncSession`` injected by FastAPI's
 dependency system and return ORM model instances.
 """
 
+import os
+import shutil
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -114,11 +117,16 @@ async def deactivate_user(db: AsyncSession, user: User) -> User:
 
 async def delete_user(db: AsyncSession, user: User) -> None:
     """
-    Permanently delete a user from the database.
+    Permanently delete a user from the database and clean up their avatar files.
 
     Args:
         db: Active async database session.
         user: The user ORM instance to delete.
     """
+    # Remove avatar directory if it exists
+    user_avatar_dir = os.path.join("uploads", "avatars", str(user.id))
+    if os.path.exists(user_avatar_dir):
+        shutil.rmtree(user_avatar_dir)
+
     await db.delete(user)
     await db.commit()

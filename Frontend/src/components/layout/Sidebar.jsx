@@ -53,7 +53,7 @@ export default function Sidebar({ isOpen, closeMobile }) {
   const userRole = currentUser?.role;
 
   const getAvatarUrl = () => {
-    return Helpers.resolveMediaUrl(currentUser?.avatar);
+    return Helpers.resolveMediaUrl(currentUser?.avatar_url || currentUser?.avatar);
   };
 
   const handleAvatarError = (e) => {

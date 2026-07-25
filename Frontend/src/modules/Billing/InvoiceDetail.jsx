@@ -9,9 +9,9 @@ import { billingClient, triggerBlobDownload } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import Helpers from '../../utils/helpers';
 import '../../../css/pages/InvoiceDetail.css';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
+/* Componente de badges para estados de facturas */
 function StatusBadge({ status }) {
   const map = {
     draft:   { label: 'Borrador',            cls: 'badge--neutral'  },
@@ -25,6 +25,7 @@ function StatusBadge({ status }) {
   return <span className={`badge ${cls}`}>{label}</span>;
 }
 
+/* Componente de badges para estados de DIAN */
 function DianStatusBadge({ dian_status }) {
   const map = {
     none:     { label: 'Sin Emitir (Pruebas)',  icon: <Clock size={12} />,                                   cls: 'badge--neutral'  },
@@ -41,30 +42,35 @@ function DianStatusBadge({ dian_status }) {
   );
 }
 
+/* Componente de etiquetas de sección */
 function SectionLabel({ children }) {
   return <span className="section-label">{children}</span>;
 }
 
+/* Componente de iconos de evento DIAN */
 function DianEventIcon({ type }) {
   if (type === 'accepted') return <CheckCircle size={14} className="text-success" />;
   if (type === 'error' || type === 'rejected') return <AlertTriangle size={14} className="text-danger" />;
   return <Clock size={14} className="text-secondary" />;
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+/* Main Component */
 
 const DIAN_SUBMISSION_ENABLED = false;
 
+/* Componente principal de detalle de factura */
 export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChange, onEdit }) {
   const toast = useToast();
-
+  /* Estados */
   const [invoice,        setInvoice]        = useState(null);
   const [loading,        setLoading]        = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendingEmail,   setSendingEmail]   = useState(false);
   const [submittingDian, setSubmittingDian] = useState(false);
-  // true mientras el PDF se está generando/descargando; deshabilita el botón
-  // para evitar solicitudes duplicadas y muestra un indicador de carga.
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  // Estados para controlar las confirmaciones modernas
+  const [confirmEmitOpen, setConfirmEmitOpen] = useState(false);
+  const [confirmVoidOpen, setConfirmCancelOpen] = useState(false);
 
   // Credit-note form
   const [showCNForm, setShowCNForm] = useState(false);
@@ -82,7 +88,7 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
     try {
       const data = await billingClient.getInvoice(invoiceId);
       setInvoice(data);
-      setCnItems(data.items.map(item => ({
+      setCnItems((data.items || []).map(item => ({
         description: item.description,
         quantity:    parseFloat(item.quantity),
         unit_price:  parseFloat(item.unit_price),
@@ -98,7 +104,7 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
 
   // ── Action handlers ───────────────────────────────────────────────────────────
 
- const handleSendToDian = async () => {
+  const handleSendToDian = async () => {
     if (!invoice) return;
     setSubmittingDian(true);
     try {
@@ -112,7 +118,7 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
       setSubmittingDian(false);
     }
   };
-
+  /* Action to send the invoice by email to the customer */
   const handleSendEmail = async () => {
     if (!invoice) return;
     setSendingEmail(true);
@@ -128,6 +134,24 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
     }
   };
 
+  /* Action to issue the invoice from draft */
+  const handleIssueInvoice = async () => {
+    if (!invoice) return;
+    setConfirmEmitOpen(false); // Close the confirmation modal
+    setLoading(true);
+    try {
+      const updated = await billingClient.updateInvoice(invoice.id, { status: 'issued' });
+      toast.success('Factura emitida exitosamente.');
+      setInvoice(updated);
+      onStatusChange();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Error al emitir la factura.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleMarkPaid = async () => {
     if (!invoice) return;
     try {
@@ -140,9 +164,10 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
     }
   };
 
+  /* Action to cancel the invoice */
   const handleCancelInvoice = async () => {
     if (!invoice) return;
-    if (!confirm('¿Está seguro de que desea anular esta factura?')) return;
+    setConfirmCancelOpen(false); // Close the confirmation modal
     try {
       const updated = await billingClient.cancelInvoice(invoice.id);
       toast.success('Factura anulada.');
@@ -153,6 +178,7 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
     }
   };
 
+  /* Action to create a credit note */
   const handleCreateCreditNote = async (e) => {
     e.preventDefault();
     if (!invoice) return;
@@ -180,6 +206,7 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
     }
   };
 
+  /* Action to download the invoice PDF */
   const handleDownloadPDF = async () => {
     if (!invoice || downloadingPdf) return;
     setDownloadingPdf(true);
@@ -195,11 +222,11 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
     }
   };
 
+  /* Action to edit the invoice */
   const handleEditInvoice = () => {
     if (!invoice) return;
     if (typeof onEdit === 'function') {
-      onEdit(invoice); // Llama a la función de edición en el componente padre
-     //onClose();       // Cierra el detalle para que no se superponga con el modal de edición
+      onEdit(invoice);
     } else {
       console.warn('InvoiceDetail: no se proporcionó la prop "onEdit" al componente.');
     }
@@ -215,28 +242,27 @@ export default function InvoiceDetail({ isOpen, onClose, invoiceId, onStatusChan
 
   if (!isOpen) return null;
 
-  const canSendToDian  = DIAN_SUBMISSION_ENABLED && invoice?.dian_status === 'none' && invoice?.status !== 'void';
-  const canMarkPaid    = invoice?.status === 'sent'          || invoice?.status === 'issued';
-  const canVoidDraft   = invoice?.status === 'draft';
-  const canCreditNote  = invoice?.dian_status === 'accepted' && invoice?.status !== 'void';
-  // Editing is only safe while the invoice hasn't been transmitted to the DIAN yet.
-  const canEditInvoice = invoice?.status === 'draft' && invoice?.dian_status === 'none';
+  /* Logical control states */
+  const isDraft   = invoice?.status === 'draft';
+  const isIssued  = invoice?.status === 'issued';
+  const isSent    = invoice?.status === 'sent';
+  const isOverdue = invoice?.status === 'overdue';
+  const isPaid    = invoice?.status === 'paid';
+  const isVoid    = invoice?.status === 'void';
 
-  // ── Discount resolution ──────────────────────────────────────────────────────
-// El descuento preferencial ya se calcula y persiste en el backend
-// (crud.py: _compute_preferred_discount + _distribute_discount_across_items),
-// por lo que discount_total ya viene correcto desde la API — no hace falta
-// ningún cálculo "estimado" en el frontend.
-const displayDiscount = parseFloat(invoice?.discount_total || 0);
+  /* Configuration for button visibility */
+  const canSendToDian  = DIAN_SUBMISSION_ENABLED && invoice?.dian_status === 'none' && !isVoid;
+  const canEditInvoice = isDraft && invoice?.dian_status === 'none';
+  const canIssue       = isDraft;
+  const canVoidDraft   = isDraft;
+  const canSendEmail   = (isIssued || isSent || isOverdue || isPaid) && invoice?.customer?.email;
+  const canMarkPaid    = isIssued || isSent || isOverdue;
+  const canCreditNote  = invoice?.dian_status === 'accepted' && !isVoid;
 
+  const displayDiscount = parseFloat(invoice?.discount_total || 0);
   const portalRoot = document.getElementById('invoice-drawer-portal') || document.body;
 
-  console.log('DEBUG DIAN:', {
-    dian_status: invoice?.dian_status,
-    status: invoice?.status,
-    canSendToDian
-  });
-
+  // Render
   return createPortal(
     <div
       onClick={onClose}
@@ -270,7 +296,7 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
           <div className="invoice-drawer__title-group">
             <div className="invoice-drawer__title-row">
               <h3 className="invoice-drawer__title">
-                {invoice ? `Factura ${invoice.full_number}` : 'Cargando…'}
+                {invoice ? (invoice.full_number ? `Factura ${invoice.full_number}` : 'Borrador sin Número') : 'Cargando…'}
               </h3>
 
               {canSendToDian && (
@@ -284,7 +310,7 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                 >
                   {submittingDian
                     ? <RefreshCw size={16} className="spin" />
-                    : <BsFillSendArrowUpFill  size={16} />}
+                    : <BsFillSendArrowUpFill size={16} />}
                 </button>
               )}
             </div>
@@ -305,7 +331,6 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
         {/* ── Body ── */}
         <div className="invoice-drawer__body">
 
-          {/* Loading state */}
           {loading && (
             <div className="invoice-drawer__loading">
               <RefreshCw size={32} className="spin text-gold" />
@@ -319,18 +344,27 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
               {/* 1. Action bar */}
               {!showCNForm && (
                 <div className="invoice-detail__actions">
-                  <button
-                    className="btn btn-outline btn-sm btn-icon"
-                    onClick={handleDownloadPDF}
-                    disabled={downloadingPdf}
-                    aria-disabled={downloadingPdf}
-                    title={downloadingPdf ? 'Generando PDF...' : 'Descargar PDF'}
-                  >
-                    {downloadingPdf
-                      ? <RefreshCw size={14} className="spin" />
-                      : <Download size={14} />}
-                    {downloadingPdf ? 'Generando PDF...' : 'Descargar PDF'}
-                  </button>
+                  
+                  {!isDraft && (
+                    <button
+                      className="btn btn-outline btn-sm btn-icon"
+                      onClick={handleDownloadPDF}
+                      disabled={downloadingPdf}
+                      aria-disabled={downloadingPdf}
+                      title={downloadingPdf ? 'Generando PDF...' : 'Descargar PDF'}
+                    >
+                      {downloadingPdf
+                        ? <RefreshCw size={14} className="spin" />
+                        : <Download size={14} />}
+                      {downloadingPdf ? 'Generando PDF...' : 'Descargar PDF'}
+                    </button>
+                  )}
+
+                  {canIssue && (
+                    <button className="btn btn-primary btn-sm btn-icon" onClick={() => setConfirmEmitOpen(true)}>
+                      <CheckCircle size={14} /> Emitir Factura
+                    </button>
+                  )}
 
                   {canEditInvoice && (
                     <button className="btn btn-outline btn-sm btn-icon" onClick={handleEditInvoice}>
@@ -338,7 +372,7 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                     </button>
                   )}
 
-                  {invoice.customer?.email && (
+                  {canSendEmail && (
                     <button className="btn btn-primary btn-sm btn-icon" onClick={handleSendEmail} disabled={sendingEmail}>
                       <Send size={14} />
                       {sendingEmail ? 'Enviando…' : 'Enviar por correo'}
@@ -352,8 +386,8 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                   )}
 
                   {canVoidDraft && (
-                    <button className="btn btn-ghost btn-sm btn-icon text-danger" onClick={handleCancelInvoice}>
-                      <Ban size={14} /> Anular
+                    <button className="btn btn-ghost btn-sm btn-icon text-danger" onClick={() => setConfirmCancelOpen(true)}>
+                      <Ban size={14} /> Anular Borrador
                     </button>
                   )}
 
@@ -406,7 +440,7 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                                   className="form-control form-control--compact text-right"
                                   value={item.quantity}
                                   min="0.01"
-                                  max={invoice.items[idx].quantity}
+                                  max={invoice.items[idx]?.quantity || 1}
                                   step="any"
                                   onChange={e => updateCnItemQty(idx, e.target.value)}
                                 />
@@ -434,21 +468,29 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
               <div className="invoice-detail__meta-grid">
                 <div className="info-card">
                   <SectionLabel>Adquiriente / Receptor</SectionLabel>
-                  <strong className="info-card__name">{invoice.customer.business_name}</strong>
-                  <span className="info-card__sub">{invoice.customer.id_type}: {invoice.customer.id_number}</span>
-                  <div className="info-card__rows">
-                    <div><b>Dirección:</b> {invoice.customer.location?.address || 'N/A'}, {invoice.customer.location?.city || 'N/A'}</div>
-                    <div><b>Email:</b> {invoice.customer.email}</div>
-                  </div>
+                  {invoice.customer ? (
+                    <>
+                      <strong className="info-card__name">{invoice.customer.business_name || 'Sin nombre'}</strong>
+                      <span className="info-card__sub">{invoice.customer.id_type}: {invoice.customer.id_number}</span>
+                      <div className="info-card__rows">
+                        <div><b>Dirección:</b> {invoice.customer.location?.address || 'N/A'}, {invoice.customer.location?.city || 'N/A'}</div>
+                        <div><b>Email:</b> {invoice.customer.email || 'N/A'}</div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-muted italic" style={{ marginTop: '8px' }}>
+                      Sin cliente asignado a este borrador
+                    </div>
+                  )}
                 </div>
 
                 <div className="info-card">
                   <SectionLabel>Fechas y Condiciones</SectionLabel>
                   <div className="info-card__rows">
-                    <div><b>Fecha Emisión:</b> {Helpers.formatDate(invoice.issued_at)}</div>
+                    <div><b>Fecha Emisión:</b> {invoice.issued_at ? Helpers.formatDate(invoice.issued_at) : 'No definida (Borrador)'}</div>
                     <div><b>Vencimiento:</b>   {invoice.due_date ? Helpers.formatDate(invoice.due_date) : 'Inmediato'}</div>
-                    <div><b>Método Pago:</b>   {invoice.payment_method}</div>
-                    <div><b>Medio Pago:</b>    Código DIAN {invoice.payment_means}</div>
+                    <div><b>Método Pago:</b>   {invoice.payment_method || 'No definido'}</div>
+                    <div><b>Medio Pago:</b>    {invoice.payment_means ? `Código DIAN ${invoice.payment_means}` : 'No definido'}</div>
                   </div>
                 </div>
               </div>
@@ -470,8 +512,8 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                     </tr>
                   </thead>
                   <tbody>
-                    {invoice.items.map((item, idx) => (
-                      <tr key={item.id}>
+                    {(invoice.items || []).map((item, idx) => (
+                      <tr key={item.id || idx}>
                         <td className="col-index">{idx + 1}</td>
                         <td className="col-desc">
                           {item.code && <strong>[{item.code}] </strong>}
@@ -507,7 +549,7 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                 <div className="totals-card">
                   <div className="totals-card__row">
                     <span>Subtotal</span>
-                    <span>{Helpers.formatCurrency(invoice.subtotal)}</span>
+                    <span>{Helpers.formatCurrency(invoice.subtotal || 0)}</span>
                   </div>
                   <div className={`totals-card__row ${displayDiscount > 0 ? 'totals-card__row--discount' : ''}`}>
                     <span>Descuento</span>
@@ -515,16 +557,16 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
                   </div>
                   <div className="totals-card__row">
                     <span>Base Gravable</span>
-                    <span>{Helpers.formatCurrency(invoice.tax_base)}</span>
+                    <span>{Helpers.formatCurrency(invoice.tax_base || 0)}</span>
                   </div>
                   <div className="totals-card__row">
                     <span>IVA (19 %)</span>
-                    <span>{Helpers.formatCurrency(invoice.tax_total)}</span>
+                    <span>{Helpers.formatCurrency(invoice.tax_total || 0)}</span>
                   </div>
                   <div className="totals-card__divider" />
                   <div className="totals-card__row totals-card__row--total">
                     <span>Total</span>
-                    <span>{Helpers.formatCurrency(invoice.total)}</span>
+                    <span>{Helpers.formatCurrency(invoice.total || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -585,6 +627,30 @@ const displayDiscount = parseFloat(invoice?.discount_total || 0);
           )}
         </div>
       </aside>
+
+     {/* MODALES DE CONFIRMACIÓN MODERNOS (Para Emitir y Anular) */}
+      <ConfirmModal
+        isOpen={confirmEmitOpen}
+        onClose={() => setConfirmEmitOpen(false)}
+        onConfirm={handleIssueInvoice}
+        title="¿Emitir esta factura?"
+        confirmText="Sí, Emitir"
+        loading={loading}
+      >
+        Al emitir esta factura, dejará de estar en estado borrador y se le asignará una numeración oficial consecutiva. Esta acción no se puede deshacer.
+      </ConfirmModal>
+
+      <ConfirmModal
+        isOpen={confirmVoidOpen}
+        onClose={() => setConfirmCancelOpen(false)}
+        onConfirm={handleCancelInvoice}
+        title="¿Anular este borrador?"
+        confirmText="Sí, Anular"
+        isDanger={true}
+        loading={loading}
+      >
+        ¿Está seguro de que desea anular esta factura en borrador? Esta acción cancelará permanentemente el documento.
+      </ConfirmModal>
     </div>,
     portalRoot
   );

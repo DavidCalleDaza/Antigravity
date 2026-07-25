@@ -166,6 +166,41 @@
     opacity: 0.5;
 }
 
+
+.customers-table th:nth-child(1),
+.customers-table td:nth-child(1) {
+ width: 0% !important;
+}
+
+.customers-table th:nth-child(2),
+.customers-table td:nth-child(2) {
+ width: 0% !important;
+}
+
+.customers-table th:nth-child(3),
+.customers-table td:nth-child(3) {
+ width: 0% !important;
+}
+
+.customers-table th:nth-child(4),
+.customers-table td:nth-child(4) {
+ width: 0% !important;
+}
+
+.customers-table th:nth-child(5),
+.customers-table td:nth-child(5) {
+ width: 0% !important;
+}
+
+.customers-table th:nth-child(6),
+.customers-table td:nth-child(6) {
+ width: 0% !important;
+}
+
+.customers-table th:nth-child(7),
+.customers-table td:nth-child(7) {
+ width: 0% !important;
+}
 .customers-name-cell {
     display: flex;
     align-items: center;

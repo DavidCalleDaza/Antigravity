@@ -331,41 +331,50 @@ export default function Billing() {
       return <span className="text-muted small">Sin ID</span>;
     }
 
-    const isDraft = row.status === 'draft';
-    const isVoid = row.status === 'void';
-    const isLocalOrNone = !row.dian_status || row.dian_status === 'none';
-    const isNotCancelled = row.status !== 'void';
+    // Estados lógicos de la fila de factura
+    const status = row.status;
+    const isDraft   = status === 'draft';
+    const isIssued  = status === 'issued';
+    const isSent    = status === 'sent';
+    const isOverdue = status === 'overdue';
+    const isPaid    = status === 'paid';
+    const isVoid    = status === 'void';
 
+    // 1. Regla para Editar (FileText): Solo se habilita en Borrador (draft)
     const canEdit = isDraft;
-    const canSendDian = isLocalOrNone && isNotCancelled;
-    const isDownloading = downloadingIds.has(row.id);
-    const isSendingEmail = sendingEmailIds.has(row.id);
-    const hasCustomerEmail = !!row.customer_email;
-
     const editReason = canEdit
       ? null
       : isVoid
         ? 'No se puede editar una factura anulada.'
         : 'Solo se pueden editar facturas en estado Borrador.';
 
-    const emailReason = hasCustomerEmail
-      ? null
-      : 'El cliente no tiene un correo electrónico registrado.';
+    // 2. Regla para Descargar PDF (Download): Habilitado en todos excepto Borrador (draft)
+    const canDownload = !isDraft;
+    const isDownloading = downloadingIds.has(row.id);
+    const downloadReason = isDownloading
+      ? 'Generando el PDF, un momento...'
+      : isDraft
+        ? 'No se puede descargar el PDF de una factura en estado Borrador.'
+        : null;
 
-    /*const dianReason = canSendDian
-      ? null
-      : isVoid
-        ? 'No se puede transmitir una factura anulada.'
-        : row.dian_status === 'accepted'
-          ? 'Esta factura ya fue aceptada por la DIAN.'
-          : row.dian_status === 'pending'
-            ? 'La factura ya se está transmitiendo a la DIAN.'
-            : row.dian_status === 'rejected'
-              ? 'La factura fue rechazada por la DIAN; corrígela antes de reintentar.'
-              : 'Esta factura no puede transmitirse en su estado actual.';*/
+    // 3. Regla para Enviar Correo (Send): Habilitado en Emitida, Enviada, Vencida, Pagada (requiere email)
+    const hasCustomerEmail = !!row.customer_email;
+    const canSendEmail = (isIssued || isSent || isOverdue || isPaid) && hasCustomerEmail;
+    const isSendingEmail = sendingEmailIds.has(row.id);
+
+    const emailReason = isSendingEmail
+      ? 'Enviando el correo, un momento...'
+      : isDraft
+        ? 'No se puede enviar por correo una factura en estado Borrador.'
+        : isVoid
+          ? 'No se puede enviar por correo una factura anulada.'
+          : !hasCustomerEmail
+            ? 'El cliente no tiene un correo electrónico registrado.'
+            : null;
 
     return (
       <div className="billing-row-actions">
+        {/* Ver Detalle */}
         <RowActionButton
           icon={Eye}
           title="Ver Detalle"
@@ -376,6 +385,7 @@ export default function Billing() {
           }}
         />
 
+        {/* Editar Borrador */}
         <RowActionButton
           icon={FileText}
           title="Editar Borrador"
@@ -393,21 +403,23 @@ export default function Billing() {
           }}
         />
 
+        {/* Descargar PDF */}
         <RowActionButton
           icon={isDownloading ? Loader2 : Download}
           title={isDownloading ? 'Generando PDF...' : 'Descargar PDF'}
-          disabled={isDownloading}
-          reason={isDownloading ? 'Generando el PDF, un momento...' : undefined}
+          disabled={isDownloading || !canDownload}
+          reason={downloadReason}
           iconClass="text-secondary"
           spinning={isDownloading}
           onClick={() => handleDownloadPDF(row)}
         />
 
+        {/* Enviar por correo */}
         <RowActionButton
           icon={isSendingEmail ? Loader2 : Send}
           title={isSendingEmail ? 'Enviando...' : 'Enviar por correo'}
-          disabled={isSendingEmail || !hasCustomerEmail}
-          reason={isSendingEmail ? 'Enviando el correo, un momento...' : emailReason}
+          disabled={isSendingEmail || !canSendEmail}
+          reason={emailReason}
           iconClass="text-gold"
           spinning={isSendingEmail}
           onClick={() => handleSendEmail(row)}
@@ -598,7 +610,7 @@ export default function Billing() {
       </div>
 
       {/* Listado de Facturas */}
-      <div className="card">
+      <div className="card billing-invoices-card">
         <div className="card-header">
           <h3 className="card-title">Listado de Facturas</h3>
           <div className="tabs" style={{ border: 'none' }}>

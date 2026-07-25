@@ -4,6 +4,7 @@ import { billingClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import CustomerModal from './CustomerModal';
 import '../../../css/pages/Customers.css';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 export default function Customers() {
   const toast = useToast();
@@ -319,46 +320,26 @@ export default function Customers() {
       />
 
       {/* MODAL: Confirmar activar/desactivar */}
-      {toggleTarget && (
-        <div className="modal-overlay active" onClick={() => !toggling && setToggleTarget(null)}>
-          <div className="customers-confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className={`customers-confirm-icon ${toggleTarget.is_active ? 'is-danger' : 'is-success'}`}>
-              <AlertTriangle width="22" height="22" />
-            </div>
-            <h3>{toggleTarget.is_active ? '¿Desactivar este cliente?' : '¿Reactivar este cliente?'}</h3>
-            <p>
-              {toggleTarget.is_active ? (
-                <>
-                  <strong>{toggleTarget.business_name}</strong> dejará de aparecer al buscar clientes para nuevas
-                  facturas, pero sus facturas existentes no se ven afectadas.
-                </>
-              ) : (
-                <>
-                  <strong>{toggleTarget.business_name}</strong> volverá a estar disponible para nuevas facturas.
-                </>
-              )}
-            </p>
-            <div className="customers-confirm-actions">
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => setToggleTarget(null)}
-                disabled={toggling}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className={toggleTarget.is_active ? 'btn btn-danger' : 'btn btn-primary'}
-                onClick={handleConfirmToggle}
-                disabled={toggling}
-              >
-                {toggling ? 'Guardando...' : toggleTarget.is_active ? 'Sí, Desactivar' : 'Sí, Reactivar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={toggleTarget}
+        onClose={() => setToggleTarget(null)}
+        onConfirm={handleConfirmToggle}
+        title={toggleTarget?.is_active ? '¿Desactivar este cliente?' : '¿Reactivar este cliente?'}
+        confirmText={toggleTarget?.is_active ? 'Sí, Desactivar' : 'Sí, Reactivar'}
+        isDanger={toggleTarget?.is_active}
+        loading={toggling}
+      >
+        {toggleTarget?.is_active ? (
+          <>
+            <strong>{toggleTarget?.business_name}</strong> dejará de aparecer al buscar clientes para nuevas
+            facturas, pero sus facturas existentes no se ven afectadas.
+          </>
+        ) : (
+          <>
+            <strong>{toggleTarget?.business_name}</strong> volverá a estar disponible para nuevas facturas.
+          </>
+        )}
+      </ConfirmModal>
     </div>
   );
 }

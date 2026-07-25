@@ -22,7 +22,7 @@ import '../css/pages/agenda.css'
 import '../css/pages/wall.css'
 import '../css/pages/statistics.css'
 import '../css/pages/profile.css'
-import '../css/pages/customers.css'
+import '../css/pages/Customers.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

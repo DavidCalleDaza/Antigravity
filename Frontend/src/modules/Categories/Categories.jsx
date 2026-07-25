@@ -5,6 +5,7 @@ import { useToast } from '../../components/ui/Toast';
 import Drawer from '../../components/ui/Drawer';
 import { useStore } from '../../store/useStore';
 import '../../../css/pages/Categories.css';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 const EMPTY_FORM = { name: '', description: '', parent_id: '' };
 const DRAG_THRESHOLD = 6; // px mínimos de movimiento para iniciar el arrastre
@@ -609,49 +610,27 @@ export default function Categories() {
       </Drawer>
 
       {/* MODAL: Confirmar activar/desactivar */}
-      {toggleTarget && (
-        <div className="modal-overlay active" onClick={() => !toggling && setToggleTarget(null)}>
-          <div className="categories-confirm-modal" onClick={(e) => e.stopPropagation()}>
-            {/* Cambiado aquí */}
-            <div className={`categories-confirm-icon ${toggleTarget.status === 'active' ? 'is-danger' : 'is-success'}`}>
-              <AlertTriangle width="22" height="22" />
-            </div>
-            {/* Cambiado aquí */}
-            <h3>{toggleTarget.status === 'active' ? '¿Desactivar esta categoría?' : '¿Reactivar esta categoría?'}</h3>
-            <p>
-              {/* Cambiado aquí */}
-              {toggleTarget.status === 'active' ? (
-                <>
-                  Las subcategorías e ítems vinculados a <strong>{toggleTarget.name}</strong> mantendrán su relación, pero esta categoría ya no se podrá seleccionar para nuevos elementos.
-                </>
-              ) : (
-                <>
-                  <strong>{toggleTarget.name}</strong> volverá a estar disponible para vincularla a nuevos productos o servicios.
-                </>
-              )}
-            </p>
-            <div className="categories-confirm-actions">
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => setToggleTarget(null)}
-                disabled={toggling}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                /* Cambiado aquí */
-                className={toggleTarget.status === 'active' ? 'btn btn-danger' : 'btn btn-primary'}
-                onClick={handleConfirmToggle}
-                disabled={toggling}
-              >
-                {toggling ? 'Guardando...' : toggleTarget.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={toggleTarget}
+        onClose={() => setToggleTarget(null)}
+        onConfirm={handleConfirmToggle}
+        title={toggleTarget?.status === 'active' ? '¿Desactivar esta categoría?' : '¿Reactivar esta categoría?'}
+        confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
+        isDanger={toggleTarget?.status === 'active'}
+        loading={toggling}
+      >
+        {toggleTarget?.status === 'active' ? (
+          <>
+            Las subcategorías e ítems vinculados a <strong>{toggleTarget?.name}</strong> mantendrán su relación, pero esta
+            categoría ya no se podrá seleccionar para nuevos elementos.
+          </>
+        ) : (
+          <>
+            <strong>{toggleTarget?.name}</strong> volverá a estar disponible para vincularla a nuevos productos o
+            servicios.
+          </>
+        )}
+      </ConfirmModal>
     </div>
   );
 }

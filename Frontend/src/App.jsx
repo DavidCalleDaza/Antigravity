@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { APP_CONFIG } from './config/appConfig';
 import { ToastContainer } from './components/ui/Toast';
@@ -28,6 +29,12 @@ import Customers from './modules/Billing/Customers';
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
 function App() {
+  useEffect(() => {
+    // Ping the backend to wake up Render free tier instances
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://servinow-api.onrender.com';
+    fetch(`${apiUrl}/api/v1/health`).catch(() => {});
+  }, []);
+
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <CustomCursor />

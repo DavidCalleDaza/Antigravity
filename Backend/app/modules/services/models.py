@@ -104,5 +104,13 @@ class Service(Base):
         onupdate=func.now(),
     )
 
-    # Relación hacia categories
+    store_location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("store_locations.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Sucursal donde se ofrece este servicio",
+    )
+
     category: Mapped["Category"] = relationship("Category", lazy="joined")
+    user: Mapped["User"] = relationship("User", lazy="joined", foreign_keys=[user_id])
+    store_location: Mapped["StoreLocation"] = relationship("StoreLocation", lazy="joined")

@@ -67,13 +67,18 @@ const Table = ({
   };
 
   const allCols = actions 
-    ? [...columns, { key: '_actions', label: 'Acciones', sortable: false }] 
+    ? [...columns, { key: '_actions', label: 'Acciones', sortable: false, width: '120px' }] 
     : columns;
 
   return (
     <div className="table-wrapper">
       <div className="table-container">
         <table className="table">
+          <colgroup>
+            {allCols.map((col, idx) => (
+              <col key={idx} style={col.width ? { width: col.width } : {}} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               {allCols.map((col, idx) => (

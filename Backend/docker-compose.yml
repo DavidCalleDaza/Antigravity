@@ -1,6 +1,10 @@
+# ============================================
+# Servinow Backend - Docker Compose (Local Dev)
+# ============================================
 version: "3.9"
 
 services:
+  # --- PostgreSQL Database ---
   db:
     image: postgres:15-alpine
     restart: unless-stopped
@@ -9,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-servinow_secret_password}
       POSTGRES_DB: ${POSTGRES_DB:-servinow_db}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,16 +22,15 @@ services:
       timeout: 5s
       retries: 5
 
+  # --- FastAPI Application ---
   web:
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    command: sh ./entrypoint.sh
     env_file:
       - .env
-    environment:
-      - POSTGRES_HOST=db
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-servinow_user}:${POSTGRES_PASSWORD:-servinow_secret_password}@db:5432/${POSTGRES_DB:-servinow_db}
     ports:
       - "8000:8000"
     volumes:
@@ -35,6 +38,38 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # --- Redis (Message Broker) ---
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # --- Celery Worker ---
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
+  # --- Flower (Celery UI) ---
+  flower:
+    image: mher/flower
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
 
 volumes:
   postgres_data:

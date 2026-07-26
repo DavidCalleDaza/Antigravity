@@ -9,15 +9,17 @@ from fastapi import APIRouter, Depends, status, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ConflictException, UnauthorizedException
-from app.core.security import verify_password
+from app.core.security import verify_password, hash_password
 from app.db.session import get_db
 from app.modules.auth.crud import create_user, deactivate_user, delete_user, get_user_by_email, update_user
 from app.modules.auth.deps import get_current_user
 from app.modules.auth.models import User
-from app.modules.auth.schemas import TokenResponse, UserCreate, UserLogin, UserResponse, UserUpdateMe
+from app.modules.auth.schemas import TokenResponse, UserCreate, UserLogin, UserResponse, UserUpdateMe, PasswordRecoveryRequest, PasswordRecoveryReset
+from app.modules.auth.google import router as google_router, redis_client
+from app.core.email import send_email
 
 router = APIRouter()
-
+router.include_router(google_router)
 
 @router.post(
     "/register",
@@ -95,7 +97,13 @@ async def login(
     from app.core.security import create_access_token
 
     user = await get_user_by_email(db, credentials.email)
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user:
+        raise UnauthorizedException(detail="Credenciales inválidas.")
+
+    if user.hashed_password is None:
+        raise UnauthorizedException(detail="Credenciales inválidas.")
+
+    if not verify_password(credentials.password, user.hashed_password):
         raise UnauthorizedException(detail="Credenciales inválidas.")
 
     if not user.is_active:
@@ -196,7 +204,7 @@ MAX_AVATAR_SIZE = 10 * 1024 * 1024
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
     summary="Subir avatar",
-    description="Permite subir una imagen de perfil (jpg, png, gif, webp, max 2MB).",
+    description="Permite subir una imagen de perfil (jpg, png, gif, webp, max 10MB).",
 )
 async def upload_avatar(
     file: UploadFile,
@@ -206,7 +214,7 @@ async def upload_avatar(
     """
     Upload a profile avatar image.
 
-    Validates file type (image only) and size (max 2MB).
+    Validates file type (image only) and size (max 10MB).
     Saves to /uploads/avatars/{user_id}/{filename}.
 
     Args:
@@ -227,10 +235,18 @@ async def upload_avatar(
 
     contents = await file.read()
     if len(contents) > MAX_AVATAR_SIZE:
-        raise BadRequestException(detail="El archivo excede el tamaño máximo de 2MB.")
+        raise BadRequestException(detail="El archivo excede el tamaño máximo de 10MB.")
 
     user_id_str = str(current_user.id)
     upload_dir = os.path.join("uploads", "avatars", user_id_str)
+
+    # Remove old avatar file if it exists
+    if current_user.avatar_url:
+        old_filename = os.path.basename(current_user.avatar_url)
+        old_path = os.path.join(upload_dir, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
     os.makedirs(upload_dir, exist_ok=True)
 
     ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
@@ -245,3 +261,86 @@ async def upload_avatar(
     await db.commit()
     await db.refresh(current_user)
     return UserResponse.model_validate(current_user)
+
+
+@router.post(
+    "/password-recovery/request",
+    status_code=status.HTTP_200_OK,
+    summary="Solicitar recuperación de contraseña",
+    description="Genera un código de 6 dígitos, lo guarda en Redis y lo envía por correo.",
+)
+async def request_password_recovery(
+    payload: PasswordRecoveryRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    import random
+    from app.core.config import settings
+
+    user = await get_user_by_email(db, payload.email)
+    if not user:
+        raise BadRequestException(detail="Usuario no encontrado.")
+
+    if user.hashed_password is None:
+        raise BadRequestException(
+            detail="Esta cuenta está vinculada con Google. Inicia sesión directamente usando Google."
+        )
+
+    # Generate 6 digit numeric code
+    code = f"{random.randint(100000, 999999)}"
+
+    # Save to Redis with 10 min (600s) TTL
+    redis_key = f"password-reset:code:{payload.email}"
+    await redis_client.setex(redis_key, 600, code)
+
+    # Send email
+    subject = "Código de recuperación — ServiNow"
+    context = {
+        "code": code,
+        "company_name": settings.SMTP_FROM_NAME or "ServiNow",
+    }
+    
+    email_sent = send_email(
+        to=payload.email,
+        subject=subject,
+        template_name="password_recovery.html",
+        context=context
+    )
+
+    if not email_sent:
+        raise BadRequestException(
+            detail="No se pudo enviar el correo de recuperación. Configuración de SMTP inválida."
+        )
+
+    return {"detail": "Código de recuperación enviado."}
+
+
+@router.post(
+    "/password-recovery/reset",
+    status_code=status.HTTP_200_OK,
+    summary="Restablecer contraseña usando código",
+    description="Valida el código de recuperación de Redis y actualiza la contraseña del usuario.",
+)
+async def reset_password_with_code(
+    payload: PasswordRecoveryReset,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    redis_key = f"password-reset:code:{payload.email}"
+    stored_code = await redis_client.get(redis_key)
+
+    if not stored_code or stored_code != payload.code:
+        raise BadRequestException(detail="Código inválido o expirado.")
+
+    user = await get_user_by_email(db, payload.email)
+    if not user:
+        raise BadRequestException(detail="Usuario no encontrado.")
+
+    # Update password and commit
+    user.hashed_password = hash_password(payload.new_password)
+    db.add(user)
+    await db.commit()
+
+    # Delete code from Redis immediately
+    await redis_client.delete(redis_key)
+
+    return {"detail": "Contraseña restablecida exitosamente."}
+

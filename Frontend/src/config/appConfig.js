@@ -42,17 +42,17 @@ export const APP_CONFIG = {
   },
 
   AGENDA_STATUS: {
-    FREE: 'free',
     PENDING: 'pending',
-    BUSY: 'busy',
-    BLOCKED: 'blocked'
+    CONFIRMED: 'confirmed',
+    CANCELLED: 'cancelled',
+    COMPLETED: 'completed'
   },
 
   AGENDA_STATUS_LABELS: {
-    free: 'Libre',
     pending: 'Pendiente',
-    busy: 'Ocupado',
-    blocked: 'Bloqueado'
+    confirmed: 'Confirmada',
+    cancelled: 'Cancelada',
+    completed: 'Completada'
   },
 
   CATEGORIES: [
@@ -73,6 +73,10 @@ export const APP_CONFIG = {
     '#fcd34d', '#10b981', '#3b82f6', '#8b5cf6',
     '#ec4899', '#64748b'
   ],
+
+  WHATSAPP: {
+    TEST_PHONE: '+1 555 180 3391',
+  },
 
   NAV_ITEMS: [
     {

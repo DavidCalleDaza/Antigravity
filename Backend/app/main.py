@@ -22,9 +22,14 @@ from app.modules.products.router import router as products_router
 from app.modules.categories.router import router as categories_router
 from app.modules.services.router import router as services_router
 from app.modules.social.router import router as social_router
+from app.modules.admin_social.router import router as admin_social_router
 from app.modules.billing.router import router as billing_router
 from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
+from app.modules.ai.router import router as ai_router
+from app.modules.whatsapp.router import router as whatsapp_router
+from app.modules.agenda.router import router as agenda_router
+from app.modules.notifications.router import router as notifications_router
 from app.modules.billing.public_verify_router import router as public_verify_router
 
 from app.db.base import Base
@@ -73,8 +78,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://servinow.vercel.app",
-        *settings.CORS_ORIGINS
+        *settings.effective_cors_origins
     ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -134,6 +140,12 @@ app.include_router(
 )
 
 app.include_router(
+    admin_social_router,
+    prefix="/api/v1",
+    tags=["Admin Social Media"],
+)
+
+app.include_router(
     billing_router,
     prefix="/api/v1/billing",
     tags=["Billing"],
@@ -149,6 +161,30 @@ app.include_router(
     locations_router,
     prefix="/api/v1/locations",
     tags=["Locations"],
+)
+
+app.include_router(
+    ai_router,
+    prefix="/api/v1/ai",
+    tags=["AI Generation"],
+)
+
+app.include_router(
+    whatsapp_router,
+    prefix="/api/v1/whatsapp",
+    tags=["WhatsApp Integration"],
+)
+
+app.include_router(
+    agenda_router,
+    prefix="/api/v1/agenda",
+    tags=["Agenda"],
+)
+
+app.include_router(
+    notifications_router,
+    prefix="/api/v1/notifications",
+    tags=["Notifications"],
 )
 
 app.include_router(
@@ -190,3 +226,12 @@ async def health_check() -> HealthCheckResponse:
         db_ok = False
 
     return HealthCheckResponse(status="ok", db_connection=db_ok)
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return {"message": "Servinow API is running"}
+
+@app.get("/tiktok{verification_id}.txt", include_in_schema=False)
+async def tiktok_verify_dynamic(verification_id: str):
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(f"tiktok-developers-site-verification={verification_id}")

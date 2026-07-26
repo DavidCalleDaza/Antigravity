@@ -47,14 +47,10 @@ htmlcov/
 *.sublime-project
 *.sublime-workspace
 
-# --- Uploads / Dynamic Media ---
+# --- Application Data ---
+uploads/
 Backend/uploads/
-.env
-Backend/.env
-.env
-Backend/.env
-Backend/.env
-.env
-Backend/.env
-Backend/.env
-Backend/uploads/
+*.Identifier
+
+# --- Analysis Docs (do not push to remote) ---
+analisis-whatsapp.md

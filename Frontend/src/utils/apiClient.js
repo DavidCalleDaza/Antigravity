@@ -191,6 +191,7 @@ export const apiClient = new ApiClient(API_BASE_URL);
 export const authClient = {
   register: (data) => apiClient.post('/auth/register', data),
   login: (data) => apiClient.post('/auth/login', data),
+  googleExchange: (code) => apiClient.post('/auth/google/exchange', { code }),
   me: () => apiClient.get('/auth/me'),
   updateMe: (data) => apiClient.patch('/auth/me', data),
   deleteAccount: (permanent = false) =>
@@ -202,6 +203,46 @@ export const authClient = {
     formData.append('file', file);
     return apiClient.requestFormData('/auth/me/avatar', formData, 'POST');
   },
+  requestPasswordReset: (email) => apiClient.post('/auth/password-recovery/request', { email }),
+  resetPassword: (email, code, newPassword) =>
+    apiClient.post('/auth/password-recovery/reset', { email, code, new_password: newPassword }),
+};
+
+export const agendaClient = {
+  // Sellers (public)
+  listSellers: () => apiClient.get('/agenda/sellers'),
+  getSeller: (id) => apiClient.get(`/agenda/sellers/${id}`),
+  // Available slots
+  getSlots: (sellerId, date, serviceId) => {
+    let query = `seller_id=${sellerId}&date=${date}`;
+    if (serviceId) query += `&service_id=${serviceId}`;
+    return apiClient.get(`/agenda/slots?${query}`);
+  },
+  // Templates (seller only)
+  listTemplates: () => apiClient.get('/agenda/availability/templates'),
+  createTemplate: (data) => apiClient.post('/agenda/availability/templates', data),
+  updateTemplate: (id, data) => apiClient.patch(`/agenda/availability/templates/${id}`, data),
+  deleteTemplate: (id) => apiClient.delete(`/agenda/availability/templates/${id}`),
+  // Overrides (seller only)
+  listOverrides: (dateFrom, dateTo) => {
+    let query = '';
+    if (dateFrom) query += `date_from=${dateFrom}`;
+    if (dateTo) query += `${query ? '&' : ''}date_to=${dateTo}`;
+    return apiClient.get(`/agenda/availability/overrides${query ? `?${query}` : ''}`);
+  },
+  createOverride: (data) => apiClient.post('/agenda/availability/overrides', data),
+  deleteOverride: (id) => apiClient.delete(`/agenda/availability/overrides/${id}`),
+  // Appointments
+  listAppointments: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/agenda/appointments${query ? `?${query}` : ''}`);
+  },
+  createAppointment: (data) => apiClient.post('/agenda/appointments', data),
+  updateAppointment: (id, data) => apiClient.patch(`/agenda/appointments/${id}`, data),
+  // Store locations (migrated to locations module)
+  listStoreLocations: () => apiClient.get('/locations/store-locations'),
+  createStoreLocation: (data) => apiClient.post('/locations/store-locations', data),
+  deleteStoreLocation: (id) => apiClient.delete(`/locations/store-locations/${id}`),
 };
 
 export const productClient = {
@@ -233,6 +274,16 @@ export const socialClient = {
   publish: (data) => apiClient.post('/social/publish', data),
   listPosts: () => apiClient.get('/social/posts'),
   deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
+  connectManualValidate: (data) => apiClient.post('/social/accounts/manual/validate', data),
+  connectManualConfirm: (data) => apiClient.post('/social/accounts/manual/confirm', data),
+};
+
+export const adminSocialClient = {
+  searchUsers: (search) => apiClient.get(`/admin/social/users?search=${encodeURIComponent(search)}`),
+  listAccounts: (userId) => apiClient.get(`/admin/social/accounts/${userId}`),
+  connectManualValidate: (userId, data) => apiClient.post(`/admin/social/accounts/${userId}/manual/validate`, data),
+  connectManualConfirm: (userId, data) => apiClient.post(`/admin/social/accounts/${userId}/manual/confirm`, data),
+  deleteAccount: (userId, platform) => apiClient.delete(`/admin/social/accounts/${userId}/${platform}`),
 };
 
 export const billingClient = {
@@ -313,8 +364,10 @@ export const categoryClient = {
     apiClient.get(`/categories?entity_type=${entityType}`),
   create: (data) =>
     apiClient.post('/categories', data),
-  update: (id, data) => apiClient.patch(`/categories/${id}`, data),
-  delete: (id) => apiClient.delete(`/categories/${id}`),
+  update: (id, data) =>
+    apiClient.patch(`/categories/${id}`, data),
+  delete: (id) =>
+    apiClient.delete(`/categories/${id}`),
 };
 
 export const locationClient = {
@@ -322,4 +375,16 @@ export const locationClient = {
     apiClient.get(`/locations/neighborhoods/${encodeURIComponent(cityIdentifier)}`),
   createNeighborhood: (data) => 
     apiClient.post('/locations/neighborhoods', data),
+};
+
+export const aiClient = {
+  generateCopy: (data) => apiClient.post('/ai/generate-copy', data),
+  generateVideo: (data) => apiClient.post('/ai/generate-video', data),
+  getTaskStatus: (taskId) => apiClient.get(`/ai/task/${taskId}`),
+};
+
+export const whatsappClient = {
+  generateOtp: () => apiClient.post('/whatsapp/link/otp'),
+  getLinkStatus: () => apiClient.get('/whatsapp/link/status'),
+  unlink: () => apiClient.delete('/whatsapp/link'),
 };

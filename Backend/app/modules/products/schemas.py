@@ -10,6 +10,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.modules.locations.schemas import LocationResponse
+
 
 class ProductBase(BaseModel):
     """Shared fields for product creation and response."""
@@ -51,6 +53,7 @@ class ProductCreate(ProductBase):
 
     image_url: Annotated[str | None, Field(None)] = None
     video_url: Annotated[str | None, Field(None)] = None
+    store_location_id: Annotated[uuid.UUID | None, Field(None)] = None
 
 
 class ProductUpdate(BaseModel):
@@ -78,5 +81,10 @@ class ProductResponse(ProductBase):
     user_id: Annotated[uuid.UUID | None, Field(None, description="User UUID.")]
     image_url: Annotated[str | None, Field(None, description="Optional image URL.")]
     video_url: Annotated[str | None, Field(None, description="Optional video URL.")]
+    store_location_id: Annotated[uuid.UUID | None, Field(None, description="Store location UUID.")]
     created_at: Annotated[datetime, Field(description="Creation timestamp.")]
     updated_at: Annotated[datetime | None, Field(None, description="Last update timestamp.")]
+    seller_name: Annotated[str | None, Field(None, description="Seller full name.")]
+    seller_avatar: Annotated[str | None, Field(None, description="Seller avatar URL.")]
+    seller_city: Annotated[str | None, Field(None, description="Seller city.")]
+    store_name: Annotated[str | None, Field(None, description="Store location name.")]

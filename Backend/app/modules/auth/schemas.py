@@ -204,6 +204,10 @@ class UserResponse(UserBase):
         bool,
         Field(description="Whether the user account is active."),
     ]
+    is_staff: Annotated[
+        bool,
+        Field(description="Whether the user is a staff member.", default=False),
+    ] = False
     created_at: Annotated[
         datetime,
         Field(description="Timestamp of account creation."),
@@ -213,3 +217,51 @@ class UserResponse(UserBase):
         Field(description="URL of the user's avatar image.", default=None),
     ]
     location: Annotated[LocationResponse | None, Field(default=None)] = None
+
+
+class PasswordRecoveryRequest(BaseModel):
+    """Schema for password recovery request."""
+
+    email: Annotated[
+        str,
+        Field(
+            ...,
+            description="Email address to send the recovery code to.",
+            examples=["usuario@servinow.com"],
+            max_length=255,
+        ),
+    ]
+
+
+class PasswordRecoveryReset(BaseModel):
+    """Schema to reset password using recovery code."""
+
+    email: Annotated[
+        str,
+        Field(
+            ...,
+            description="User email address.",
+            examples=["usuario@servinow.com"],
+            max_length=255,
+        ),
+    ]
+    code: Annotated[
+        str,
+        Field(
+            ...,
+            description="6-digit verification code received by email.",
+            examples=["123456"],
+            min_length=6,
+            max_length=6,
+        ),
+    ]
+    new_password: Annotated[
+        str,
+        Field(
+            ...,
+            description="New plain-text password.",
+            min_length=8,
+            max_length=128,
+            examples=["NewSecureP@ss123"],
+        ),
+    ]

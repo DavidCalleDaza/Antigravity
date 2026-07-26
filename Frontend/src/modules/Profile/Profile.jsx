@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, User, Mail, Shield, AlertTriangle, Share2, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
+import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { authClient, locationClient } from '../../utils/apiClient';
@@ -8,6 +8,7 @@ import Helpers from '../../utils/helpers';
 import Modal from '../../components/ui/Modal';
 import ImageCropperModal from '../../components/ui/ImageCropperModal';
 import SocialSettings from './SocialSettings';
+import WhatsAppSettings from './WhatsAppSettings';
 import LocationSelects from '../../components/ui/LocationSelects';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
@@ -42,13 +43,21 @@ export default function Profile() {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  const processAvatarFileRef = useRef(null);
+
   useEffect(() => {
-    if (currentUser?.avatar) {
-      setPreviewUrl(Helpers.resolveMediaUrl(currentUser.avatar));
+    const avatarUrl = currentUser?.avatar_url || currentUser?.avatar;
+    if (avatarUrl) {
+      setPreviewUrl(Helpers.resolveMediaUrl(avatarUrl));
     } else {
       setPreviewUrl(null);
     }
-  }, [currentUser?.avatar]);
+  }, [currentUser?.avatar_url, currentUser?.avatar]);
+
+  useEffect(() => {
+    window.__testProcessAvatar = (file) => processAvatarFileRef.current?.(file);
+    return () => { delete window.__testProcessAvatar; };
+  }, []);
 
   useEffect(() => {
     if (currentUser) {
@@ -106,7 +115,7 @@ export default function Profile() {
         ...currentUser,
         name: response.full_name,
         email: response.email,
-        avatar: response.avatar_url,
+        avatar_url: response.avatar_url,
         location: response.location,
       });
       toast.success('Perfil actualizado correctamente.', 'Éxito');
@@ -127,7 +136,9 @@ export default function Profile() {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`, {
+            headers: { 'User-Agent': 'Servinow/1.0' },
+          });
           const data = await response.json();
           if (data && data.address) {
             setFormData(prev => ({
@@ -157,12 +168,7 @@ export default function Profile() {
     );
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
+  const processAvatarFile = (file) => {
     if (!file) return;
 
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -177,6 +183,34 @@ export default function Profile() {
 
     setSelectedImage(file);
     setCropModalOpen(true);
+  };
+  processAvatarFileRef.current = processAvatarFile;
+
+  const handleAvatarClick = async () => {
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({
+        startIn: 'desktop',
+        types: [{
+          description: 'Imágenes',
+          accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp'] },
+        }],
+      });
+      const file = await fileHandle.getFile();
+      processAvatarFile(file);
+    } catch (err) {
+      if (err.name === 'AbortError' || err.name === 'SecurityError') {
+        fileInputRef.current?.click();
+        return;
+      }
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    processAvatarFile(file);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -189,7 +223,7 @@ export default function Profile() {
       const latestUser = useStore.getState().currentUser;
       const updatedUser = {
         ...latestUser,
-        avatar: response.avatar_url,
+        avatar_url: response.avatar_url,
       };
       setCurrentUser(updatedUser);
       toast.success('Foto de perfil actualizada.', 'Éxito');
@@ -251,6 +285,13 @@ export default function Profile() {
         >
           <Share2 width="18" height="18" />
           Redes Sociales
+        </button>
+        <button
+          className={`profile-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
+          onClick={() => setActiveTab('whatsapp')}
+        >
+          <MessageCircle width="18" height="18" />
+          WhatsApp
         </button>
       </div>
 
@@ -459,9 +500,13 @@ export default function Profile() {
           </div>
         </div>
       </>
-    ) : (
+    ) : activeTab === 'social' ? (
       <div className="profile-section-card">
         <SocialSettings />
+      </div>
+    ) : (
+      <div className="profile-section-card">
+        <WhatsAppSettings />
       </div>
     )}
   </div>

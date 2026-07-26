@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon, Power } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon, Power, Calendar } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
+import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
@@ -11,7 +13,7 @@ import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import { serviceClient, categoryClient, ApiError } from '../../utils/apiClient';
+import { serviceClient, categoryClient, agendaClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
 import Dropdown from '../../components/ui/Dropdown';
@@ -24,24 +26,30 @@ const SERVICE_STATUS_LABELS = {
   inactive: 'Inactivo',
 };
 
-// ─── Sub-componente de Confirmación Estilo Estándar ───────────────────────────
-
 export default function Services() {
   const { currentUser } = useStore();
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
+  const isClient = userRole === 'client';
+  const navigate = useNavigate();
 
   const [view, setView] = useState('grid');
   const [services, setServices] = useState([]);
-  const [dbCategories, setDbCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
   
+  // Estados de Main (Borrado duro y filtros)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [dbCategories, setDbCategories] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sellerFilter, setSellerFilter] = useState('');
+  const [storeLocations, setStoreLocations] = useState([]);
+
   // Estado para el control de activación/desactivación
   const [toggleTarget, setToggleTarget] = useState(null);
   const [toggling, setToggling] = useState(false);
@@ -53,6 +61,7 @@ export default function Services() {
     duration: '',
     status: 'active',
     description: '',
+    store_location_id: '',
   });
   const [mediaError, setMediaError] = useState(null);
   const [shareOnSave, setShareOnSave] = useState({ facebook: false, instagram: false, tiktok: false });
@@ -85,13 +94,33 @@ export default function Services() {
   useEffect(() => {
     loadServices();
     loadCategories();
+    if (isClient) {
+      agendaClient.listSellers().then(setSellers).catch(() => {});
+    } else {
+      agendaClient.listStoreLocations().then(setStoreLocations).catch(() => {});
+    }
   }, []);
 
+  useEffect(() => {
+    if (isClient) loadServices();
+  }, [sellerFilter]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoryClient.list('service');
+      setDbCategories(data);
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
+  };
+ 
   const loadServices = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await serviceClient.list();
+      const params = {};
+      if (isClient && sellerFilter) params.seller_id = sellerFilter;
+      const data = await serviceClient.list(params);
       setServices(data);
     } catch (err) {
       const errorMessage = err instanceof ApiError && err.status === 500 && err.message?.includes('relation')
@@ -104,13 +133,6 @@ export default function Services() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadCategories = async () => {
-    try {
-      const data = await categoryClient.list('service');
-      setDbCategories(data);
-    } catch (err) {}
   };
 
   const filteredServices = useMemo(() => {
@@ -148,6 +170,7 @@ export default function Services() {
         description: String(formData.description || ''),
         duration: String(formData.duration || ''),
         category_id: formData.category_id === '' ? null : formData.category_id,
+        store_location_id: formData.store_location_id || null,
       };
 
       if (formData.image_url) payload.image_url = formData.image_url;
@@ -168,11 +191,49 @@ export default function Services() {
       resetForm();
       if (hasShareSelected) {
         setTimeout(() => {
-          setShareModal({ isOpen: true, item: { ...savedItem, type: 'servicio' } });
+          setShareModal({ isOpen: true, item: { ...savedItem, imageUrl: savedItem.image_url || formData.image_url, type: 'servicio' } });
         }, 100);
       }
     } catch (err) {
-      toast.error('Error al guardar el servicio.');
+      console.error("Error detallado al guardar el servicio:", err);
+
+      const isApiError = err && (err.name === 'ApiError' || typeof err.status === 'number');
+
+      if (isApiError) {
+        if (err.status === 422) {
+          const validationErrors = err.data?.detail;
+          if (Array.isArray(validationErrors)) {
+            const errorMessages = validationErrors.map(error => {
+              const field = error.loc[error.loc.length - 1];
+              return `"${field}": ${error.msg}`;
+            }).join(', ');
+            toast.error(`Error de validación en: ${errorMessages}`);
+          } else {
+            toast.error(err.message || 'Datos no procesables por el servidor.');
+          }
+        } else {
+          toast.error(err.message || `Error del servidor (Código ${err.status})`);
+        }
+      } else {
+        if (err instanceof TypeError && err.message?.includes('fetch')) {
+          toast.error('No se pudo conectar con el servidor. ¿Está encendido el backend?');
+        } else {
+          toast.error('Error de conexión o fallo inesperado.');
+        }
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await serviceClient.delete(deletingId);
+      setServices(services.filter(s => s.id !== deletingId));
+      toast.success('Servicio eliminado.');
+    } catch (err) {
+      toast.error('Error al eliminar');
+    } finally {
+      setIsConfirmOpen(false);
+      setDeletingId(null);
     }
   };
 
@@ -205,6 +266,7 @@ export default function Services() {
       duration: '',
       status: 'active',
       description: '',
+      store_location_id: '',
     });
     setShareOnSave({ facebook: false, instagram: false, tiktok: false });
     reset();
@@ -222,22 +284,31 @@ export default function Services() {
       description: service.description || '',
       image_url: service.image_url || null,
       video_url: service.video_url || null,
+      store_location_id: service.store_location_id || '',
     });
     setIsModalOpen(true);
   };
 
-  const statusBadge = (s) => {
-    const cls = { active: 'badge-success', inactive: 'badge-neutral' };
-    return <span className={`badge badge-dot ${cls[s] || 'badge-neutral'}`}>{SERVICE_STATUS_LABELS[s] || s}</span>;
-  };
-
   const columns = [
-    { key: 'name', label: 'Servicio', sortable: true },
-    { key: 'category', label: 'Categoría', sortable: true },
-    { key: 'price', label: 'Precio', sortable: true, render: (v) => Helpers.formatCurrency(v) },
-    { key: 'duration', label: 'Duración', sortable: true },
-    { key: 'status', label: 'Estado', sortable: true, render: (v) => statusBadge(v) }
-  ];
+    { key: 'name', label: 'Servicio', sortable: true, width: '180px' },
+    ...(isClient ? [
+      { key: 'seller_name', label: 'Vendedor', sortable: true, width: '150px' },
+      { key: 'seller_city', label: 'Ciudad', sortable: true, width: '120px' },
+      { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
+    ] : []),
+    { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
+    { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
+    { key: 'duration', label: 'Duración', sortable: true, width: '110px' },
+    { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
+  ].flat();
+
+  const statusBadge = (status) => {
+    switch (status) {
+      case 'active': return <span className="status-badge active">● Activo</span>;
+      case 'inactive': return <span className="status-badge inactive">● Inactivo</span>;
+      default: return <span className="status-badge">● {status}</span>;
+    }
+  };
 
   const tableActions = (row) => (
     <div className="d-flex gap-2">
@@ -253,11 +324,17 @@ export default function Services() {
           >
             <Power width="14" height="14" />
           </button>
+          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => setShareModal({ isOpen: true, item: row })} title="Compartir">
+            <ShareIcon />
+          </button>
+          <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => { setDeletingId(row.id); setIsConfirmOpen(true); }} title="Eliminar">
+            <TrashIcon />
+          </button>
         </>
       )}
-      {userRole === CLIENT && (
-        <button className="btn btn-primary btn-sm">
-          <CalendarPlus width="14" height="14" />
+      {isClient && (
+        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/agenda?seller_id=${row.user_id}&service_id=${row.id}`)}>
+          <Calendar width="14" height="14" />
           Agendar
         </button>
       )}
@@ -268,13 +345,12 @@ export default function Services() {
     <div className="page-content">
       <div className="page-header">
         <div>
-          <Wrench width="20" height="20" className="page-title-icon" />
           <h2 className="page-title">Servicios</h2>
           <p className="page-description">Gestiona los servicios que ofreces</p>
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Servicio
             </button>
@@ -284,6 +360,17 @@ export default function Services() {
 
       <div className="products-toolbar">
         <div className="products-filters">
+          {isClient && (
+            <select
+              className="form-select"
+              value={sellerFilter}
+              onChange={(e) => setSellerFilter(e.target.value)}
+              style={{ width: 'auto', padding: 'var(--space-2) var(--space-4)' }}
+            >
+              <option value="">Todos los vendedores</option>
+              {sellers.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+            </select>
+          )}
           <Dropdown
             options={categoryOptions}
             value={categoryFilter}
@@ -324,28 +411,22 @@ export default function Services() {
         </div>
       ) : view === 'grid' ? (
         <div className="product-grid">
-          {filteredServices.length === 0 ? (
-            <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-              <div className="empty-state-icon"><WrenchIcon width="48" height="48" /></div>
-              <div className="empty-state-title">Sin servicios</div>
-              <div className="empty-state-text">No hay servicios que coincidan con los filtros.</div>
-            </div>
-          ) : (
-            filteredServices.map(s => (
+          {filteredServices.map(s => {
+            return (
               <MediaCard
                 key={s.id}
                 item={s}
                 variant="service"
                 canManage={canManage}
                 onEdit={openEditModal}
-                onDelete={(item) => setToggleTarget(item)} // Reutilizamos onDelete de MediaCard para abrir el toggle modal
-                onAction={(service) => toast.success(`Cita para ${service.name} solicitada`)}
+                onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
+                onAction={(service) => navigate(`/agenda?seller_id=${service.user_id}&service_id=${service.id}`)}
                 onShare={(item) => setShareModal({ isOpen: true, item })}
                 actionLabel="Agendar"
                 actionIcon={CalendarPlus}
               />
-            ))
-          )}
+            );
+          })}
         </div>
       ) : (
          <div className="services-table-wrapper">
@@ -442,8 +523,36 @@ export default function Services() {
             />
           </div>
 
+          {storeLocations.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">Ubicación</label>
+              <select
+                className="form-select"
+                value={formData.store_location_id}
+                onChange={(e) => setFormData({ ...formData, store_location_id: e.target.value })}
+              >
+                <option value="">Sin ubicación</option>
+                {storeLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            </div>
+          )}
+
           <div className="share-on-save">
-            <label className="form-label">Publicar al guardar (opcional)</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Publicar al guardar (opcional)</label>
+              <label className="share-checkbox-label" style={{ margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={shareOnSave.facebook && shareOnSave.instagram && shareOnSave.tiktok}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setShareOnSave({ facebook: checked, instagram: checked, tiktok: checked });
+                  }}
+                  className="form-checkbox"
+                />
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
+              </label>
+            </div>
             <div className="share-networks-inline">
               {[
                 { id: 'facebook', label: 'Facebook' },
@@ -467,17 +576,31 @@ export default function Services() {
             <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>
             <button type="submit" className="btn btn-primary">
               {editingService
-                ? Object.values(shareOnSave).some(Boolean) ? 'Guardar y publicar' : 'Guardar Cambios'
-                : Object.values(shareOnSave).some(Boolean) ? 'Crear y publicar' : 'Crear Servicio'}
+                ? Object.values(shareOnSave).some(Boolean) ? 'Guardar y publicar' : 'Guardar'
+                : Object.values(shareOnSave).some(Boolean) ? 'Crear y publicar' : 'Crear'}
             </button>
           </div>
         </form>
       </Drawer>
 
+      <Modal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        title="Eliminar Servicio"
+        size="sm"
+        actions={[
+          { label: 'Cancelar', onClick: () => setIsConfirmOpen(false) },
+          { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
+        ]}
+      >
+        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este servicio?</div>
+      </Modal>
+
       <ShareModal
         isOpen={shareModal.isOpen}
         onClose={() => setShareModal({ isOpen: false, item: null })}
         item={shareModal.item}
+        onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
       />
 
       {/* MODAL DE CONFIRMACIÓN MODERNO (Toggle de Estado) */}
@@ -496,6 +619,56 @@ export default function Services() {
             <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este servicio volverá a estar disponible.</>
           )}
         </ConfirmModal>
+
+      <style>{`
+        .loading-state, .error-state {
+          text-align: center;
+          padding: var(--space-12);
+          color: var(--text-secondary);
+        }
+        .error-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-4);
+        }
+        .error-state-icon {
+          font-size: var(--text-4xl);
+        }
+        .error-state-title {
+          font-size: var(--text-xl);
+          font-weight: var(--font-semibold);
+          color: var(--text-primary);
+        }
+        .error-state-text {
+          max-width: 400px;
+          color: var(--text-secondary);
+        }
+
+        .share-on-save {
+          border-top: 1px solid var(--neutral-700);
+          padding-top: var(--space-4);
+          margin-top: var(--space-2);
+        }
+
+        .share-networks-inline {
+          display: flex;
+          gap: var(--space-4);
+          margin-top: var(--space-2);
+        }
+
+        .share-checkbox-label {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          cursor: pointer;
+          font-size: var(--text-sm);
+        }
+
+        .share-checkbox-label input {
+          accent-color: var(--purple);
+        }
+      `}</style>
     </div>
   );
 }
@@ -504,6 +677,26 @@ function PencilIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
     </svg>
   );
 }

@@ -50,3 +50,20 @@ class LocationResponse(LocationBase):
     id: uuid.UUID
     created_at: datetime
     updated_at: datetime | None = None
+
+
+# ── Store Locations ────────────────────────────────────────────────────────
+
+class StoreLocationBrief(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    phone: str | None = None
+    location: LocationResponse | None = None
+
+
+class StoreLocationCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=150)
+    phone: str | None = Field(None, max_length=20)
+    location_id: uuid.UUID | None = None

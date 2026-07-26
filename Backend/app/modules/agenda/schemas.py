@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.modules.locations.schemas import LocationResponse
+from app.modules.locations.schemas import LocationResponse, StoreLocationBrief
 
 
 # ── Availability Templates ────────────────────────────────────────────────
@@ -73,6 +73,7 @@ class AppointmentCreate(BaseModel):
 class AppointmentUpdate(BaseModel):
     status: str | None = Field(None, description="pending, confirmed, cancelled, completed")
     notes: str | None = None
+    cancellation_reason: str | None = None
 
 
 class AppointmentResponse(BaseModel):
@@ -88,6 +89,7 @@ class AppointmentResponse(BaseModel):
     end_time: time
     status: str
     notes: str | None
+    cancellation_reason: str | None = None
     created_at: datetime
     updated_at: datetime | None
 
@@ -109,15 +111,6 @@ class AvailableSlotsResponse(BaseModel):
 
 
 # ── Sellers (public info) ─────────────────────────────────────────────────
-
-class StoreLocationBrief(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    name: str
-    phone: str | None = None
-    location: LocationResponse | None = None
-
 
 class SellerPublicResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

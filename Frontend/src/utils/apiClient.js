@@ -227,13 +227,10 @@ export const agendaClient = {
   },
   createAppointment: (data) => apiClient.post('/agenda/appointments', data),
   updateAppointment: (id, data) => apiClient.patch(`/agenda/appointments/${id}`, data),
-  // Store locations (seller)
-  listStoreLocations: () => apiClient.get('/agenda/store-locations'),
-  createStoreLocation: (data) => {
-    const query = new URLSearchParams(data).toString();
-    return apiClient.post(`/agenda/store-locations?${query}`, {});
-  },
-  deleteStoreLocation: (id) => apiClient.delete(`/agenda/store-locations/${id}`),
+  // Store locations (migrated to locations module)
+  listStoreLocations: () => apiClient.get('/locations/store-locations'),
+  createStoreLocation: (data) => apiClient.post('/locations/store-locations', data),
+  deleteStoreLocation: (id) => apiClient.delete(`/locations/store-locations/${id}`),
 };
 
 export const productClient = {

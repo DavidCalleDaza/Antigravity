@@ -15,6 +15,10 @@ from app.modules.agenda.schemas import (
 from app.modules.auth.models import User
 from app.modules.locations.models import StoreLocation
 
+# ── Constants ───────────────────────────────────────────────────────────────
+SLOT_INTERVAL_MINUTES = 30
+
+
 def _parse_time(t) -> time:
     if isinstance(t, str):
         for fmt in ("%H:%M:%S", "%H:%M"):
@@ -204,6 +208,16 @@ def _slots_overlap(s1_start, s1_end, s2_start, s2_end) -> bool:
     return s1_start < s2_end and s2_start < s1_end
 
 
+def _is_slot_occupied(candidate_start_mins: int, candidate_end_mins: int, appointments: list) -> bool:
+    """Check if a candidate slot overlaps with any existing appointment."""
+    for apt in appointments:
+        apt_start = _time_to_minutes(apt.start_time)
+        apt_end = _time_to_minutes(apt.end_time)
+        if _slots_overlap(candidate_start_mins, candidate_end_mins, apt_start, apt_end):
+            return True
+    return False
+
+
 async def get_available_slots(
     db: AsyncSession,
     seller_id: uuid.UUID,
@@ -211,7 +225,7 @@ async def get_available_slots(
     duration_minutes: int = 60,
 ) -> list[dict]:
     day_of_week = target_date.weekday()
-    dow_model = (day_of_week + 1) % 7
+    dow_model = (day_of_week + 1) % 7  # Convert Python weekday (0=Mon) to model format (0=Sun)
 
     # Get templates for that day
     tpl_stmt = select(AvailabilityTemplate).where(
@@ -279,24 +293,16 @@ async def get_available_slots(
         if is_blocked:
             continue
 
-        # Generate time slots within this template (e.g., every 30 min)
+        # Generate time slots within this template
         start_mins = _time_to_minutes(slot_start)
         end_mins = _time_to_minutes(slot_end)
 
-        for slot_start_mins in range(start_mins, end_mins - duration_minutes + 1, 30):
+        for slot_start_mins in range(start_mins, end_mins - duration_minutes + 1, SLOT_INTERVAL_MINUTES):
             slot_end_mins = slot_start_mins + duration_minutes
             candidate_start = _minutes_to_time(slot_start_mins)
             candidate_end = _minutes_to_time(slot_end_mins)
 
-            # Check overlap with appointments
-            overlaps = False
-            for apt in appointments:
-                apt_start = _time_to_minutes(apt.start_time)
-                apt_end = _time_to_minutes(apt.end_time)
-                if _slots_overlap(slot_start_mins, slot_end_mins, apt_start, apt_end):
-                    overlaps = True
-                    break
-            if overlaps:
+            if _is_slot_occupied(slot_start_mins, slot_end_mins, appointments):
                 continue
 
             result_slots.append({
@@ -309,22 +315,15 @@ async def get_available_slots(
         if ext["start"] and ext["end"]:
             extra_start = _time_to_minutes(ext["start"])
             extra_end = _time_to_minutes(ext["end"])
-            for slot_start_mins in range(extra_start, extra_end - duration_minutes + 1, 30):
+            for slot_start_mins in range(extra_start, extra_end - duration_minutes + 1, SLOT_INTERVAL_MINUTES):
                 slot_end_mins = slot_start_mins + duration_minutes
                 candidate_start = _minutes_to_time(slot_start_mins)
                 candidate_end = _minutes_to_time(slot_end_mins)
 
-                overlaps = False
-                for apt in appointments:
-                    apt_start = _time_to_minutes(apt.start_time)
-                    apt_end = _time_to_minutes(apt.end_time)
-                    if _slots_overlap(
-                        _time_to_minutes(candidate_start), _time_to_minutes(candidate_end),
-                        apt_start, apt_end,
-                    ):
-                        overlaps = True
-                        break
-                if not overlaps:
+                if not _is_slot_occupied(
+                    _time_to_minutes(candidate_start), _time_to_minutes(candidate_end),
+                    appointments,
+                ):
                     result_slots.append({
                         "start_time": candidate_start.strftime("%H:%M"),
                         "end_time": candidate_end.strftime("%H:%M"),
@@ -347,7 +346,7 @@ async def get_available_slots(
 async def get_sellers(db: AsyncSession) -> list[User]:
     stmt = (
         select(User)
-        .where(User.role == "seller", User.is_active == True)
+        .where(User.role.in_(("seller", "admin")), User.is_active == True)
         .options(selectinload(User.store_locations).selectinload(StoreLocation.location))
     )
     result = await db.execute(stmt)
@@ -357,7 +356,7 @@ async def get_sellers(db: AsyncSession) -> list[User]:
 async def get_seller_by_id(db: AsyncSession, seller_id: uuid.UUID) -> User | None:
     stmt = (
         select(User)
-        .where(User.id == seller_id, User.role == "seller", User.is_active == True)
+        .where(User.id == seller_id, User.role.in_(("seller", "admin")), User.is_active == True)
         .options(selectinload(User.store_locations).selectinload(StoreLocation.location))
     )
     result = await db.execute(stmt)

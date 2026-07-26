@@ -42,17 +42,17 @@ export const APP_CONFIG = {
   },
 
   AGENDA_STATUS: {
-    FREE: 'free',
     PENDING: 'pending',
-    BUSY: 'busy',
-    BLOCKED: 'blocked'
+    CONFIRMED: 'confirmed',
+    CANCELLED: 'cancelled',
+    COMPLETED: 'completed'
   },
 
   AGENDA_STATUS_LABELS: {
-    free: 'Libre',
     pending: 'Pendiente',
-    busy: 'Ocupado',
-    blocked: 'Bloqueado'
+    confirmed: 'Confirmada',
+    cancelled: 'Cancelada',
+    completed: 'Completada'
   },
 
   CATEGORIES: [

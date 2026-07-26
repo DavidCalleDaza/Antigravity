@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cita Cancelada</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h2>{{ company_name }}</h2>
+    </div>
+    
+    <div style="background: #f9f9f9; border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
+        <h3 style="margin-top: 0;">Tu cita ha sido cancelada</h3>
+        <p>Hola,</p>
+        <p>La cita con <strong>{{ seller_name }}</strong> ha sido cancelada.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px;">
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; width: 30%;"><strong>Servicio:</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ service_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Fecha:</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ date }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Hora:</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ start_time }}</td>
+            </tr>
+            {% if cancellation_reason %}
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Motivo:</strong></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">{{ cancellation_reason }}</td>
+            </tr>
+            {% endif %}
+        </table>
+        
+        <p style="text-align: center;">
+            <a href="{{ frontend_url }}/agenda" style="display: inline-block; padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px;">Ver mis citas</a>
+        </p>
+    </div>
+    
+    <div style="margin-top: 20px; text-align: center; font-size: 12px; color: #777;">
+        <p>{{ company_name }} | {{ company_phone }} | {{ company_city }}</p>
+    </div>
+</body>
+</html>

@@ -1,11 +1,18 @@
 from typing import List
-from fastapi import APIRouter, Depends, Query, status
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from app.db.session import get_db
-from app.modules.locations.models import Neighborhood
-from app.modules.locations.schemas import NeighborhoodCreate, NeighborhoodResponse
+from app.modules.locations.models import Neighborhood, StoreLocation
+from app.modules.locations.schemas import (
+    NeighborhoodCreate, NeighborhoodResponse,
+    StoreLocationBrief, StoreLocationCreate,
+)
+from app.modules.auth.deps import get_current_user
+from app.modules.auth.models import User
 
 router = APIRouter()
 
@@ -69,3 +76,65 @@ async def create_neighborhood(
     await db.refresh(db_obj)
 
     return db_obj
+
+
+# ── Store Locations ────────────────────────────────────────────────────────
+
+@router.get("/store-locations", response_model=list[StoreLocationBrief])
+async def list_store_locations(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get all active store locations for the current user."""
+    stmt = select(StoreLocation).where(
+        StoreLocation.user_id == current_user.id,
+        StoreLocation.is_active == True,
+    ).options(selectinload(StoreLocation.location))
+    result = await db.execute(stmt)
+    return [StoreLocationBrief(
+        id=sl.id,
+        name=sl.name,
+        phone=sl.phone,
+        location=sl.location,
+    ) for sl in result.scalars().all()]
+
+
+@router.post("/store-locations", status_code=201)
+async def create_store_location(
+    data: StoreLocationCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create a new store location for the current user."""
+    if current_user.role not in ("admin", "seller"):
+        raise HTTPException(status_code=403, detail="Solo vendedores pueden crear ubicaciones")
+    sl = StoreLocation(
+        user_id=current_user.id,
+        name=data.name,
+        phone=data.phone,
+        location_id=data.location_id,
+    )
+    db.add(sl)
+    await db.commit()
+    await db.refresh(sl)
+    return {"id": str(sl.id), "name": sl.name}
+
+
+@router.delete("/store-locations/{location_id}", status_code=204)
+async def delete_store_location(
+    location_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a store location owned by the current user."""
+    stmt = select(StoreLocation).where(
+        StoreLocation.id == location_id,
+        StoreLocation.user_id == current_user.id,
+    )
+    result = await db.execute(stmt)
+    sl = result.scalar_one_or_none()
+    if not sl:
+        raise HTTPException(status_code=404, detail="Ubicación no encontrada")
+    await db.delete(sl)
+    await db.commit()
+    return None

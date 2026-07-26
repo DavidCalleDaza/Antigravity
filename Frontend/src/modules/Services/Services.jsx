@@ -348,7 +348,7 @@ export default function Services() {
                 canManage={canManage}
                 onEdit={openEditModal}
                 onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
-                onAction={(service) => toast.success(`Cita para ${service.name} solicitada`)}
+                onAction={(service) => navigate(`/agenda?seller_id=${service.user_id}&service_id=${service.id}`)}
                 onShare={(item) => setShareModal({ isOpen: true, item })}
                 actionLabel="Agendar"
                 actionIcon={CalendarPlus}

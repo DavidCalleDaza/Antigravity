@@ -78,7 +78,7 @@ async def run_async_migrations() -> None:
         ssl_ctx = ssl.create_default_context()
         ssl_ctx.check_hostname = False
         ssl_ctx.verify_mode = ssl.CERT_NONE
-        connectable_kwargs["connect_args"] = {"ssl": ssl_ctx}
+        connectable_kwargs["connect_args"] = {"ssl": ssl_ctx, "server_settings": {"search_path": "public"}}
 
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),

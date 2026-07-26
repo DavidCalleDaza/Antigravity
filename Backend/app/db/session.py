@@ -26,7 +26,7 @@ def get_connect_args(database_url: str) -> dict:
         ssl_ctx = ssl.create_default_context()
         ssl_ctx.check_hostname = False
         ssl_ctx.verify_mode = ssl.CERT_NONE
-        return {"ssl": ssl_ctx}
+        return {"ssl": ssl_ctx, "server_settings": {"search_path": "public"}}
     return {}
 
 

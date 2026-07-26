@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import settings
+from app.db.session import get_connect_args
 
 async def _publish_async(
     engine,
@@ -189,7 +190,7 @@ def publish_to_social_task(
     Celery task to publish content to social platforms in the background.
     """
     loop = celery_app._worker_loop
-    engine = create_async_engine(settings.DATABASE_URL)
+    engine = create_async_engine(settings.DATABASE_URL, connect_args=get_connect_args(settings.DATABASE_URL))
 
     try:
         loop.run_until_complete(

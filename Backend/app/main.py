@@ -27,7 +27,6 @@ from app.modules.locations.router import router as locations_router
 from app.api.uploads import router as uploads_router
 from app.modules.billing.public_verify_router import router as public_verify_router
 
-from app.db.base import Base
 from app.shared.schemas import HealthCheckResponse
 
 import os
@@ -43,10 +42,10 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     Application lifespan manager.
 
     Runs startup logic before ``yield`` and shutdown logic after.
+    Schema changes are managed exclusively via Alembic migrations —
+    run `alembic upgrade head` before starting the app.
     """
     # --- Startup ---
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
     # --- Shutdown ---
     await engine.dispose()

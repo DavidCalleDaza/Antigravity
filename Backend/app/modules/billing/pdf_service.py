@@ -71,6 +71,9 @@ def _validate_invoice_for_pdf(invoice: Invoice) -> None:
         missing.append("NIT de la empresa emisora (configuración)")
 
     if missing:
+        # ---- AGREGUE ESTA LÍNEA TEMPORAL PARA VER EL ERROR EN CONSOLA ----
+        print(f"\n[ERROR PDF] Faltan los siguientes datos: {missing}\n")
+        # ------------------------------------------------------------------
         raise InvoicePDFDataError(
             "No es posible generar el PDF de la factura porque faltan datos "
             "requeridos: " + "; ".join(missing) + "."
@@ -111,7 +114,7 @@ def _load_company_logo_flowable():
         return None
 
 
-def _build_invoice_pdf(invoice: Invoice, destination) -> None:
+def _build_invoice_pdf(invoice: Invoice, destination, verify_base_url: str = None) -> None:
     """
     Construye el PDF de una factura.
 
@@ -405,13 +408,13 @@ def _build_invoice_pdf(invoice: Invoice, destination) -> None:
 
     # --- 4. TOTALS & QR CODE & NOTES SECTION ---
     # Prepare QR code content (fallbacks if qr_data is not present)
-    verify_base_url = getattr(settings, "PUBLIC_VERIFY_BASE_URL", "https://tudominio.com/verify")
+    if not verify_base_url:
+        verify_base_url = getattr(settings, "PUBLIC_VERIFY_BASE_URL", "https://tudominio.com/verify")
     verify_identifier = invoice.cufe or str(invoice.id)
     qr_content = f"{verify_base_url}/{verify_identifier}"
 
     qr_stream = _generate_qr_code_image(qr_content)
     qr_flowable = RLImage(qr_stream, width=1.2 * inch, height=1.2 * inch)
-    
 
     # Totals column
     discount_p = Paragraph(f"${invoice.discount_total:,.2f}", style_text_right)
@@ -495,18 +498,13 @@ def _build_invoice_pdf(invoice: Invoice, destination) -> None:
     doc.build(story)
 
 
-def render_invoice_pdf_bytes(invoice: Invoice) -> bytes:
+def render_invoice_pdf_bytes(invoice: Invoice, verify_base_url: str = None) -> bytes:
     """
-    Renderiza el PDF de la factura completamente en memoria, a partir del
-    estado ACTUAL de la factura en la base de datos.
-
-    Esta es la función que debe usar el endpoint de descarga: garantiza
-    "tiempo real" (spec) y evita el problema de servir un archivo en disco
-    que quedó desactualizado tras un cambio de estado, pago, anulación o
-    transmisión a la DIAN.
+    Renderiza el PDF de la factura en memoria, a partir de su estado actual.
+    Acepta de forma opcional una URL de origen dinámica para los códigos QR.
     """
     buffer = BytesIO()
-    _build_invoice_pdf(invoice, buffer)
+    _build_invoice_pdf(invoice, buffer, verify_base_url=verify_base_url)
     buffer.seek(0)
     return buffer.read()
 

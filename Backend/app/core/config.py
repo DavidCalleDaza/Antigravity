@@ -30,6 +30,26 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     ENVIRONMENT: str = "production"  # "development" | "production"
 
+      # Configuración de la Empresa Emisora (Ya agregados)
+    COMPANY_NAME: str
+    COMPANY_NIT: str
+    COMPANY_ADDRESS: str
+    COMPANY_CITY: str
+    COMPANY_PHONE: str
+    COMPANY_EMAIL: str
+
+    # --- Google OAuth (Opcionales con valor None por defecto) ---
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: str | None = None
+    GOOGLE_REDIRECT_URI: str | None = None
+    FRONTEND_URL: str
+
+    # --- AGREGUE ESTAS LÍNEAS PARA LA RESOLUCIÓN DE LA DIAN ---
+    DIAN_RESOLUTION_NUMBER: str
+    DIAN_RESOLUTION_DATE: str
+    DIAN_RESOLUTION_RANGE_FROM: str
+    DIAN_RESOLUTION_RANGE_TO: str
+
     # --- Database ---
     POSTGRES_USER: str = "servinow_user"
     POSTGRES_PASSWORD: str = "servinow_secret_password"

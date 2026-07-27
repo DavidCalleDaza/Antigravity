@@ -61,7 +61,7 @@ def generate_pkce_pair() -> tuple[str, str]:
 
 
 @router.get("/authorize", dependencies=[Depends(check_rate_limit)])
-async def google_authorize(role: str = "client"):
+async def google_authorize(request: Request, role: str = "client"):  # <-- Inyectamos 'request'
     """
     Initiate Google OAuth2 flow with PKCE and OIDC nonce.
     """
@@ -71,12 +71,25 @@ async def google_authorize(role: str = "client"):
     if role not in ["client", "seller"]:
         raise BadRequestException(detail="Invalid role requested.")
 
+    # --- CAPTURAR ORIGEN DEL FRONTEND DINÁMICAMENTE ---
+    referer = request.headers.get("referer")
+    if referer:
+        parsed_url = urllib.parse.urlparse(referer)
+        frontend_origin = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    else:
+        # Fallback por si no viene el referer (usa settings o un puerto por defecto)
+        frontend_origin = settings.FRONTEND_URL or "http://localhost:5173"
+
     code_verifier, code_challenge = generate_pkce_pair()
     state_id = uuid.uuid4().hex
     nonce = uuid.uuid4().hex
 
-    # Store code_verifier and nonce in Redis with 10 minutes TTL
-    pkce_data = json.dumps({"code_verifier": code_verifier, "nonce": nonce})
+    # Guardamos también 'frontend_url' en Redis con 10 minutos TTL
+    pkce_data = json.dumps({
+        "code_verifier": code_verifier, 
+        "nonce": nonce,
+        "frontend_url": frontend_origin  # <-- Guardado en Redis
+    })
     await redis_client.setex(f"pkce:{state_id}", 600, pkce_data)
 
     # Create signed state (only containing state_id and role)
@@ -99,48 +112,69 @@ async def google_authorize(role: str = "client"):
     return RedirectResponse(url)
 
 
+# app/modules/auth/google.py
+
 @router.get("/callback", dependencies=[Depends(check_rate_limit)])
 async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
     """
     Handle Google OAuth2 callback.
     """
+    # 1. Definir un fallback inicial para la URL del frontend
+    frontend_url = settings.FRONTEND_URL or "http://localhost:5173"
+    
+    # Intentamos recuperar de antemano el 'frontend_url' correcto desde Redis usando el state
+    state = request.query_params.get("state")
+    if state:
+        try:
+            state_payload = signer.loads(state, max_age=600)
+            state_id = state_payload.get("state_id")
+            redis_key = f"pkce:{state_id}"
+            pkce_data_str = await redis_client.get(redis_key)
+            if pkce_data_str:
+                pkce_data = json.loads(pkce_data_str)
+                frontend_url = pkce_data.get("frontend_url", frontend_url)
+        except Exception:
+            pass # Si falla, se mantiene el fallback por defecto
+
     error = request.query_params.get("error")
     if error:
         logger.warning(f"Google OAuth error: {error}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=user_cancelled")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=user_cancelled")
 
     code = request.query_params.get("code")
-    state = request.query_params.get("state")
     if not code or not state:
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=missing_params")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=missing_params")
 
-    # 1. Validate signed state
+    # Validar signed state
     try:
         state_payload = signer.loads(state, max_age=600)
     except SignatureExpired:
         logger.warning("SECURITY EVENT: Expired state signature in Google callback")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=state_expired")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=state_expired")
     except BadSignature:
         logger.warning("SECURITY EVENT: Invalid state signature in Google callback")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=state_invalid")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=state_invalid")
 
     state_id = state_payload.get("state_id")
     requested_role = state_payload.get("role", "client")
 
-    # 2. Get and DELETE pkce_data from Redis (prevents replay)
+    # Get and DELETE pkce_data from Redis (prevents replay)
     redis_key = f"pkce:{state_id}"
     pkce_data_str = await redis_client.get(redis_key)
     if not pkce_data_str:
         logger.warning(f"SECURITY EVENT: PKCE data not found or expired for state_id {state_id}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=pkce_missing")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=pkce_missing")
     
     await redis_client.delete(redis_key)
     
     pkce_data = json.loads(pkce_data_str)
     code_verifier = pkce_data.get("code_verifier")
     expected_nonce = pkce_data.get("nonce")
+    
+    # Recuperamos la URL real guardada (la que usaba el cliente cuando hizo clic)
+    frontend_url = pkce_data.get("frontend_url", frontend_url)
 
-    # 3. Exchange code for tokens
+    # Exchange code for tokens
     try:
         async with httpx.AsyncClient() as client:
             token_resp = await client.post(
@@ -159,13 +193,13 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
             token_data = token_resp.json()
     except httpx.HTTPError as e:
         logger.error(f"HTTP error during Google token exchange: {e}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=google_exchange_failed")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=google_exchange_failed")
 
     id_token = token_data.get("id_token")
     if not id_token:
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=no_id_token")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=no_id_token")
 
-    # 4. Fetch JWKS and validate id_token (Signature, Aud, Iss)
+    # Fetch JWKS and validate id_token
     try:
         async with httpx.AsyncClient() as client:
             jwks_resp = await client.get(GOOGLE_JWKS_URL, timeout=10.0)
@@ -173,7 +207,7 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
             jwks = jwks_resp.json()
     except httpx.HTTPError as e:
         logger.error(f"Failed to fetch Google JWKS: {e}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=google_jwks_failed")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=google_jwks_failed")
 
     try:
         payload = jwt.decode(
@@ -186,27 +220,26 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
         )
     except JWTError as e:
         logger.warning(f"SECURITY EVENT: Failed to validate Google id_token: {e}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=invalid_id_token")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=invalid_id_token")
 
-    # 4.1 Validate nonce
+    # Validate nonce
     token_nonce = payload.get("nonce")
     if not token_nonce or token_nonce != expected_nonce:
         logger.warning(f"SECURITY EVENT: Nonce mismatch. Expected {expected_nonce}, got {token_nonce}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=invalid_nonce")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=invalid_nonce")
 
-    # 5. Verify email is verified by Google
+    # Verify email is verified by Google
     email = payload.get("email")
     email_verified = payload.get("email_verified")
     google_id = payload.get("sub")
 
     if not email or not email_verified:
         logger.warning(f"SECURITY EVENT: Google email not verified or missing for sub {google_id}")
-        return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=email_not_verified")
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=email_not_verified")
 
-    # 6. Database Upsert
+    # Database Upsert
     user = await get_user_by_email(db, email)
     if user:
-        # Verify existing identity or link new one
         stmt = select(UserIdentity).where(
             UserIdentity.user_id == user.id,
             UserIdentity.provider == "google",
@@ -216,17 +249,13 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
         identity = result.scalar_one_or_none()
         
         if not identity:
-            # Link new identity
             new_identity = UserIdentity(user_id=user.id, provider="google", provider_id=google_id)
             db.add(new_identity)
             try:
                 await db.commit()
-                # TODO: Trigger Celery task to send notification email about new linked identity
             except IntegrityError:
                 await db.rollback()
-        # Note: We do NOT update the user's role here to respect non-escalation.
     else:
-        # Create new user
         full_name = payload.get("name", email.split("@")[0])
         avatar_url = payload.get("picture")
         
@@ -238,7 +267,7 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
             hashed_password=None,
         )
         db.add(user)
-        await db.flush()  # to get user.id
+        await db.flush()
         
         identity = UserIdentity(user_id=user.id, provider="google", provider_id=google_id)
         db.add(identity)
@@ -248,13 +277,14 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
         except IntegrityError:
             await db.rollback()
             logger.error(f"Database error creating new user from Google Auth for email {email}")
-            return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?social_status=error&detail=user_creation_failed")
+            return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=user_creation_failed")
 
-    # 7. Generate one-time exchange_code
+    # Generate one-time exchange_code
     exchange_code = uuid.uuid4().hex
     await redis_client.setex(f"exchange:{exchange_code}", 60, str(user.id))
 
-    return RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?code={exchange_code}")
+    # REDIRECCIÓN DINÁMICA PERFECTA
+    return RedirectResponse(f"{frontend_url}/auth/callback?code={exchange_code}")
 
 
 class ExchangeRequest(BaseModel):

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../../css/pages/VerifyPublic.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const STATUS_LABELS = {
   draft: { label: "Borrador", tone: "neutral" },

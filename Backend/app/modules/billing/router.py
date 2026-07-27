@@ -12,7 +12,7 @@ from io import BytesIO
 from typing import Annotated
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from fastapi.responses import StreamingResponse
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -318,6 +318,7 @@ async def mark_billing_invoice_paid(
 @router.get("/invoices/{invoice_id}/download")
 async def download_invoice_pdf(
     invoice_id: uuid.UUID,
+    request: Request,  # <-- Inyectamos la petición aquí
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
@@ -334,8 +335,17 @@ async def download_invoice_pdf(
     if not invoice:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada.")
 
+    # Extraemos el origen dinámico (ej: http://localhost:5174 o https://servinow.vercel.app)
+    origin = request.headers.get("origin")
+    verify_base_url = f"{origin}/verify" if origin else None
+
     try:
-        pdf_bytes = await run_in_threadpool(render_invoice_pdf_bytes, invoice)
+        # Pasamos el "verify_base_url" al generador en el threadpool
+        pdf_bytes = await run_in_threadpool(
+            render_invoice_pdf_bytes, 
+            invoice, 
+            verify_base_url=verify_base_url
+        )
     except InvoicePDFDataError as data_err:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(data_err))
     except Exception as pdf_err:
@@ -356,11 +366,12 @@ async def download_invoice_pdf(
 @router.get("/invoices/{invoice_id}/pdf", include_in_schema=False)
 async def get_invoice_pdf_file(
     invoice_id: uuid.UUID,
+    request: Request,  # <-- Inyectamos la petición aquí también
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Alias legacy de /download, conservado por compatibilidad hacia atrás."""
-    return await download_invoice_pdf(invoice_id, db, current_user)
+    return await download_invoice_pdf(invoice_id, request, db, current_user)
 
 
 # --- DIAN & Electronic Invoicing Events ---

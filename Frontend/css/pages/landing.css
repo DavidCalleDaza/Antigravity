@@ -23,11 +23,11 @@
   --deep:      #fcfcfc;
   --card:      #ffffff;
   --line:      #eeeeee;
-  --gold:      var(--primary); 
-  --gold-soft: var(--primary-subtle);
-  --gold-dim:  var(--primary-50);
-  --cream:     var(--text-primary);
-  --muted:     var(--text-secondary);
+  --gold:      #3EB489;
+  --gold-soft: rgba(62, 180, 137, 0.25);
+  --gold-dim:  rgba(62, 180, 137, 0.15);
+  --cream:     #121212;
+  --muted:     #6c757d;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

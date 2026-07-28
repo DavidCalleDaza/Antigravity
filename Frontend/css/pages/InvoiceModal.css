@@ -1038,3 +1038,9 @@
     height: 34px !important;
   }
 }
+
+/* ═══ Light Mode ═══ */
+[data-theme="light"] .customer-dropdown-item,
+[data-theme="light"] .customer-dropdown-item strong {
+  color: var(--text-primary) !important;
+}

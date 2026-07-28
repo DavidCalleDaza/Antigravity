@@ -268,3 +268,24 @@
   padding: 8px;
   flex-shrink: 0;
 }
+
+/* ═══ Light Mode ═══ */
+[data-theme="light"] .searchable-select-trigger {
+  color: var(--form-input-text);
+}
+[data-theme="light"] .searchable-select-trigger-text {
+  color: var(--form-input-text);
+}
+[data-theme="light"] .searchable-select-search-input {
+  color: var(--form-input-text);
+  background: var(--form-input-bg);
+}
+[data-theme="light"] .searchable-select-search-input::placeholder {
+  color: var(--muted);
+}
+[data-theme="light"] .searchable-select-item {
+  color: var(--text-primary);
+}
+[data-theme="light"] .searchable-select-item:hover {
+  color: var(--text-primary);
+}

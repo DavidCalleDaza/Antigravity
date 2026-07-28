@@ -614,6 +614,12 @@
  width: 10% !important;
 }
 
+/* ═══ Light Mode ═══ */
+[data-theme="light"] .drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li:hover,
+[data-theme="light"] .drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"]:hover {
+  color: var(--text-primary);
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
   .services-toolbar {

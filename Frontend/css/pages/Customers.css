@@ -212,7 +212,7 @@
 }
 
 .customers-pref-badge {
-    background: #f59e0b;
+    background: var(--gold);
     color: #fff;
     font-size: 9px;
     padding: 1px 5px;
@@ -396,9 +396,9 @@
 }
 
 .pagination-btn.is-active {
-    background: #f59e0b; /* Color amarillo/dorado acorde a la identidad */
+    background: var(--gold); /* Color adaptable al tema */
     color: #000;
-    border-color: #f59e0b;
+    border-color: var(--gold);
     font-weight: 600;
 }
 
@@ -482,7 +482,7 @@
 
 /* Estado activo/seleccionado */
 .status-filter-btn.is-active {
-    background: #f59e0b; /* Color dorado para combinar con tu tema */
+    background: var(--gold); /* Color adaptable al tema */
     color: #000000 !important;
     font-weight: 600;
 }

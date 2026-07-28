@@ -61,8 +61,8 @@
 }
 
 .categories-tab.is-active {
-    color: var(--text-gold, #d4af37);
-    border-bottom-color: var(--text-gold, #d4af37);
+    color: var(--text-gold);
+    border-bottom-color: var(--text-gold);
 }
 
 /* ---- Lista / Tabla ---- */
@@ -153,9 +153,9 @@
 }
 
 .categories-root-dropzone.is-active {
-    border-color: var(--text-gold, #d4af37);
-    background: rgba(212, 175, 55, 0.08);
-    color: var(--text-gold, #d4af37);
+    border-color: var(--text-gold);
+    background: var(--gold-dim);
+    color: var(--text-gold);
 }
 
 /* ---- Filas arrastrables ---- */
@@ -169,8 +169,8 @@
 }
 
 .categories-table tr.is-drag-over td {
-    background: rgba(212, 175, 55, 0.12) !important;
-    box-shadow: inset 0 0 0 1px var(--text-gold, #d4af37);
+    background: var(--gold-soft) !important;
+    box-shadow: inset 0 0 0 1px var(--text-gold);
 }
 
 /* ---- Estado vacío / carga ---- */
@@ -277,8 +277,8 @@
     padding: 8px 12px; /* Reducido a 8px arriba/abajo para una altura compacta */
     margin: 0;
     border: none;
-    border-bottom: 2px dashed rgba(225, 177, 19, 0.25);
-    background: rgba(18, 18, 24, 0.95);
+    border-bottom: 2px dashed var(--gold-soft);
+    background: var(--surface-overlay);
     backdrop-filter: blur(8px);
     color: var(--text-secondary);
     font-size: 11px; /* Letra ligeramente más pequeña y elegante */
@@ -290,10 +290,10 @@
 }
 
 .categories-root-dropzone.is-active {
-    border-bottom: 2px solid var(--text-gold, #f3be11);
-    background: rgba(212, 175, 55, 0.12);
-    color: var(--text-gold, #d4af37);
-    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+    border-bottom: 2px solid var(--text-gold);
+    background: var(--gold-soft);
+    color: var(--text-gold);
+    box-shadow: 0 4px 20px var(--gold-soft);
 }
 
 /* ---- Estado / Badges ---- */

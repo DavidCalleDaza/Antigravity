@@ -35,6 +35,7 @@
   --text-tertiary:  var(--muted);
   --text-inverse:   var(--page-bg);
   --text-on-primary: var(--page-bg);
+  --text-gold:      var(--gold);
 
   /* ── Semantic: Primary (Gold) ── */
   --primary:        var(--gold);
@@ -260,6 +261,7 @@
   --text-secondary: var(--muted);
   --text-tertiary:  var(--muted);
   --text-inverse:   var(--page-bg);
+  --text-gold:      var(--gold);
 
   /* ── Semantic: Primary (Mint Green) ── */
   --primary:        var(--gold);

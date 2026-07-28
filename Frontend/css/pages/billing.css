@@ -185,7 +185,7 @@
 
 .billing-filter-control:focus {
   border-color: var(--gold) !important;
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15) !important;
+  box-shadow: 0 0 0 2px var(--gold-dim) !important;
   outline: none !important;
 }
 
@@ -398,7 +398,7 @@
 /* Colores para iconos */
 .text-primary { color: #3b82f6 !important; }
 .text-secondary { color: #94a3b8 !important; }
-.text-gold { color: #fbbf24 !important; }
+.text-gold { color: var(--gold) !important; }
 
 /* ==========================================================================
    Sección: Facturación - Pestañas de Estados
@@ -445,8 +445,8 @@
 }
 
 .card-header .tab.active {
-  color: var(--text-gold, #d4af37) !important;
-  background: rgba(212, 175, 55, 0.08) !important;
+  color: var(--text-gold) !important;
+  background: var(--gold-dim) !important;
   font-weight: 600 !important;
 }
 
@@ -584,7 +584,7 @@
 .btn-ghost.btn-icon-only.text-gold,
 .btn-ghost.btn-icon-only .text-gold,
 .btn-ghost.btn-icon-only svg.text-gold {
-  color: #fbbf24 !important;
+  color: var(--gold) !important;
 }
 
 .btn-ghost.btn-icon-only.text-secondary,

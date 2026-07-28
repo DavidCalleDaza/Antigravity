@@ -164,6 +164,7 @@ blockquote {
 /* ═══ CUSTOM CURSOR — desktop only ═══ */
 @media (pointer: fine) {
   body { cursor: none; }
+  body.logged-in { cursor: auto; }
   .cursor {
     position: fixed; width: 10px; height: 10px;
     background: var(--gold); border-radius: 50%;

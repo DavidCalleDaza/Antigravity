@@ -27,9 +27,11 @@ export const useStore = create(
       isAuthenticated: false,
       login: (user) => {
         set({ currentUser: user, isAuthenticated: true });
+        document.body.classList.add('logged-in');
       },
       logout: () => {
         set({ currentUser: null, isAuthenticated: false });
+        document.body.classList.remove('logged-in');
       },
 
       landingDrawers: {
@@ -90,6 +92,9 @@ export const useStore = create(
       onRehydrateStorage: () => (state) => {
         if (state && state.theme) {
           document.documentElement.setAttribute('data-theme', state.theme);
+        }
+        if (state && state.isAuthenticated) {
+          document.body.classList.add('logged-in');
         }
       },
     }

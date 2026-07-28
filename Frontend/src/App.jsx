@@ -25,10 +25,13 @@ import VerifyPublic from './Pages/VerifyPublic';
 
 import CustomCursor from './components/common/CustomCursor';
 import Customers from './modules/Billing/Customers';
+import { useStore } from './store/useStore';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
 function App() {
+  const { isAuthenticated } = useStore();
+
   useEffect(() => {
     // Ping the backend to wake up Render free tier instances
     const apiUrl = import.meta.env.VITE_API_URL || 'https://servinow-api.onrender.com';
@@ -37,7 +40,7 @@ function App() {
 
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <CustomCursor />
+      {!isAuthenticated && <CustomCursor />}
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />

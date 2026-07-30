@@ -9,7 +9,8 @@ const Drawer = ({
   title,
   children,
   showHeader = true,
-  closeIcon = true
+  closeIcon = true,
+  width
 }) => {
   const setSidebarCollapsed = useStore(state => state.setSidebarCollapsed);
   const sidebarCollapsed = useStore(state => state.sidebarCollapsed);
@@ -57,6 +58,7 @@ const Drawer = ({
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        style={width ? { maxWidth: width } : undefined}
       >
         {showHeader && (
           <div className="drawer-header">

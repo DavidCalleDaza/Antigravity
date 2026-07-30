@@ -181,6 +181,7 @@ export default function ShareModal({
       isOpen={isOpen}
       onClose={onClose}
       position="right"
+      width="560px"
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Share2 width="20" height="20" />

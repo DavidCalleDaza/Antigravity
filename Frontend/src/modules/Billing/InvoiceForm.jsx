@@ -980,7 +980,8 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
         <Drawer isOpen={showQuickProduct} onClose={resetQuickProductForm} position="right" title="Nuevo Producto">
           <form className="d-flex flex-col gap-5" onSubmit={handleCreateQuickProduct}>
             <MediaUploader preview={fileUploadProd.preview || Helpers.resolveMediaUrl(quickProduct.image_url)}
-              uploading={fileUploadProd.uploading} progress={fileUploadProd.progress}
+              uploading={fileUploadProd.uploading} compressing={fileUploadProd.compressing}
+              progress={fileUploadProd.progress}
               onSelect={handleProductFileSelect} onClear={fileUploadProd.reset} error={productMediaError} />
             <div className="form-group">
               <label className="form-label">Nombre del producto <span className="required">*</span></label>
@@ -1049,7 +1050,8 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
         <Drawer isOpen={showQuickService} onClose={resetQuickServiceForm} position="right" title="Nuevo Servicio">
           <form className="d-flex flex-col gap-5" onSubmit={handleCreateQuickService}>
             <MediaUploader preview={fileUploadServ.preview || Helpers.resolveMediaUrl(quickService.image_url)}
-              uploading={fileUploadServ.uploading} progress={fileUploadServ.progress}
+              uploading={fileUploadServ.uploading} compressing={fileUploadServ.compressing}
+              progress={fileUploadServ.progress}
               onSelect={handleServiceFileSelect} onClear={fileUploadServ.reset} error={serviceMediaError} />
             <div className="form-group">
               <label className="form-label">Nombre <span className="required">*</span></label>

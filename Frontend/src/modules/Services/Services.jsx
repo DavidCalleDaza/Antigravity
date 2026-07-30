@@ -69,7 +69,7 @@ export default function Services() {
 
   const toast = useToast();
 
-  const { upload, uploading, progress, preview, reset, validateFile } = useFileUpload({
+  const { upload, uploading, compressing, progress, preview, reset, validateFile } = useFileUpload({
     onSuccess: (data) => {
       setFormData(prev => ({ ...prev, image_url: data.url, video_url: data.type === 'video' ? data.url : prev.video_url }));
       toast.success('Media subido correctamente');
@@ -448,6 +448,7 @@ export default function Services() {
           <MediaUploader
             preview={preview || Helpers.resolveMediaUrl(editingService?.image_url)}
             uploading={uploading}
+            compressing={compressing}
             progress={progress}
             onSelect={handleFileSelect}
             onClear={reset}

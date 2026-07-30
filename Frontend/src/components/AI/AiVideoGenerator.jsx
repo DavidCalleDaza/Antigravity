@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Loader2, PlayCircle, CheckCircle2 } from 'lucide-react';
 import { aiClient } from '../../utils/apiClient';
+import { useToast } from '../../components/ui/Toast';
 
 import { useStore } from '../../store/useStore';
 
@@ -10,6 +11,15 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
   const [status, setStatus] = useState(null); // 'pending', 'success', 'failed'
   const [videoUrl, setVideoUrl] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+
+  const toast = useToast();
+
+  const handleDisabledClick = () => {
+    toast.info(
+      'La generación de video con IA estará disponible próximamente. Estamos trabajando en esta funcionalidad.',
+      'Próximamente'
+    );
+  };
 
   const handleGenerate = async () => {
     if (!item || !imageBlob) {
@@ -96,15 +106,23 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
         </div>
         
         {!loading && status !== 'success' && (
+          <>
           <button 
             className="btn btn-outline btn-sm"
-            onClick={handleGenerate}
-            disabled={!imageBlob || loading}
-            style={{ borderColor: 'var(--gold)', color: 'var(--gold)', whiteSpace: 'nowrap' }}
+            onClick={handleDisabledClick}
+            disabled
+            title="Próximamente — En mantenimiento"
+            style={{ borderColor: 'var(--gold)', color: 'var(--gold)', whiteSpace: 'nowrap', opacity: 0.6, cursor: 'not-allowed' }}
           >
             <PlayCircle width="14" height="14" style={{ marginRight: '6px' }} />
             Generar Video
           </button>
+          <span style={{
+            fontSize: '0.65rem', background: 'var(--gold)', color: '#fff',
+            padding: '2px 8px', borderRadius: '999px', fontWeight: 600,
+            marginLeft: '8px', whiteSpace: 'nowrap'
+          }}>Próximamente</span>
+          </>
         )}
       </div>
 

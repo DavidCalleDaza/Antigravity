@@ -1,10 +1,11 @@
 import React from 'react';
-import { Upload, X, FileImage, FileVideo } from 'lucide-react';
+import { Upload, X, FileImage, FileVideo, Loader2 } from 'lucide-react';
 
 export default function MediaUploader({
   label = 'Media',
   preview = null,
   uploading = false,
+  compressing = false,
   progress = 0,
   onSelect,
   onClear,
@@ -17,7 +18,12 @@ export default function MediaUploader({
       {label && <label className="form-label">{label}</label>}
 
       <div className={`media-uploader-dropzone ${error ? 'has-error' : ''}`}>
-        {uploading ? (
+        {compressing ? (
+          <div className="media-uploader-progress">
+            <Loader2 width={24} height={24} className="spin" />
+            <span>Optimizando imagen...</span>
+          </div>
+        ) : uploading ? (
           <div className="media-uploader-progress">
             <div className="media-uploader-progress-bar">
               <div
@@ -56,7 +62,7 @@ export default function MediaUploader({
             />
             <Upload width={32} height={32} />
             <span>Click para seleccionar</span>
-            <span className="media-uploader-hint">Imagen (5MB) o Video (20MB)</span>
+            <span className="media-uploader-hint">Imagen (máx. 10MB, se optimiza automáticamente) o Video (20MB)</span>
           </label>
         )}
       </div>

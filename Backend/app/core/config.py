@@ -30,24 +30,31 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     ENVIRONMENT: str = "production"  # "development" | "production"
 
-      # Configuración de la Empresa Emisora (Ya agregados)
-    COMPANY_NAME: str
-    COMPANY_NIT: str
-    COMPANY_ADDRESS: str
-    COMPANY_CITY: str
-    COMPANY_PHONE: str
-    COMPANY_EMAIL: str
+    # --- Company Info (defaults de simulación; override vía .env en producción) ---
+    COMPANY_NAME: str = "ServiNow (Simulación)"
+    COMPANY_NIT: str = "900000000-0"
+    COMPANY_ADDRESS: str = "Calle 123 #45-67"
+    COMPANY_CITY: str = "Bogotá"
+    COMPANY_PHONE: str = "3000000000"
+    COMPANY_EMAIL: str = "simulacion@servinow.com"
+    COMPANY_DEPARTMENT: str = "Cundinamarca"
 
     # --- Google OAuth (Opcionales con valor None por defecto) ---
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
     GOOGLE_REDIRECT_URI: str | None = None
 
-    # --- AGREGUE ESTAS LÍNEAS PARA LA RESOLUCIÓN DE LA DIAN ---
-    DIAN_RESOLUTION_NUMBER: str
-    DIAN_RESOLUTION_DATE: str
-    DIAN_RESOLUTION_RANGE_FROM: str
-    DIAN_RESOLUTION_RANGE_TO: str
+    # --- DIAN Resolution (defaults para simulación) ---
+    DIAN_RESOLUTION_NUMBER: str = "18760000001"
+    DIAN_RESOLUTION_DATE: str = "2026-01-01"
+    DIAN_RESOLUTION_RANGE_FROM: int = 1
+    DIAN_RESOLUTION_RANGE_TO: int = 999999
+
+    # --- DIAN Integration (defaults para modo simulación) ---
+    DIAN_ENVIRONMENT: str = "test"
+    DIAN_SOFTWARE_ID: str = ""
+    DIAN_CERTIFICATE_PATH: str = ""
+    DIAN_TECHNICAL_KEY: str = ""
 
     # --- Database ---
     POSTGRES_USER: str = "servinow_user"
@@ -125,11 +132,6 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     SMTP_FROM_NAME: str = "ServiNow"
     SMTP_USE_TLS: bool = True
-    COMPANY_NAME: str = ""
-    COMPANY_NIT: str = ""
-    COMPANY_ADDRESS: str = ""
-    COMPANY_CITY: str = ""
-    COMPANY_PHONE: str = ""
 
     # --- Cloudinary ---
     CLOUDINARY_CLOUD_NAME: str = ""
@@ -145,10 +147,6 @@ class Settings(BaseSettings):
     TIKTOK_CLIENT_KEY: str = ""
     TIKTOK_CLIENT_SECRET: str = ""
     TIKTOK_REDIRECT_URI: str = ""
-    
-    GOOGLE_CLIENT_ID: str = ""
-    GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = ""
 
     # --- AI Generation (Testing Phase) ---
     GEMINI_API_KEY: str = ""

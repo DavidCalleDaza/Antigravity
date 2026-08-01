@@ -3,6 +3,31 @@ import { persist } from 'zustand/middleware';
 
 export const DRAWER_WIDTH = 520;
 
+const safeStorage = {
+  getItem: (name) => {
+    try {
+      return localStorage.getItem(name);
+    } catch (e) {
+      console.warn('[useStore] localStorage.getItem bloqueado, usando estado inicial');
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      localStorage.setItem(name, value);
+    } catch (e) {
+      console.warn('[useStore] localStorage.setItem bloqueado');
+    }
+  },
+  removeItem: (name) => {
+    try {
+      localStorage.removeItem(name);
+    } catch (e) {
+      console.warn('[useStore] localStorage.removeItem bloqueado');
+    }
+  },
+};
+
 export const useStore = create(
   persist(
     (set, get) => ({
@@ -83,6 +108,7 @@ export const useStore = create(
     }),
     {
       name: 'antigravity-storage',
+      storage: safeStorage,
       partialize: (state) => ({
         theme: state.theme,
         sidebarCollapsed: state.sidebarCollapsed,

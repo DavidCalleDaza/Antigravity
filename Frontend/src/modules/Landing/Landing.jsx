@@ -60,12 +60,17 @@ export default function Landing() {
   }, [closeAllDrawers]);
 
   useEffect(() => {
-    Helpers.initRevealAnimations();
+    try {
+      Helpers.initRevealAnimations();
+    } catch (e) {
+      console.warn('[Landing] Reveal animations no disponibles:', e.message);
+    }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     let particles = [];
     let animationFrameId;
 
@@ -235,9 +240,17 @@ export default function Landing() {
       animationFrameId = requestAnimationFrame(animateParticles);
     };
 
-    animateParticles();
+    try {
+      animateParticles();
+    } catch (e) {
+      console.warn('[Landing] Animación de partículas no disponible:', e.message);
+    }
 
-    Helpers.initRevealAnimations();
+    try {
+      Helpers.initRevealAnimations();
+    } catch (e) {
+      console.warn('[Landing] Reveal animations no disponibles:', e.message);
+    }
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);

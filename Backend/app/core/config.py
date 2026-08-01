@@ -42,7 +42,6 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
     GOOGLE_REDIRECT_URI: str | None = None
-    FRONTEND_URL: str
 
     # --- AGREGUE ESTAS LÍNEAS PARA LA RESOLUCIÓN DE LA DIAN ---
     DIAN_RESOLUTION_NUMBER: str
@@ -141,7 +140,7 @@ class Settings(BaseSettings):
     META_APP_ID: str = ""
     META_APP_SECRET: str = ""
     META_REDIRECT_URI: str = ""
-    META_API_VERSION: str = "v20.0"
+    META_API_VERSION: str = "v21.0"
     
     TIKTOK_CLIENT_KEY: str = ""
     TIKTOK_CLIENT_SECRET: str = ""

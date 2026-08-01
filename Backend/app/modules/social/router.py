@@ -10,6 +10,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -26,7 +27,9 @@ router = APIRouter(tags=["social"])
 logger = logging.getLogger(__name__)
 
 # ── State signer for OAuth ──────────────────────────────────────────────────
-_state_serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
+# Salt namespaces the social state so it can never be replayed against other
+# flows that sign with the same SECRET_KEY (e.g. Google OAuth state).
+_state_serializer = URLSafeTimedSerializer(settings.SECRET_KEY, salt="social-oauth-state")
 STATE_MAX_AGE = 600  # 10 minutes
 
 
@@ -156,26 +159,30 @@ async def callback_platform(
     try:
         if target == "meta":
             # Fetch page info and instagram business account
-            import httpx
             async with httpx.AsyncClient() as client:
                 me_resp = await client.get(
                     f"https://graph.facebook.com/{settings.META_API_VERSION}/me/accounts",
                     params={
                         "access_token": access_token,
-                        "fields": "id,name,instagram_business_account",
+                        "fields": "id,name,access_token,instagram_business_account",
                     },
                 )
                 me_data = me_resp.json()
-                print(f"DEBUG META ME/ACCOUNTS RESPONSE: {me_data}")
+                logger.debug("META ME/ACCOUNTS RESPONSE: %s", me_data)
 
             pages = me_data.get("data", [])
             if not pages:
-                print("DEBUG: NO PAGES FOUND IN META RESPONSE")
+                logger.warning("No Facebook pages found for user %s", user_id)
                 return _frontend_redirect("error", detail="no_facebook_pages", platform=requested_platform)
 
+            # MVP: se usa la primera página (soportar selección entre varias
+            # páginas es una mejora futura).
             page = pages[0]
             page_id = page["id"]
             page_name = page.get("name")
+            # Se usa únicamente para consultar la cuenta de Instagram vinculada;
+            # se persiste el token de usuario de larga duración.
+            page_access_token = page.get("access_token") or access_token
 
             # ── Create/update Facebook account ──
             fb_account_in = schemas.SocialAccountCreate(
@@ -192,10 +199,25 @@ async def callback_platform(
             ig_biz = page.get("instagram_business_account")
             if ig_biz:
                 ig_id = ig_biz.get("id")
+                ig_username = None
+                try:
+                    async with httpx.AsyncClient() as client:
+                        ig_resp = await client.get(
+                            f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_id}",
+                            params={
+                                "fields": "username",
+                                "access_token": page_access_token,
+                            },
+                        )
+                        ig_data = ig_resp.json()
+                        ig_username = ig_data.get("username")
+                except Exception as e:
+                    logger.warning("Failed to fetch Instagram username for %s: %s", ig_id, e)
+
                 ig_account_in = schemas.SocialAccountCreate(
                     platform="instagram",
                     platform_user_id=ig_id,
-                    platform_username=None,  # Could fetch IG username with another API call
+                    platform_username=ig_username,
                     access_token=access_token,
                     refresh_token=None,
                     expires_at=expires_at,

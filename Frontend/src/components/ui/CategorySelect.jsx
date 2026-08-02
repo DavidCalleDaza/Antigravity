@@ -71,6 +71,7 @@ export default function CategorySelect({ value, onChange, entityType, categories
       placeholder="Seleccionar categoría"
       searchPlaceholder="Buscar categoría..."
       onClose={resetCreateState}
+      clearable
       renderOption={(c, { isSelected, select }) => (
         <button
           type="button"

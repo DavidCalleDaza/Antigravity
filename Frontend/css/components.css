@@ -195,6 +195,22 @@
 
 .form-hint { font-size: var(--text-xs); color: var(--text-tertiary); }
 
+/* 1. Dar borde ÚNICAMENTE al botón principal del selector de Categoría */
+[data-theme="light"] .form-group button:not(.btn):not(.searchable-select-dropdown *):not(.category-select-dropdown *):not(.dropdown-menu *),
+[data-theme="light"] .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *):not(.category-select-dropdown *):not(.dropdown-menu *) {
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 2. Quitar bordes a las opciones dentro de la lista desplegable */
+.searchable-select-dropdown button,
+.searchable-select-dropdown [role="button"],
+.category-select-dropdown button,
+.category-select-dropdown [role="button"],
+.dropdown-menu button,
+.dropdown-menu [role="button"] {
+  border: none !important;
+  border-bottom: none !important;
+}
 /* Input with icon */
 .input-group {
   position: relative;
@@ -899,6 +915,8 @@
   opacity: 1;
   visibility: visible;
 }
+
+
 
 @media (min-width: 1024px) {
   body.drawer-open-right .drawer-overlay {

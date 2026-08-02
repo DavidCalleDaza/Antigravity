@@ -1,24 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
-/* *
- * Dropdown custom — replacement for native <select>.
- *
- * Why it exists: the native <select> cannot be re-styled in the part
- * open (the <option> list) because that layer is drawn by the system
- * operating/browser, not the CSS of the app. This component uses <div>s
- * normal for the trigger and options, so 100% of the look
- * (background, hover, text, borders) leaves our theme, not the OS.
- *
- * Use the .custom-dropdown-* classes that already exist in Statistics.css
- * (and that can be reused in any other module).
- *
- *Props:
- * - options: [{ value, label }]
- * - value: currently selected value
- * - onChange: (value) => void
- * - className: optional class for the wrapper (min-width control, etc.) */
-export default function Dropdown({ options, value, onChange, className = '' }) {
+export default function Dropdown({ 
+  options = [], 
+  value, 
+  onChange, 
+  className = '', 
+  placeholder = '', 
+  disabled = false 
+}) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -42,11 +32,13 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
   const selected = options.find((o) => o.value === value);
 
   const handleSelect = (optValue) => {
+    if (disabled) return;
     onChange(optValue);
     setOpen(false);
   };
 
   const handleTriggerKeyDown = (e) => {
+    if (disabled) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setOpen((o) => !o);
@@ -54,23 +46,39 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
   };
 
   return (
-    <div className={`custom-dropdown ${className}`} ref={wrapperRef}>
+    <div className={`custom-dropdown ${disabled ? 'disabled' : ''} ${className}`} ref={wrapperRef}>
       <div
-        className={`custom-dropdown-trigger ${open ? 'open' : ''}`}
+        className={`custom-dropdown-trigger ${open ? 'open' : ''} ${disabled ? 'disabled' : ''}`}
         role="button"
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleTriggerKeyDown}
-        style={{ outline: 'none' }}
+        style={{
+          outline: 'none',
+          opacity: disabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer'
+        }}
       >
-        <span className="custom-dropdown-value">{selected ? selected.label : ''}</span>
+        <span className={`custom-dropdown-value ${!selected ? 'custom-dropdown-placeholder' : ''}`}>
+          {selected ? selected.label : placeholder}
+        </span>
         <ChevronDown className="custom-dropdown-chevron" width="14" height="14" />
       </div>
 
-      {open && (
+      {open && !disabled && (
         <div className="custom-dropdown-menu" role="listbox">
+          {placeholder && (
+            <div
+              className={`custom-dropdown-option ${value === '' ? 'selected' : ''}`}
+              role="option"
+              aria-selected={value === ''}
+              onClick={() => handleSelect('')}
+            >
+              <span className="custom-dropdown-placeholder">{placeholder}</span>
+            </div>
+          )}
           {options.map((opt) => (
             <div
               key={opt.value}
@@ -80,7 +88,6 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
               onClick={() => handleSelect(opt.value)}
             >
               <span>{opt.label}</span>
-              
             </div>
           ))}
         </div>

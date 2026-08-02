@@ -11,6 +11,7 @@ import '../css/components.css'
 import '../css/utilities.css'
 import '../css/layout.css'
 import '../css/pages/ConfirmModal.css';
+import '../css/pages/dropdown.css';
 
 // Page Specific CSS (preserving original architecture)
 import '../css/pages/landing.css'

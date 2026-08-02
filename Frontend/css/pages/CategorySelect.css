@@ -1,120 +1,16 @@
 /* ==========================================================================
    CategorySelect Component Styling (Royal Velvet & Fresh Mint)
+   Solo contiene lo que CategorySelect.jsx realmente usa: las filas de la
+   lista (renderOption) y el footer de "Nueva Categoría". El trigger, el
+   dropdown flotante, el buscador y el chevron los resuelve SearchableSelect,
+   que es quien realmente los renderiza.
    ========================================================================== */
 
-.category-select-wrapper {
-  position: relative;
-  width: 100%;
-}
+/* ==========================================================================
+   1. FILAS DE LA LISTA (usadas por renderOption)
+   ========================================================================== */
 
-.category-select-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--neutral-100);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  text-align: left;
-}
-
-.category-select-trigger:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px var(--primary-subtle);
-}
-
-.category-select-trigger-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.category-select-chevron {
-  color: var(--text-secondary);
-  transition: transform var(--transition-fast);
-}
-
-.category-select-item-name {
-  font-size: 11px !important;
-  color: inherit;
-  flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.category-select-trigger[aria-expanded="true"] .category-select-chevron {
-  transform: rotate(180deg);
-}
-
-.category-select-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: var(--space-2);
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  z-index: var(--z-dropdown);
-  display: flex;
-  flex-direction: column;
-  max-height: 350px;
-  overflow: hidden;
-}
-
-/* Search Input */
-.category-select-search-wrapper {
-  display: flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--neutral-900);
-}
-
-.category-select-search-icon {
-  color: var(--text-secondary);
-  margin-right: var(--space-2);
-  flex-shrink: 0;
-}
-
-.category-select-search-input {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  padding: var(--space-1) 0;
-}
-
-.category-select-search-input:focus {
-  outline: none;
-}
-
-/* Items List */
-.category-select-list {
-  overflow-y: auto;
-  flex-grow: 1;
-  padding: var(--space-1) 0;
-}
-
-.category-select-no-results {
-  padding: var(--space-4);
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
+/* Opción individual de la lista (Fila de categoría) */
 .category-select-item {
   display: flex;
   align-items: center;
@@ -129,30 +25,53 @@
   cursor: pointer;
   text-align: left;
   transition: background-color var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Hover sobre una opción de la lista */
 .category-select-item:hover {
   background-color: var(--neutral-100);
 }
 
+/* Estado de la opción actualmente seleccionada */
 .category-select-item--selected {
   background-color: var(--primary-subtle);
   color: var(--primary);
   font-weight: var(--font-medium);
 }
 
+/* Nombre de la categoría dentro de la fila */
+.category-select-item-name {
+  font-size: 11px !important;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Icono Check (✓) en la opción seleccionada */
 .category-select-check {
   color: var(--primary);
   flex-shrink: 0;
 }
 
-/* Footer & Creation Form */
+
+/* ==========================================================================
+   2. FOOTER Y CREACIÓN DE CATEGORÍAS (usados por el prop footer)
+   ========================================================================== */
+
+/* Sección inferior del menú */
 .category-select-footer {
   border-top: 1px solid var(--border-color);
   padding: var(--space-2) var(--space-3);
   background-color: var(--neutral-900);
 }
 
+/* Botón "+ Nueva Categoría" */
 .category-select-add-btn {
   display: flex;
   align-items: center;
@@ -164,16 +83,19 @@
   padding: var(--space-2);
 }
 
+/* Hover del botón de añadir categoría */
 .category-select-add-btn:hover {
   background-color: var(--primary-subtle);
 }
 
+/* Formulario de creación rápida de nueva categoría */
 .category-select-create-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
+/* Entrada de texto para escribir la nueva categoría */
 .category-select-create-input {
   width: 100%;
   padding: var(--space-2);
@@ -181,12 +103,14 @@
   border-radius: var(--radius-sm);
 }
 
+/* Mensaje de error en la creación */
 .category-select-error {
   color: var(--danger);
   font-size: var(--text-xs);
   padding: 0 var(--space-1);
 }
 
+/* Botones de acción del formulario (Guardar / Cancelar) */
 .category-select-create-actions {
   display: flex;
   justify-content: flex-end;
@@ -199,7 +123,12 @@
   height: auto;
 }
 
-/* Spinner */
+
+/* ==========================================================================
+   3. ANIMACIONES Y UTILIDADES (Animations & Spinners)
+   ========================================================================== */
+
+/* Icono de carga rotativo (Spinner) */
 .spin {
   animation: spin 1s linear infinite;
 }

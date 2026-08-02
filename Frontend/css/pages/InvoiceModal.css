@@ -1,8 +1,12 @@
 /* ==========================================================================
-   Estructura Base del Modal de Facturación
+   SERVINOW — Invoice Modal Page Styles (100% Scoped & Safe)
    ========================================================================== */
 
-/** Estilos Generales del Modal **/    
+/* ==========================================================================
+   SECCIÓN 1: ESTRUCTURA BASE Y CONTENEDORES DEL MODAL
+   ========================================================================== */
+
+/* Cabecera del modal: define dimensiones compactas y alineación vertical */
 .modal-header {
     padding-top: 6px !important;     
     padding-bottom: 10px !important;  
@@ -13,7 +17,7 @@
     width: auto !important;
 }
 
-/* Estilos para el modal de factura */
+/* Contenedor principal del modal de facturación (diseño grande adaptado a la pantalla) */
 .modal.modal-lg {
     width: 92% !important;           
     min-width: auto !important;
@@ -30,15 +34,17 @@
     padding: 15px 15px; 
 }
 
+/* Cuerpo interno del modal: distribuye el contenido principal y la barra lateral */
 .modal-body {
     flex: 1;
     display: grid !important;
-    grid-template-columns: 1fr 290px   !important; /* Sidebar a la derecha */
+    grid-template-columns: 1fr 290px !important; /* Columna principal izquierda y barra lateral derecha */
     gap: 20px !important;
     padding: 15px !important;
-    overflow-y: auto !important; /* Asegura el scroll vertical del modal */
+    overflow-y: auto !important; /* Desplazamiento vertical cuando el contenido excede el alto */
 }
 
+/* Título de la cabecera */
 .modal-title {
     font-size: 18px !important; 
     font-weight: 600;
@@ -46,7 +52,7 @@
     color: var(--text-primary);
 }
 
-/* Botón de cerrar compacto */
+/* Botón compacto de cierre del modal */
 .modal-close {
     background: transparent;
     border: none;
@@ -60,14 +66,27 @@
     transition: background 0.2s !important;
 }
 
+/* Cambio de color en estado hover para el botón de cerrar */
 .modal-close:hover {
     background: var(--border); 
     color: var(--text-primary) !important;
 }
 
+/* Contenedor de tarjetas elevadas de la interfaz */
+.card-raised {
+    background: var(--surface-raised) !important; 
+    border: 1px solid var(--border) !important; 
+    border-radius: var(--radius-lg) !important; 
+    padding: 16px !important; 
+    box-sizing: border-box !important; 
+}
+
+
 /* ==========================================================================
-   Diseño de Inputs y Selects Unificados
+   SECCIÓN 2: ELEMENTOS DE FORMULARIO UNIFICADOS (INPUTS Y SELECTS)
    ========================================================================== */
+
+/* Estilos compartidos para campos de texto y selectores del formulario */
 .modal-body .form-control,
 .modal-body .form-select {
     width: 100% !important;
@@ -83,7 +102,7 @@
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
 }
 
-/* Flecha personalizada unificada para los selectores */
+/* Configuración de flecha de selección personalizada para los menús desplegables */
 .modal-body .form-select {
     appearance: none !important;
     padding-right: 28px !important;
@@ -92,13 +111,13 @@
     background-size: 14px !important;
 }
 
-/* Estado Hover Unificado */
+/* Hover unificado para campos de formulario */
 .modal-body .form-control:hover,
 .modal-body .form-select:hover {
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* Estado Focus Unificado */
+/* Enfoque (Focus) unificado con tonalidad dorada */
 .modal-body .form-control:focus,
 .modal-body .form-select:focus {
     border-color: var(--text-gold, #d4af37) !important;
@@ -106,9 +125,12 @@
     outline: none !important;
 }
 
+
 /* ==========================================================================
-   Sección de Información del Cliente 
+   SECCIÓN 3: SECCIÓN DE INFORMACIÓN DEL CLIENTE
    ========================================================================== */
+
+/* Contenedor principal de la sección de cliente */
 .customer-section {
     background: var(--surface-raised) !important;
     border: 1px solid var(--border) !important;
@@ -120,6 +142,7 @@
     align-items: center !important;
 }
 
+/* Título de la sección de cliente */
 .customer-title {
     font-size: 14px !important;
     font-weight: 600 !important;
@@ -127,12 +150,20 @@
     white-space: nowrap !important;
 }
 
+/* Bloque del título del cliente */
+.customer-title-block {
+    align-self: center !important;
+    height: auto !important;
+}
+
+/* Contenedor vertical de etiquetas e inputs de cliente */
 .customer-fields-block {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
 }
 
+/* Formato de etiquetas para campos de cliente */
 .customer-section .customer-fields-block label.form-label {
     text-transform: none !important;
     font-size: 12px !important;
@@ -144,6 +175,7 @@
     line-height: 2 !important;
 }
 
+/* Fila de campos de entrada para el cliente */
 .customer-inputs-row {
     display: flex !important;
     flex-direction: row !important;
@@ -152,11 +184,13 @@
     height: 100% !important;
 }
 
+/* Contenedor relativo para posicionar iconos dentro de inputs de cliente */
 .customer-inputs-row .input-group {
     position: relative !important;
     flex: 1 !important; 
 }
 
+/* Icono izquierdo interno en el campo del cliente */
 .customer-inputs-row .input-icon-left {
     position: absolute !important;
     left: 10px !important;
@@ -168,21 +202,71 @@
     z-index: 5 !important;
 }
 
+/* Espacio interno para evitar solapamiento con iconos de lado izquierdo y derecho */
 .customer-inputs-row .form-control {
     padding-left: 32px !important; 
     padding-right: 32px !important; 
 }
 
-.customer-title-block {
-    align-self: center !important;
-    height: auto !important;
+/* Botón integrado a la derecha dentro del grupo de entrada */
+.customer-inputs-row .input-group .input-icon-right-btn {
+    position: absolute !important;
+    right: 10px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--text-secondary) !important;
+    padding: 4px !important;
+    z-index: 10 !important;
 }
 
+/* Contenedor de metadatos del cliente seleccionado (Correo, Régimen, etc.) */
+.customer-selected-info {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    margin-top: 6px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Detalle individual de los datos del cliente */
+.customer-selected-info span {
+    white-space: nowrap !important;
+}
+
+/* Etiqueta / insignia para indicar cliente preferente o descuento */
+.customer-preferred-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border: 1px solid rgba(245, 158, 11, 0.25) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    color: #f59e0b !important;
+    white-space: nowrap !important;
+    height: 36px !important; 
+    box-sizing: border-box !important;
+    align-self: center !important;
+}
+
+/* Bloque contenedor para el botón de nuevo cliente */
 .customer-button-block {
     align-self: center !important;
     height: auto !important;
 }
 
+/* Botón para registrar un nuevo cliente */
 .btn-new-customer {
     background: transparent !important;
     font-family: 'Verdana', sans-serif !important;
@@ -201,69 +285,24 @@
     transition: background 0.2s, border-color 0.2s !important;
 }
 
+/* Hover para botón de nuevo cliente */
 .btn-new-customer:hover {
     background: rgba(212, 175, 55, 0.1) !important;
 }
 
+/* Dimensiones del icono del botón de nuevo cliente */
 .btn-new-customer svg {
     width: 16px !important;
     height: 16px !important;
     flex-shrink: 0 !important;
 }
 
-.customer-inputs-row .input-group .input-icon-right-btn {
-    position: absolute !important;
-    right: 10px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    background: none !important;
-    border: none !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    color: var(--text-secondary) !important;
-    padding: 4px !important;
-    z-index: 10 !important;
-}
-
-.customer-selected-info {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 16px !important;
-    font-size: 11px !important;
-    color: var(--text-secondary) !important;
-    margin-top: 6px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-.customer-selected-info span {
-    white-space: nowrap !important;
-}
-
-.customer-preferred-badge {
-    display: inline-flex !important;
-    align-items: center !important;
-    background: rgba(245, 158, 11, 0.08) !important;
-    border: 1px solid rgba(245, 158, 11, 0.25) !important;
-    border-radius: 6px !important;
-    padding: 4px 8px !important;
-    font-size: 11px !important;
-    color: #f59e0b !important;
-    white-space: nowrap !important;
-    height: 36px !important; 
-    box-sizing: border-box !important;
-    align-self: center !important;
-}
-
 
 /* ==========================================================================
-   Sección: Detalles de Pago y Fechas 
+   SECCIÓN 4: DETALLES DE PAGO Y FECHAS
    ========================================================================== */
 
+/* Caja para fechas e información fiscal de la factura */
 .card-raised:has(> span.text-primary) {
     background: var(--surface-raised) !important;
     border: 1px solid var(--border) !important;
@@ -276,6 +315,7 @@
     flex-direction: row !important;
 }
 
+/* Etiqueta identificadora de la sección de fechas/pago */
 .card-raised:has(> span.text-primary) > span.text-primary {
     font-size: 14px !important;
     font-weight: 600 !important;
@@ -287,18 +327,21 @@
     margin: 0 !important;
 }
 
+/* Rejilla de flexión horizontal para los campos del formulario de pago */
 .card-raised:has(> span.text-primary) .grid.grid-3 {
     display: flex !important;
     gap: 12px !important;
     width: 100% !important;
 }
 
+/* Contenedor individual de los campos de fecha o selección */
 .card-raised .form-group {
     position: relative !important;
     flex: 1 !important;
     margin: 0 !important;
 }
 
+/* Etiqueta del formulario de pago */
 .card-raised .form-group .form-label {
     display: block !important;
     text-transform: none !important;
@@ -310,9 +353,12 @@
     line-height: 1 !important;
 }
 
+
 /* ==========================================================================
-   Sección: Líneas de Detalle
+   SECCIÓN 5: LÍNEAS DE DETALLE DE LA FACTURA
    ========================================================================== */
+
+/* Contenedor de la sección de listado de artículos o servicios */
 .card-raised.items-card-section {
     background: var(--surface-raised) !important;
     border: 1px solid var(--border) !important;
@@ -324,17 +370,19 @@
     margin-bottom: 0px !important;
     overflow: hidden !important;
     flex: 1 !important;           
-    min-height: 150px !important;  
+    min-height: 150px !important;  /* Conservado para respetar distribución */
     height: auto !important;       
     max-height: none !important;   
 }
 
+/* Título de la sección de líneas de detalle */
 .card-raised.items-card-section .text-primary {
     font-size: 14px !important;
     font-weight: 600 !important;
     color: var(--text-primary) !important;
 }
 
+/* Botón de acción para añadir conceptos a la tabla */
 .card-raised.items-card-section .btn.btn-outline {
     background: transparent !important;
     font-family: 'Verdana', sans-serif !important;
@@ -349,24 +397,27 @@
     transition: background 0.2s, border-color 0.2s !important;   
 }
 
+/* Hover de botón añadir concepto */
 .card-raised.items-card-section .btn.btn-outline:hover {
     background: rgba(212, 175, 55, 0.1) !important;
 }
 
-/* Contenedor de scroll horizontal optimizado para móviles */
+/* Contenedor que maneja el desbordamiento horizontal de la tabla */
 .table-responsive-wrapper {
     border: 1px solid var(--border) !important;
     border-radius: 6px !important;
     background: var(--surface) !important;
     overflow-x: auto !important;       
-    overflow-y: visible !important;
+    overflow-y: auto !important;       /* Permite scroll vertical de filas */
+    max-height: 380px !important;      /* Limita la altura máxima de la tabla para mantenerla fija */
     flex: 1 !important; 
     height: auto !important; 
     margin-bottom: 0px !important;
     width: 100% !important;
-    -webkit-overflow-scrolling: touch; /* Scroll de inercia suave en iOS */
+    -webkit-overflow-scrolling: touch; 
 }
 
+/* Estructura de tabla para los elementos de factura */
 .table-invoice-items {
     table-layout: auto !important;     
     width: 100% !important;            
@@ -374,6 +425,7 @@
     margin-bottom: 0px !important;
 }
 
+/* Cabeceras de columna de la tabla (permanecen fijas al hacer scroll) */
 .table-invoice-items th {
     position: sticky !important;
     top: 0 !important;
@@ -381,7 +433,7 @@
     background: var(--surface-raised) !important;
     font-family: 'Verdana', sans-serif !important;
     font-size: 10px !important;
-    padding: 8px 4px 8px 9px !important; 
+    padding: 8px 4px 4px 8px !important; 
     border-bottom: 2px solid var(--border) !important;
     letter-spacing: 0.05em !important; 
     overflow: hidden !important;
@@ -389,20 +441,37 @@
     white-space: nowrap !important;
 }
 
+/* AJUSTE SOLICITADO: Fijación de los campos que se están modificando (Fila 1) justo debajo de las cabeceras */
+.table-invoice-items tbody tr:first-child {
+    position: sticky !important;
+    top: 26px !important;              /* Se ancla exactamente debajo de la cabecera */
+    z-index: 9 !important;              /* Debajo del header th pero por encima de los registros secundarios */
+    background: var(--surface) !important; /* Fondo opaco del sistema para tapar los items deslizantes */
+    box-shadow: 0 1px 0 var(--border) !important;
+}
+
+/* Fila de la tabla */
 .table-invoice-items tr {
     border-bottom: 1px solid var(--border) !important;
     gap: 8px !important;
 }
 
+/* Celdas individuales de la tabla */
 .table-invoice-items td {
-    padding: 8px 6px !important; 
+    padding: 4px 4px 4px 4px !important; 
     vertical-align: middle !important;
     overflow: visible !important;      
 }
 
-/* Distribución de columnas */
-.table-invoice-items th:nth-child(1), .table-invoice-items td:nth-child(1) { width: 18% !important; }
-.table-invoice-items th:nth-child(2), .table-invoice-items td:nth-child(2) { width: 18% !important; }
+/* Distribución específica del ancho de las columnas de la tabla */
+.table-invoice-items th:nth-child(1), .table-invoice-items td:nth-child(1) { 
+    width: 18% !important; 
+    min-width: 160px !important; /* Espacio para dropdown de productos */
+}
+.table-invoice-items th:nth-child(2), .table-invoice-items td:nth-child(2) { 
+    width: 18% !important; 
+    min-width: 160px !important; /* Espacio para dropdown de servicios */
+}
 .table-invoice-items th:nth-child(3), .table-invoice-items td:nth-child(3) { width: 24% !important; }
 .table-invoice-items th:nth-child(4), .table-invoice-items td:nth-child(4) { width: 4% !important; min-width: 4%!important; }
 .table-invoice-items th:nth-child(5), .table-invoice-items td:nth-child(5) { width: 7% !important; }
@@ -410,11 +479,23 @@
 .table-invoice-items th:nth-child(7), .table-invoice-items td:nth-child(7) { width: 9% !important; }
 .table-invoice-items th:nth-child(8), .table-invoice-items td:nth-child(8) { width: 9% !important; text-align: right !important; white-space: nowrap !important; }
 
+/* Contenedor flex sin envoltura para selectores de productos y servicios */
+.table-invoice-items td:nth-child(1) .d-flex,
+.table-invoice-items td:nth-child(2) .d-flex {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: 80% !important;
+}
 
+/* Estilos de texto para totales individuales */
 .table-invoice-items td:nth-child(8) strong {
     font-size: 11px !important;
 }
 
+/* Columna de acciones finales (generalmente para eliminar filas) */
 .table-invoice-items th:last-child,
 .table-invoice-items td:last-child {
     width: 70px !important;
@@ -424,17 +505,20 @@
     white-space: nowrap !important;
 }
 
+/* Contenedor flex para acciones de fin de fila */
 .table-invoice-items td:last-child .d-flex {
     flex-wrap: nowrap !important;
     justify-content: center !important;
     gap: 2px !important;
 }
 
+/* Alineaciones a la derecha para montos monetarios */
 .table-invoice-items .text-right,
 .table-invoice-items input.text-right {
     text-align: right !important;
 }
 
+/* Asegura el ancho total para elementos de control dentro de la tabla */
 .table-invoice-items input,
 .table-invoice-items select {
     width: 100% !important;
@@ -442,6 +526,7 @@
     box-sizing: border-box !important;
 }
 
+/* Ajustes compactos para los elementos interactivos de la tabla */
 .table-invoice-items select.form-select,
 .table-invoice-items input.form-control {
     height: 32px !important;          
@@ -449,6 +534,7 @@
     font-size: 10px !important;
 }
 
+/* Botón fantasma peligro/eliminar en la tabla */
 .table-invoice-items .btn-ghost.text-danger {
     color: var(--text-secondary) !important;
     border-radius: 6px !important;
@@ -458,11 +544,13 @@
     flex-shrink: 0 !important;
 }
 
+/* Hover de botón peligro/eliminar */
 .table-invoice-items .btn-ghost.text-danger:hover {
     background-color: rgba(239, 68, 68, 0.1) !important;
     color: #ef4444 !important;
 }
 
+/* Botón de advertencia/información en la tabla */
 .table-invoice-items .btn-ghost.text-warning {
     height: 32px !important;
     width: 32px !important;
@@ -470,9 +558,159 @@
     border-radius: 6px !important;
 }
 
+
 /* ==========================================================================
-   Sección: Observaciones
+   SECCIÓN 6: AJUSTES DEL CONTROL DE BÚSQUEDA FLOTANTE (SEARCHABLE SELECT)
    ========================================================================== */
+
+/* Contenedor del desplegable flotante adaptado */
+.table-invoice-items [class*="searchable-select-dropdown"],
+.table-invoice-items [class*="custom-dropdown-menu"] {
+  width: max-content !important; 
+  min-width: 100% !important;    
+  max-width: 380px !important;   
+}
+
+/* Estilo para evitar saltos de línea de opciones largas en el buscador flotante */
+.table-invoice-items [class*="searchable-select-dropdown"] li,
+.table-invoice-items [class*="searchable-select-dropdown"] div,
+.table-invoice-items [class*="searchable-select-dropdown"] span,
+.table-invoice-items [class*="custom-dropdown-option"] {
+  white-space: nowrap !important; 
+  overflow: hidden !important;
+  text-overflow: ellipsis !important; 
+}
+
+/* Forzar alineación y no envoltura de elementos dentro de las celdas de selección */
+.table-invoice-items td:nth-child(1) .d-flex.align-items-center,
+.table-invoice-items td:nth-child(2) .d-flex.align-items-center {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+}
+
+/* Espaciado del envoltorio del selector de búsqueda */
+.table-invoice-items td:nth-child(1) .d-flex > div[style*="flex: 1"],
+.table-invoice-items td:nth-child(2) .d-flex > div[style*="flex: 1"],
+.table-invoice-items .searchable-select-wrapper {
+    flex: 1 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+}
+
+/* Disparador (Trigger) visual del Selector de Búsqueda */
+.table-invoice-items .searchable-select-trigger {
+    height: 32px !important; 
+    box-sizing: border-box !important;
+    background-color: var(--surface) !important; 
+    border: 1px solid var(--border) !important; 
+    border-radius: 6px !important;
+    padding: 0 8px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Estados de interacción del disparador */
+.table-invoice-items .searchable-select-trigger:hover,
+.table-invoice-items .searchable-select-trigger:focus,
+.table-invoice-items .searchable-select-trigger[aria-expanded="true"] {
+    border-color: var(--text-gold, #d4af37) !important;
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) !important;
+}
+
+/* Control del truncamiento del texto seleccionado dentro del disparador */
+.table-invoice-items .searchable-select-trigger-text {
+    color: var(--text-primary, #ffffff) !important; 
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: inline-block !important;
+    max-width: 130px !important; 
+    font-size: 11px !important;
+    text-align: left !important;
+}
+
+/* Icono indicador del disparador */
+.table-invoice-items .searchable-select-chevron {
+    color: var(--text-gold, #d4af37) !important;
+    flex-shrink: 0 !important;
+    width: 12px !important;
+    height: 12px !important;
+    margin-left: auto !important;
+}
+
+/* AJUSTE SOLICITADO: Desplegable flotante con scroll vertical interno limitado sin mover la interfaz de fondo */
+.table-invoice-items .searchable-select-dropdown {
+    background-color: var(--card-bg, var(--surface-overlay, #1c1924)) !important; 
+    border: 1px solid var(--border) !important; 
+    border-radius: 6px !important;
+    box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.6)) !important;
+    z-index: 99999 !important; 
+    padding: 6px 0 !important; 
+    
+    /* Configuración de scroll independiente */
+    max-height: 200px !important;       /* Altura máxima para visualizar productos cómodamente */
+    overflow-y: auto !important;         /* Permite scroll vertical interno de productos */
+    overscroll-behavior: contain !important; /* Bloquea la propagación del scroll hacia el modal principal */
+}
+
+/* Caja interna del motor de búsqueda del desplegable */
+.table-invoice-items .searchable-select-search-wrapper {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 6px !important;
+    position: sticky !important;       /* AJUSTE SOLICITADO: El input de buscar se queda estático arriba al mover la lista */
+    top: 0 !important;
+    z-index: 10 !important;
+    background-color: var(--card-bg, var(--surface-overlay, #1c1924)) !important;
+}
+
+/* Entrada de texto interna del motor de búsqueda */
+.table-invoice-items .searchable-select-search-input {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important; 
+}
+
+/* Opción de elemento individual seleccionable */
+.table-invoice-items .searchable-select-item {
+    padding: 8px 18px !important; 
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important; 
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-primary, #ffffff) !important; 
+    font-size: 11px !important;
+}
+
+/* Hover de elementos individuales */
+.table-invoice-items .searchable-select-item:hover {
+    background-color: var(--neutral-100, rgba(255, 255, 255, 0.05)) !important;
+    color: var(--text-primary, #ffffff) !important;
+}
+
+/* Estado activo/seleccionado de una opción del desplegable */
+.table-invoice-items .searchable-select-item--selected {
+    background-color: rgba(212, 175, 55, 0.16) !important;
+    color: var(--text-gold, #d4af37) !important;
+}
+
+
+/* ==========================================================================
+   SECCIÓN 7: SECCIÓN DE OBSERVACIONES
+   ========================================================================== */
+
+/* Contenedor del área de observaciones */
 .card-raised:has(textarea) {
     background: var(--surface-raised) !important;
     border: 1px solid var(--border) !important;
@@ -484,6 +722,7 @@
     align-items: center !important; 
 }
 
+/* Etiqueta para el área de observaciones */
 .card-raised:has(textarea) .form-label {
     font-size: 14px !important;
     font-weight: 600 !important;
@@ -495,6 +734,7 @@
     margin: 0 !important;
 }
 
+/* Entrada multilinea de texto para observaciones */
 .card-raised:has(textarea) textarea.form-control {
     background-color: var(--surface) !important;
     color: var(--text-primary) !important;
@@ -513,9 +753,12 @@
     resize: none !important;
 }   
 
+
 /* ==========================================================================
-   Estructura de Columnas e Invoice Form
+   SECCIÓN 8: COLUMNA PRINCIPAL Y SIDEBAR DE TOTALES
    ========================================================================== */
+
+/* Columna que alberga los formularios de la factura */
 .invoice-form-column {
     display: flex;
     flex-direction: column;
@@ -526,17 +769,7 @@
     min-width: 0 !important;
 }
 
-.card-raised {
-    background: var(--surface-raised) !important; 
-    border: 1px solid var(--border) !important; 
-    border-radius: var(--radius-lg) !important; 
-    padding: 16px !important; 
-    box-sizing: border-box !important; 
-}
-
-/* ==========================================================================
-   Sidebar de Totales
-   ========================================================================== */
+/* Barra lateral para cálculo de importes totales de la factura */
 .totals-sidebar.card-raised {
     background: var(--surface-raised) !important;
     border: 1px solid var(--border) !important;
@@ -554,6 +787,7 @@
     flex: 1 !important;
 }
 
+/* Divisiones internas dentro del sidebar */
 .totals-sidebar.card-raised > div,
 .totals-sidebar.card-raised .d-flex.flex-column {
     display: flex !important;
@@ -562,6 +796,7 @@
     width: 100% !important;
 }
 
+/* Fila de desglose monetario dentro del sidebar de totales */
 .totals-sidebar.card-raised .d-flex.justify-content-between {
     display: flex !important;
     flex-direction: row !important;
@@ -572,32 +807,25 @@
     gap: 16px !important; 
 }
 
+/* Previene divisiones anómalas de las líneas monetarias */
 .totals-sidebar.card-raised .d-flex.justify-content-between > * {
     white-space: nowrap !important; 
     flex-shrink: 0 !important;      
 }
 
+/* Color dorado asignado a saldos destacados */
 .totals-sidebar .text-gold {
     color: var(--text-gold, #d4af37) !important;
     white-space: nowrap !important; 
 }
 
-.totals-sidebar .text-sm {
-    font-size: 12px !important;
-}
+/* Ajustes de tipografía para desglose de saldos */
+.totals-sidebar .text-sm { font-size: 12px !important; }
+.totals-sidebar .font-bold.text-sm.text-primary { font-size: 14px !important; }
+.totals-sidebar .font-bold.text-base { font-size: 12px !important; }
+.totals-sidebar .font-bold.text-lg { font-size: 15px !important; }
 
-.totals-sidebar .font-bold.text-sm.text-primary {
-    font-size: 14px !important;
-}
-
-.totals-sidebar .font-bold.text-base {
-    font-size: 12px !important;
-}
-
-.totals-sidebar .font-bold.text-lg {
-    font-size: 15px !important;
-}
-
+/* Botones de acción dentro del sidebar de totales */
 .totals-sidebar .btn {
     height: 38px !important;
     font-family: 'Verdana', sans-serif !important;
@@ -615,27 +843,36 @@
     margin-left: 5% !important;
 }
 
+/* Botón principal (Emitir factura) */
 .totals-sidebar .btn-primary {
     background: var(--text-gold, #d4af37) !important;
     color: #000000 !important;
     border: none !important;
 }
+
+/* Hover de botón principal */
 .totals-sidebar .btn-primary:hover {
     background: #c5a02e !important;
 }
 
+/* Botón alternativo / borrador */
 .totals-sidebar .btn-outline {
     background: transparent !important;
     border: 1px solid var(--border) !important;
     color: var(--text-primary) !important;
 }
+
+/* Hover de botón alternativo */
 .totals-sidebar .btn-outline:hover {
     background: rgba(255, 255, 255, 0.05) !important;
 }
 
+
 /* ==========================================================================
-   Estilos de la Lista Desplegable (Tema Oscuro Unificado)
+   SECCIÓN 9: LISTA DESPLEGABLE DE BUSCADOR DE CLIENTES
    ========================================================================== */
+
+/* Panel flotante de autocompletado de clientes */
 .customer-dropdown {
     position: absolute !important;
     top: 100% !important;
@@ -651,6 +888,7 @@
     margin-top: 4px !important;
 }
 
+/* Opción de cliente individual dentro del menú de búsqueda */
 .customer-dropdown-item {
     padding: 8px 12px !important;
     cursor: pointer !important;
@@ -663,20 +901,24 @@
     transition: background-color 0.15s ease !important;
 }
 
+/* Texto de énfasis en el dropdown */
 .customer-dropdown-item strong {
     color: #ffffff !important;
 }
 
+/* Hover o enfoque de opción dentro del dropdown de cliente */
 .customer-dropdown-item:hover,
 .customer-dropdown-item.is-highlighted {
     background-color: rgba(255, 255, 255, 0.08) !important; 
 }
 
+/* Metadatos adicionales de cliente (RFC / Documento) */
 .customer-dropdown-meta {
     font-size: 11px !important;
     color: rgba(255, 255, 255, 0.5) !important; 
 }
 
+/* Vista en caso de no hallar registros del cliente */
 .customer-dropdown-empty {
     padding: 10px 12px !important;
     font-size: 13px !important;
@@ -684,47 +926,185 @@
     background-color: #1a1a1c !important;
 }
 
+
 /* ==========================================================================
-   Responsive: Tablet (≤ 900px)
+   SECCIÓN 10: SOPORTE PARA TEMA CLARO (LIGHT THEME OVERRIDES)
    ========================================================================== */
+
+/* Fondo, bordes y sombras en Tema Claro para el selector de búsqueda */
+[data-theme="light"] .table-invoice-items .searchable-select-dropdown {
+    background-color: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Color de texto en disparador e ítems del listado */
+[data-theme="light"] .table-invoice-items .searchable-select-trigger-text,
+[data-theme="light"] .table-invoice-items .searchable-select-item {
+    color: #18181b !important; 
+}
+
+/* Hover de las opciones en tema claro */
+[data-theme="light"] .table-invoice-items .searchable-select-item:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: #18181b !important;
+}
+
+/* Fondo de cabecera de búsqueda de selector */
+[data-theme="light"] .table-invoice-items .searchable-select-search-wrapper {
+    background-color: #f4f4f5 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Entrada de texto de la búsqueda en tema claro */
+[data-theme="light"] .table-invoice-items .searchable-select-search-input {
+    background-color: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: #18181b !important;
+}
+
+/* Estilo para sugerencia de texto de entrada */
+[data-theme="light"] .table-invoice-items .searchable-select-search-input::placeholder {
+    color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Icono buscador de lupa */
+[data-theme="light"] .table-invoice-items .searchable-select-search-icon {
+    color: #71717a !important;
+}
+
+/* Aviso de falta de coincidencias en tema claro */
+[data-theme="light"] .table-invoice-items .searchable-select-no-results {
+    color: #71717a !important;
+}
+
+/* ==========================================================================
+   SECCIÓN 12: INTEGRACIÓN DEL DROPDOWN CUSTOM EN "DETALLES DE PAGO"
+   Especificidad reforzada con .modal-body para ganar SIEMPRE sobre la
+   Sección 4, sin importar el orden en el archivo.
+   ========================================================================== */
+
+/* La tarjeta se ajusta EXACTAMENTE al contenido: nada de alto reservado */
+.modal-body .card-raised:has(> span.text-primary) {
+    display: flex !important;
+    align-items: center !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 10px 12px !important; /* mismo padding arriba y abajo, sin sobrante */
+}
+
+/* El label del título ya no reserva 45px: se ajusta a su propio texto */
+.modal-body .card-raised:has(> span.text-primary) > span.text-primary {
+    height: auto !important;
+    min-height: 0 !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+/* La fila de campos: alineada arriba, sin estirarse a un alto fantasma */
+.modal-body .card-raised:has(> span.text-primary) .grid.grid-3 {
+    display: flex !important;
+    align-items: flex-start !important;
+    height: auto !important;
+    flex: 1 !important;
+}
+
+.modal-body .card-raised:has(> span.text-primary) .grid.grid-3 .form-group {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important; /* antes flex-end: causaba el hueco */
+    height: auto !important;
+    gap: 4px !important;
+}
+
+/* Fecha al mismo alto que el Dropdown, sin alto mínimo inflado */
+.modal-body .card-raised:has(> span.text-primary) input.form-control[type="date"] {
+    height: 40px !important;
+    min-height: 0 !important;
+}
+
+/* El Dropdown no reserva más alto del necesario */
+.modal-body .card-raised:has(> span.text-primary) .custom-dropdown-trigger {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 40px !important;
+    min-height: 0 !important;
+    padding: 4px 10px !important;
+    font-size: 13px !important;
+}
+
+.modal-body .card-raised:has(> span.text-primary) .custom-dropdown-trigger:hover {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.modal-body .card-raised:has(> span.text-primary) .custom-dropdown-trigger.open {
+    border-color: var(--text-gold, #d4af37) !important;
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) !important;
+}
+
+.modal-body .card-raised:has(> span.text-primary) .custom-dropdown-menu {
+    z-index: 1000 !important;
+    margin-top: 4px !important;
+}
+
+.modal-body .card-raised:has(> span.text-primary) .custom-dropdown.disabled .custom-dropdown-trigger {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+@media (max-width: 768px) {
+  .modal-body .card-raised:has(> span.text-primary) .custom-dropdown-trigger {
+      height: 42px !important;
+  }
+}
+
+/* ==========================================================================
+   SECCIÓN 12: REGLAS DE DISEÑO RESPONSIVO (MEDIA QUERIES)
+   ========================================================================== */
+
+/* --- TABLETS (Menor o igual a 900px) --- */
 @media (max-width: 900px) {
+  /* Conversión del grid principal a distribución en bloque vertical */
   .modal-body {
     grid-template-columns: 1fr !important;
   }
 
+  /* Liberación del alto de la barra lateral de importes */
   .totals-sidebar.card-raised {
     height: auto !important;
     min-width: 0 !important;
   }
 }
 
-/* ==========================================================================
-   Responsive: Mobile (≤ 768px)
-   ========================================================================== */
+/* --- MÓVILES (Menor o igual a 768px) --- */
 @media (max-width: 768px) {
-  /* Limitamos la altura del modal para dejar un margen con la barra inferior del dispositivo */
+  /* Adaptación de tamaño total del modal */
   .modal.modal-lg {
     width: 96% !important;
-    height: 85vh !important; /* Altura controlada para evitar solapamientos */
+    height: 85vh !important; 
     max-height: 85vh !important;
     padding: 10px !important;
     padding-bottom: 24px !important; 
   }
 
+  /* Ajustes en los espaciados del cuerpo del modal */
   .modal-body {
     padding: 10px !important;
     gap: 16px !important;
     overflow-y: auto !important; 
-    /* Colchón de espacio inferior para que el "Resumen de Importes" no sea bloqueado por barras nativas del celular */
-    padding-bottom: 50px !important; 
+    padding-bottom: 50px !important; /* Margen inferior para salvaguardar de barras de interfaz del móvil */
   }
 
+  /* Flexibilización de la columna principal */
   .invoice-form-column {
     height: auto !important; 
     overflow: visible !important;
   }
 
-  /* --- Sección: Información de Cliente --- */
+  /* Conversión de sección de datos de cliente a un diseño vertical */
   .customer-section {
     grid-template-columns: 1fr !important;
     display: flex !important;
@@ -754,58 +1134,58 @@
   }
 
   .customer-inputs-row .input-group {
-        width: 100% !important;
-    }
+    width: 100% !important;
+  }
 
-    /* Badge de Descuento: se expande a ancho completo y se centra debajo del buscador */
-    .customer-preferred-badge {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        min-height: 38px !important;
-        padding: 8px 12px !important;
-        justify-content: center !important; /* Centra el texto del descuento */
-        align-self: stretch !important;
-        box-sizing: border-box !important;
-        white-space: normal !important;
-        text-align: center !important;
-        margin-top: 2px !important;
-    }
+  /* Reajuste de insignia de cliente preferencial */
+  .customer-preferred-badge {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    justify-content: center !important; 
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    text-align: center !important;
+    margin-top: 2px !important;
+  }
 
-    /* Metadatos seleccionados (Correo, Régimen, IVA): permite envoltura multilínea sin cortes */
-    .customer-selected-info {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important; /* Envuelve los textos si no caben en una sola línea */
-        gap: 6px 14px !important;  /* 6px de espacio vertical, 14px de separación horizontal */
-        font-size: 11px !important;
-        color: var(--text-secondary) !important;
-        margin-top: 8px !important;
-        white-space: normal !important; /* Cancela el bloqueo de salto de línea */
-        overflow: visible !important;
-        text-overflow: clip !important;
-        width: 100% !important;
-    }
+  /* Flexibilización multilínea de metadatos de cliente */
+  .customer-selected-info {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important; 
+    gap: 6px 14px !important;  
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    margin-top: 8px !important;
+    white-space: normal !important; 
+    overflow: visible !important;
+    text-overflow: clip !important;
+    width: 100% !important;
+  }
 
-    .customer-selected-info span {
-        white-space: normal !important; /* Permite saltos de palabra */
-        display: inline-block !important;
-    }
+  .customer-selected-info span {
+    white-space: normal !important; 
+    display: inline-block !important;
+  }
 
-    /* Bloque del botón "Nuevo Cliente" */
-    .customer-button-block {
-        width: 100% !important;
-        height: auto !important;
-        margin-top: 6px !important;
-        display: flex !important;
-        justify-content: flex-start !important; /* Alinea el botón a la izquierda */
-    }
+  /* Alineación del bloque de nuevo cliente */
+  .customer-button-block {
+    width: 100% !important;
+    height: auto !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    justify-content: flex-start !important; 
+  }
 
-    .btn-new-customer {
-        padding: 6px 0 !important; /* Ajuste limpio alineado al borde del contenedor */
-    } 
+  .btn-new-customer {
+    padding: 6px 0 !important; 
+  } 
 
-  /* --- Sección: Detalles de Pago y Fechas (Soluciona el colapso vertical) --- */
+  /* Sección de detalles de pago a flujo vertical */
   .card-raised:has(> span.text-primary) {
     display: flex !important;
     flex-direction: column !important;
@@ -828,7 +1208,7 @@
     width: 100% !important;
   }
 
-  /* --- Sección: Observaciones --- */
+  /* Adaptación de caja de texto de observaciones */
   .card-raised:has(textarea) {
     display: flex !important;
     flex-direction: column !important;
@@ -847,7 +1227,7 @@
     max-height: 70px !important;
   }
 
-  /* --- Sección: Líneas de Detalle con Scroll Horizontal Seguro --- */
+  /* Sección de listado de ítems adaptable */
   .card-raised.items-card-section {
     height: auto !important;
     min-height: auto !important;
@@ -856,24 +1236,24 @@
     overflow: visible !important;
   }
 
-  /* Reactivamos la tabla nativa con scroll horizontal seguro */
+  /* Activación del contenedor con desplazamiento horizontal */
   .table-responsive-wrapper {
     border: 1px solid var(--border) !important;
     background: var(--surface-raised) !important;
-    overflow-x: auto !important; /* Habilita scroll horizontal */
+    overflow-x: auto !important; 
     overflow-y: hidden !important;
     width: 100% !important;
   }
 
-  /* Forzamos un ancho mínimo para que las columnas mantengan su legibilidad e inputs adecuados */
+  /* Ancho mínimo para mantener legibilidad de las columnas de la tabla */
   .table-invoice-items {
     display: table !important;
-    min-width: 1050px !important; /* Anchura segura para evitar compresión */
+    min-width: 1050px !important; 
     width: 100% !important;
   }
 
   .table-invoice-items thead {
-    display: table-header-group !important; /* Asegura cabeceras correctas siempre */
+    display: table-header-group !important; 
   }
 
   .table-invoice-items tr {
@@ -886,124 +1266,101 @@
     padding: 8px 6px !important;
   }
 
-  /* No usamos ::before en esta aproximación para no duplicar etiquetas, ya que thead es visible */
   .table-invoice-items td::before {
     display: none !important; 
   }
 
-  /* Inputs de la tabla con tamaño cómodo para interactuar en pantallas táctiles */
+  /* Tamaño cómodo para inputs de la tabla en pantallas táctiles */
   .table-invoice-items select.form-select,
   .table-invoice-items input.form-control {
     height: 38px !important;
     font-size: 13px !important;
   }
 
-  /* --- Sección: Resumen de Importes --- */
+  /* Reajuste integral del bloque sidebar de totales para pantallas pequeñas */
   .totals-sidebar.card-raised {
     display: flex !important;
     flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    grid-template-columns: none !important;
     height: auto !important;
-    min-height: auto !important;
-    flex: none !important;
-    margin-top: 10px !important;
-    margin-bottom: 8px !important;
+    min-height: 280px !important; 
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    margin-top: 16px !important;
+    margin-bottom: 40px !important; 
     padding: 16px !important;
   }
 
-    .totals-sidebar.card-raised {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        justify-content: flex-start !important;
-        
-        /* Cancela layouts de rejilla y alturas colapsadas */
-        grid-template-columns: none !important;
-        height: auto !important;
-        min-height: 280px !important; /* Altura mínima suficiente para ver importes y botón */
-        max-height: none !important;
-        
-        /* Elimina el desbordamiento o scroll interno dentro de la tarjeta */
-        overflow: visible !important;
-        overflow-y: visible !important;
-        
-        /* Ajustes de espaciado */
-        margin-top: 16px !important;
-        margin-bottom: 40px !important; /* Espacio seguro para evitar la barra inferior del móvil */
-        padding: 16px !important;
-    }
+  /* Asegura visualización de desgloses */
+  .totals-sidebar.card-raised > div,
+  .totals-sidebar.card-raised .d-flex.flex-column {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important; 
+    height: auto !important;
+    min-height: auto !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 
-    /* Asegura que el contenedor de los ítems de importes (Subtotal, IVA, Total) se despliegue */
-    .totals-sidebar.card-raised > div,
-    .totals-sidebar.card-raised .d-flex.flex-column {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important; /* Espaciado interno entre filas de dinero */
-        height: auto !important;
-        min-height: auto !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
+  /* Formato en fila estructurada de totales */
+  .totals-sidebar.card-raised .d-flex.justify-content-between {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: auto !important;
+    padding: 4px 0 !important;
+  }
 
-    /* Asegura que las filas del desglose de dinero mantengan su estructura de extremo a extremo */
-    .totals-sidebar.card-raised .d-flex.justify-content-between {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        height: auto !important;
-        padding: 4px 0 !important;
-    }
+  /* Separaciones y alineación central de botones del desglose */
+  .totals-sidebar .btn-primary {
+    margin-top: 45px !important;    
+    margin-bottom: 6px !important; 
+    margin-left: auto !important;  
+    margin-right: auto !important; 
+  }
 
-     /* Agrega márgenes estratégicos al botón amarillo de emisión */
-    .totals-sidebar .btn-primary {
-        margin-top: 12px !important;    /* Lo separa del texto "Total Factura" */
-        margin-bottom: 6px !important; /* Lo separa del botón "Guardar Borrador" */
-        margin-left: auto !important;  /* Lo separa del borde derecho */
-        margin-right: auto !important; /* Lo separa del borde izquierdo */
-        margin-top: 45px !important;
-    }
-    .totals-sidebar .btn-outline {
-        padding: 10px 24px;
-        margin-left: auto !important;  /* Lo separa del borde derecho */
-        margin-right: auto !important; /* Lo separa del borde izquierdo */   
-    }
+  .totals-sidebar .btn-outline {
+    padding: 10px 24px;
+    margin-left: auto !important;  
+    margin-right: auto !important;    
+  }
 
-    /* Identifica el grupo que contiene el selector y previene que los elementos compitan por espacio horizontal */
-    .nested-modal-body .form-group:has(select) {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: stretch !important;
-        gap: 4px !important;
-    }
+  /* Apilado vertical de selects y checkboxes en modales anidados */
+  .nested-modal-body .form-group:has(select) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+  }
 
-    /* Fuerza a que el select y el checkbox se apilen verticalmente */
-    .nested-modal-body .form-group:has(select) > div,
-    .nested-modal-body .form-group:has(select) .d-flex {
-        display: flex !important;
-        flex-direction: column !important; /* Apilado vertical seguro */
-        align-items: flex-start !important;
-        gap: 6px !important;
-        width: 100% !important;
-    }
+  .nested-modal-body .form-group:has(select) > div,
+  .nested-modal-body .form-group:has(select) .d-flex {
+    display: flex !important;
+    flex-direction: column !important; 
+    align-items: flex-start !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
 
-    /* El select ahora toma todo el ancho disponible para que no se corte el texto del Régimen */
-    .nested-modal-body .form-group:has(select) select {
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
+  .nested-modal-body .form-group:has(select) select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 
-    /* Espaciado del checkbox de IVA para que no quede pegado al select superior */
-    .nested-modal-body .form-group:has(select) label.d-flex.align-items-center {
-        margin-top: 2px !important;
-        height: auto !important;
-    }
-
+  .nested-modal-body .form-group:has(select) label.d-flex.align-items-center {
+    margin-top: 2px !important;
+    height: auto !important;
+  }
 }
 
-/* ==========================================================================
-   Responsive: Small Mobile (≤ 480px)
-   ========================================================================== */
+/* --- MÓVILES PEQUEÑOS (Menor o igual a 480px) --- */
 @media (max-width: 480px) {
+  /* Maximización del espacio del modal */
   .modal.modal-lg {
     width: 100% !important;
     height: 100vh !important;
@@ -1012,9 +1369,9 @@
     padding: 6px !important;
   }
 
+  /* Espacio de seguridad incrementado al final */
   .modal-body {
-    padding-bottom: 70px !important; /* Incrementamos espacio seguro en dispositivos muy pequeños */
-    
+    padding-bottom: 70px !important; 
   }
 
   .modal-header {
@@ -1027,6 +1384,7 @@
 
   .invoice-form-column {
     gap: 8px !important;
+    overflow: visible;
   }
 
   .card-raised {

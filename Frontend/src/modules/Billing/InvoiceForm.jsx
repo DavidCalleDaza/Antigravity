@@ -12,6 +12,7 @@ import "../../../css/pages/InvoiceModal.css";
 import { usePaymentMeans } from '../../hooks/usePaymentMeans';
 import CustomerModal from './CustomerModal'; 
 import SearchableSelect from '../../components/common/SearchableSelect';
+import Dropdown from '../../components/ui/Dropdown';
 
 const ITEM_UNITS = ["UND", "KG", "LT", "MT", "HR", "SRV", "MES", "CJA", "PAR", "ROL"];
 const UNIT_LABELS = {
@@ -96,8 +97,8 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
 
   const [customerId, setCustomerId]       = useState('');
   const [dueDate, setDueDate]             = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('Contado');
-  const [paymentMeans, setPaymentMeans]   = useState('10');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMeans, setPaymentMeans]   = useState('');
   const { options: validPaymentMeans, loading: loadingPaymentMeans } = usePaymentMeans(paymentMethod);
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
@@ -152,16 +153,16 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
         const defaultDue = new Date();
         defaultDue.setDate(defaultDue.getDate() + 30);
         setDueDate(defaultDue.toISOString().split('T')[0]);
-        setPaymentMethod('Contado');
-        setPaymentMeans('10');
+        setPaymentMethod('');
+        setPaymentMeans('');
         setNotes('');
         setItems([{ ...EMPTY_ITEM }]);
         return;
       }
       setCustomerId(invoiceToEdit.customer_id || '');
       setDueDate(invoiceToEdit.due_date ? invoiceToEdit.due_date.split('T')[0] : '');
-      setPaymentMethod(invoiceToEdit.payment_method || 'Contado');
-      setPaymentMeans(invoiceToEdit.payment_means || '10');
+      setPaymentMethod(invoiceToEdit.payment_method || '');
+      setPaymentMeans(invoiceToEdit.payment_means || '');
       setNotes(invoiceToEdit.notes || '');
       let rawItems =
         invoiceToEdit.items || invoiceToEdit.invoice_items ||
@@ -178,8 +179,8 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
           if (fullInvoice) {
             setCustomerId(fullInvoice.customer_id || '');
             setDueDate(fullInvoice.due_date ? fullInvoice.due_date.split('T')[0] : '');
-            setPaymentMethod(fullInvoice.payment_method || 'Contado');
-            setPaymentMeans(fullInvoice.payment_means || '10');
+            setPaymentMethod(fullInvoice.payment_method || '');
+            setPaymentMeans(fullInvoice.payment_means || '');
             setNotes(fullInvoice.notes || '');
             rawItems =
               fullInvoice.items || fullInvoice.invoice_items ||
@@ -231,7 +232,7 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
   useEffect(() => {
     if (!paymentMeans || loadingPaymentMeans) return;
     const stillValid = validPaymentMeans.some(opt => opt.value === paymentMeans);
-    if (!stillValid) setPaymentMeans(validPaymentMeans[0]?.value || '');
+    if (!stillValid) setPaymentMeans('');
   }, [validPaymentMeans, loadingPaymentMeans]);
 
   const filteredCustomers = useMemo(() => {
@@ -686,25 +687,37 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
             {/* 2. PAGO Y FECHAS */}
             <div className="card-raised d-flex flex-column gap-2">
               <span className="font-bold text-sm text-primary">Detalles de Pago y Fechas</span>
-              <div className="grid grid-3 gap-0">
+              <div className="grid grid-3 gap-0 payment-fields-grid">
                 <div className="form-group">
                   <label className="form-label g-0">Método de Pago</label>
-                  <select className="form-select" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-                    <option value="">Seleccionar...</option>
-                    <option value="Contado">Contado</option>
-                    <option value="Crédito">Crédito</option>
-                    <option value="Transferencia">Transferencia</option>
-                  </select>
+                  <Dropdown
+                    options={[
+                      { value: 'Contado', label: 'Contado' },
+                      { value: 'Crédito', label: 'Crédito' },
+                      { value: 'Transferencia', label: 'Transferencia' },
+                    ]}
+                    value={paymentMethod}
+                    onChange={(val) => {
+                      setPaymentMethod(val);
+                      setPaymentMeans('');
+                    }}
+                    placeholder="Seleccionar..."
+                  />
                 </div>
+
                 <div className="form-group">
                   <label className="form-label mb-1">Medio de Pago</label>
-                  <select className="form-select" value={paymentMeans} onChange={(e) => setPaymentMeans(e.target.value)}
-                    disabled={!paymentMethod || loadingPaymentMeans}
-                    title={!paymentMethod ? 'Selecciona primero el Método de Pago' : ''}>
-                    <option value="">Seleccionar...</option>
-                    {validPaymentMeans.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                  </select>
+                  <div title={!paymentMethod ? 'Selecciona primero el Método de Pago' : ''}>
+                    <Dropdown
+                      options={validPaymentMeans}
+                      value={paymentMeans}
+                      onChange={(val) => setPaymentMeans(val)}   // ✅ correcto
+                      placeholder="Seleccionar..."
+                      disabled={!paymentMethod || loadingPaymentMeans}
+                    />
+                  </div>
                 </div>
+
                 <div className="form-group">
                   <label className="form-label mb-1">Vencimiento</label>
                   <input type="date" className="form-control" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
@@ -766,6 +779,15 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                                   disabled={productLocked}
                                   clearable
                                   size="compact"
+                                  renderOption={(p, { isSelected, select }) => (
+                                    <button
+                                      type="button"
+                                      className={`searchable-select-item ${isSelected ? 'searchable-select-item--selected' : ''}`}
+                                      onClick={select}
+                                    >
+                                      <span className="searchable-select-item-name">{p.name}</span>
+                                    </button>
+                                  )}
                                 />
                               </div>
                               <button type="button" className="btn btn-ghost btn-sm btn-icon-only text-primary"
@@ -793,6 +815,15 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
                                   disabled={serviceLocked}
                                   clearable
                                   size="compact"
+                                  renderOption={(s, { isSelected, select }) => (
+                                    <button
+                                      type="button"
+                                      className={`searchable-select-item ${isSelected ? 'searchable-select-item--selected' : ''}`}
+                                      onClick={select}
+                                    >
+                                      <span className="searchable-select-item-name">{s.name}</span>
+                                    </button>
+                                  )}
                                 />
                               </div>
                               <button type="button" className="btn btn-ghost btn-sm btn-icon-only text-primary"

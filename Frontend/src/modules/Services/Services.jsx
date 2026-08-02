@@ -59,7 +59,7 @@ export default function Services() {
     category_id: '',
     price: 0,
     duration: '',
-    status: 'active',
+    status: '',
     description: '',
     store_location_id: '',
   });
@@ -83,6 +83,11 @@ export default function Services() {
   const categoryOptions = [
     { value: '', label: 'Todas las categorías' },
     ...dbCategories.map(c => ({ value: c.id, label: c.name })),
+  ];
+
+  const serviceStatusOptions = [
+    { value: 'active', label: 'Activo' },
+    { value: 'inactive', label: 'Inactivo' },
   ];
 
   const statusOptions = [
@@ -162,6 +167,14 @@ export default function Services() {
 
   const handleSaveService = async (e) => {
     e.preventDefault();
+    if (!formData.status) {
+      toast.error('Debes seleccionar un estado.');
+      return;
+    }
+    if (!formData.category_id) {
+      toast.error('Debes seleccionar una categoría.');
+      return;
+    }
     try {
       const payload = {
         name: formData.name,
@@ -266,7 +279,7 @@ export default function Services() {
       category_id: '',
       price: 0,
       duration: '',
-      status: 'active',
+      status: '',
       description: '',
       store_location_id: '',
     });
@@ -344,7 +357,7 @@ export default function Services() {
   );
 
   return (
-    <div className="page-content">
+    <div className="page-content services-page">
       <div className="page-header">
         <div>
           <h2 className="page-title">Servicios</h2>
@@ -352,7 +365,7 @@ export default function Services() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: '', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Servicio
             </button>
@@ -360,8 +373,8 @@ export default function Services() {
         </div>
       </div>
 
-      <div className="products-toolbar">
-        <div className="products-filters">
+      <div className="services-toolbar">
+        <div className="services-filters">
           {isClient && (
             <select
               className="form-select"
@@ -412,7 +425,7 @@ export default function Services() {
           <button className="btn btn-primary" onClick={loadServices}>Reintentar</button>
         </div>
       ) : view === 'grid' ? (
-        <div className="product-grid">
+        <div className="service-grid">
           {filteredServices.map(s => {
             return (
               <MediaCard
@@ -446,7 +459,7 @@ export default function Services() {
         position="right"
         title={editingService ? 'Editar Servicio' : 'Nuevo Servicio'}
       >
-        <form className="d-flex flex-col gap-5" onSubmit={handleSaveService}>
+        <form className="services-form d-flex flex-col gap-5" onSubmit={handleSaveService}>
           <MediaUploader
             preview={preview || Helpers.resolveMediaUrl(editingService?.image_url)}
             uploading={uploading}
@@ -464,6 +477,7 @@ export default function Services() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              placeholder='Nombre del servicio'
             />
           </div>
 
@@ -483,7 +497,9 @@ export default function Services() {
               <input
                 type="number"
                 className="form-input"
-                value={formData.price}
+                placeholder="0"
+                value={formData.price === 0 ? '' : formData.price}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                 min="0"
               />
@@ -503,14 +519,12 @@ export default function Services() {
             </div>
             <div className="form-group">
               <label className="form-label">Estado</label>
-              <select
-                className="form-select"
+              <Dropdown
+                options={serviceStatusOptions}
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
-              </select>
+                onChange={(val) => setFormData({ ...formData, status: val })}
+                placeholder="Seleccionar estado"
+              />
             </div>
           </div>
 
@@ -522,6 +536,7 @@ export default function Services() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows="3"
               style={{ resize: 'vertical' }}
+              placeholder='Descripción del servicio'
             />
           </div>
 
@@ -579,7 +594,7 @@ export default function Services() {
             <button type="submit" className="btn btn-primary">
               {editingService
                 ? Object.values(shareOnSave).some(Boolean) ? 'Guardar y publicar' : 'Guardar'
-                : Object.values(shareOnSave).some(Boolean) ? 'Crear y publicar' : 'Crear'}
+                : Object.values(shareOnSave).some(Boolean) ? 'Crear y publicar' : 'Crear Servicio'}
             </button>
           </div>
         </form>
@@ -622,56 +637,6 @@ export default function Services() {
             <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este servicio volverá a estar disponible.</>
           )}
         </ConfirmModal>
-
-      <style>{`
-        .loading-state, .error-state {
-          text-align: center;
-          padding: var(--space-12);
-          color: var(--text-secondary);
-        }
-        .error-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-4);
-        }
-        .error-state-icon {
-          font-size: var(--text-4xl);
-        }
-        .error-state-title {
-          font-size: var(--text-xl);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-        }
-        .error-state-text {
-          max-width: 400px;
-          color: var(--text-secondary);
-        }
-
-        .share-on-save {
-          border-top: 1px solid var(--neutral-700);
-          padding-top: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-networks-inline {
-          display: flex;
-          gap: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          cursor: pointer;
-          font-size: var(--text-sm);
-        }
-
-        .share-checkbox-label input {
-          accent-color: var(--purple);
-        }
-      `}</style>
     </div>
   );
 }

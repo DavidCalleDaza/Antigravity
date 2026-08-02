@@ -2,7 +2,7 @@
 Servinow API — Billing Module: Invoice Email Service.
 
 Envía la factura electrónica al correo del cliente, adjuntando el PDF
-generado por pdf_service.py (reutilizado, sin duplicar lógica de render).
+generado por exports/invoice_pdf.py (reutilizado, sin duplicar lógica de render).
 
 No transmite nada a la DIAN — es un envío informativo independiente.
 """
@@ -19,7 +19,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.core.config import settings
 from app.modules.billing.models import Invoice
-from app.modules.billing.pdf_service import (
+from app.modules.exports.invoice_pdf import (
     render_invoice_pdf_bytes,
     InvoicePDFDataError,
 )
@@ -160,11 +160,16 @@ def _send_via_smtp(message: MIMEMultipart, to_email: str) -> None:
         raise SmtpSendError("tiempo de espera agotado o error de red.") from net_err
 
 
-def send_invoice_email(invoice: Invoice) -> dict:
+def send_invoice_email(invoice: Invoice, verify_base_url: str = None) -> dict:
     """
     Orquesta el envío completo de la factura por correo:
     valida cliente/email -> genera PDF (reutilizando pdf_service) ->
     renderiza plantilla -> construye mensaje -> envía por SMTP.
+
+    `verify_base_url` permite propagar el host/puerto real desde el que se
+    hizo la solicitud (igual que en /download), para que el QR del PDF
+    adjunto apunte al mismo lugar sin importar el puerto en el que corra
+    el frontend/backend en ese momento.
 
     Lanza subclases de InvoiceEmailError en cada punto de fallo, para que
     el router las traduzca a respuestas HTTP claras y específicas.
@@ -182,7 +187,7 @@ def send_invoice_email(invoice: Invoice) -> dict:
     # Reutiliza el servicio de PDF existente — misma fuente que /download,
     # así el adjunto siempre refleja el estado actual de la factura.
     try:
-        pdf_bytes = render_invoice_pdf_bytes(invoice)
+        pdf_bytes = render_invoice_pdf_bytes(invoice, verify_base_url=verify_base_url)
     except InvoicePDFDataError:
         raise  # el router ya sabe traducir esto a 422
     except Exception as pdf_err:

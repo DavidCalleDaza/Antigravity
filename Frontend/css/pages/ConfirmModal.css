@@ -1,0 +1,129 @@
+/* ==========================================================================
+   SERVINOW — ConfirmModal (Alerta de confirmación estándar para toda la app)
+   ========================================================================== */
+
+.standard-confirm-modal {
+  width: 100%;
+  max-width: 390px;
+  background: var(--glass-bg, #131318);
+  backdrop-filter: var(--glass-blur, blur(16px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(16px));
+  border: var(--glass-border, 1px solid rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-2xl, 16px);
+  box-shadow: var(--shadow-2xl, 0 20px 40px rgba(0, 0, 0, 0.5));
+  padding: var(--space-3, 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3, 12px);
+}
+
+.standard-confirm-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full, 50%);
+  margin: 0 auto var(--space-2, 8px);
+}
+
+.standard-confirm-icon.is-danger {
+  background: rgba(240, 68, 56, 0.15);
+  color: var(--danger, #f04438);
+}
+
+.standard-confirm-icon.is-success {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold, #d4af37);
+}
+
+.standard-confirm-modal h3 {
+  margin: 0;
+  font-size: var(--text-xl, 1.25rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--text-primary, #ffffff);
+}
+
+.standard-confirm-modal p {
+  margin: 0;
+  font-size: var(--text-sm, 0.875rem);
+  line-height: 1.5;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.standard-confirm-modal p strong {
+  color: var(--text-primary, #ffffff);
+  font-weight: var(--font-semibold, 600);
+}
+
+.standard-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-3, 12px);
+  width: 100%;
+}
+
+.standard-confirm-actions .btn {
+  min-width: 110px;
+  height: 42px;
+  border-radius: var(--radius-lg, 10px);
+  font-weight: var(--font-semibold, 600);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.standard-confirm-actions .btn-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary, #ffffff);
+}
+
+.standard-confirm-actions .btn-outline:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.standard-confirm-actions .btn-danger {
+  background: var(--danger, #f04438);
+  border: none;
+  color: #ffffff;
+}
+
+.standard-confirm-actions .btn-danger:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.standard-confirm-actions .btn-primary {
+  background: var(--gold, #d4af37);
+  border: none;
+  color: #131318;
+}
+
+.standard-confirm-actions .btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.standard-confirm-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-theme="light"] .standard-confirm-modal {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .standard-confirm-modal h3 {
+  color: #18181b;
+}
+
+[data-theme="light"] .standard-confirm-modal p {
+  color: #52525b;
+}
+
+[data-theme="light"] .standard-confirm-actions .btn-outline {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #18181b;
+}

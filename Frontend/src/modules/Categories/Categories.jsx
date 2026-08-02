@@ -617,6 +617,7 @@ export default function Categories() {
         title={toggleTarget?.status === 'active' ? '¿Desactivar esta categoría?' : '¿Reactivar esta categoría?'}
         confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
         isDanger={toggleTarget?.status === 'active'}
+        icon={Power}
         loading={toggling}
       >
         {toggleTarget?.status === 'active' ? (

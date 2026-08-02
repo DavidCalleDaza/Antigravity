@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as LucideIcons from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../ui/Toast';
 import ServinowLogo from '../ui/ServinowLogo';
 import Helpers from '../../utils/helpers';
-import Modal from '../ui/Modal';
+import ConfirmModal from '../ui/ConfirmModal';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -147,18 +148,17 @@ export default function Sidebar({ isOpen, closeMobile }) {
         id="sidebar-overlay"
         onClick={closeMobile}
       ></div>
-      <Modal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        title="Cerrar sesión"
-        size="sm"
-        actions={[
-          { label: 'Cancelar', onClick: () => setIsLogoutModalOpen(false) },
-          { label: 'Cerrar sesión', className: 'btn-danger', onClick: handleLogout }
-        ]}
-      >
-        <div style={{ color: 'var(--text-secondary)', width: '100%', padding: '10px 0' }}>¿Estás seguro de que deseas cerrar sesión?</div>
-      </Modal>
+        <ConfirmModal
+            isOpen={isLogoutModalOpen}
+            onClose={() => setIsLogoutModalOpen(false)}
+            onConfirm={handleLogout}
+            title="¿Cerrar sesión?"
+            confirmText="Sí, cerrar sesión"
+            isDanger={true}
+            icon={LogOut}
+        >
+          ¿Estás seguro de que deseas cerrar sesión?
+      </ConfirmModal>
     </>
   );
 }

@@ -327,12 +327,12 @@ export default function Customers() {
         title={toggleTarget?.is_active ? '¿Desactivar este cliente?' : '¿Reactivar este cliente?'}
         confirmText={toggleTarget?.is_active ? 'Sí, Desactivar' : 'Sí, Reactivar'}
         isDanger={toggleTarget?.is_active}
+        icon={Power}
         loading={toggling}
       >
         {toggleTarget?.is_active ? (
           <>
-            <strong>{toggleTarget?.business_name}</strong> dejará de aparecer al buscar clientes para nuevas
-            facturas, pero sus facturas existentes no se ven afectadas.
+            <strong>{toggleTarget?.business_name}</strong> ya no estará disponible para nuevas facturas. Su historial de facturación se conservará.
           </>
         ) : (
           <>

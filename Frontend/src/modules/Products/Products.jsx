@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart, Power, Calendar } from 'lucide-react';
+import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart, Power, Calendar, Trash2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
-import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
@@ -45,6 +44,7 @@ export default function Products() {
   // Estados de Main (Borrado duro)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Estados de Test (Alternancia de estado activo/inactivo)
   const [toggleTarget, setToggleTarget] = useState(null);
@@ -217,15 +217,17 @@ export default function Products() {
   };
 
   const handleDelete = async () => {
+    setDeleting(true);
     try {
       await productClient.delete(deletingId);
       setProducts(products.filter(p => p.id !== deletingId));
       toast.success('Producto eliminado.');
+      setIsConfirmOpen(false);
+      setDeletingId(null);
     } catch (err) {
       toast.error('Error al eliminar');
     } finally {
-      setIsConfirmOpen(false);
-      setDeletingId(null);
+      setDeleting(false);
     }
   };
 
@@ -584,18 +586,21 @@ export default function Products() {
         </form>
       </Drawer>
 
-      <Modal
+      <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
-        title="Eliminar Producto"
-        size="sm"
-        actions={[
-          { label: 'Cancelar', onClick: () => setIsConfirmOpen(false) },
-          { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
-        ]}
+        onConfirm={handleDelete}
+        title="¿Eliminar este producto?"
+        confirmText="Sí, Eliminar"
+        isDanger={true}
+        icon={Trash2}
+        loading={deleting}
       >
-        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este producto permanentemente? Esta acción no se puede deshacer.</div>
-      </Modal>
+        <div style={{ gridColumn: '1 / -1' }}>
+          ¿Estás seguro de que deseas eliminar este producto permanentemente? Esta acción no se puede deshacer.
+        </div>
+      </ConfirmModal>
+
 
       <ConfirmModal
         isOpen={!!toggleTarget}
@@ -604,6 +609,7 @@ export default function Products() {
         title={toggleTarget?.status === 'active' ? '¿Desactivar este producto?' : '¿Reactivar este producto?'}
         confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
         isDanger={toggleTarget?.status === 'active'}
+        icon={Power}
         loading={toggling}
       >
         {toggleTarget?.status === 'active' ? (

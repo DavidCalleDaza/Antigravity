@@ -58,10 +58,9 @@ from app.modules.billing.schemas import (
     CategoryDistributionItem,
     RevenueByLineItem
 )
-from app.modules.billing.pdf_service import (
+from app.modules.exports.invoice_pdf import (
     generate_invoice_pdf,
     render_invoice_pdf_bytes,
-    InvoicePDFDataError,
 )
 
 from app.modules.billing.invoice_email_service import (
@@ -385,10 +384,10 @@ async def submit_invoice_to_dian_endpoint(
     """Submit a generated invoice to DIAN (or run simulated flow in dev)."""
     return await submit_invoice_to_dian(db, invoice_id)
 
-
 @router.post("/invoices/{invoice_id}/send-email", response_model=InvoiceEmailSendResponse)
 async def send_invoice_email_endpoint(
     invoice_id: uuid.UUID,
+    request: Request,  # <-- Inyectamos la petición aquí también
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> InvoiceEmailSendResponse:
@@ -401,8 +400,13 @@ async def send_invoice_email_endpoint(
     if not invoice:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada.")
 
+    # Mismo cálculo que /download, para que el QR del PDF adjunto apunte
+    # al mismo origen/puerto desde el que se hizo la solicitud.
+    origin = request.headers.get("origin")
+    verify_base_url = f"{origin}/verify" if origin else None
+
     try:
-        result = await run_in_threadpool(send_invoice_email, invoice)
+        result = await run_in_threadpool(send_invoice_email, invoice, verify_base_url)
         return InvoiceEmailSendResponse(**result)
     except CustomerEmailMissingError as err:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))

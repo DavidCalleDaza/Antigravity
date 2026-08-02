@@ -11,6 +11,7 @@ export default function ConfirmModal({
   cancelText = "Cancelar", 
   isDanger = false,
   loading = false,
+  icon: Icon = AlertTriangle,   // 👈 nuevo: ícono personalizable, con AlertTriangle por defecto
   children 
 }) {
   if (!isOpen) return null;
@@ -19,7 +20,7 @@ export default function ConfirmModal({
     <div 
       className="modal-overlay active" 
       onClick={(e) => {
-        e.stopPropagation(); //  👈 Stops the click from spreading so it doesn't close the back detail
+        e.stopPropagation();
         if (!loading) onClose();
       }} 
       style={{ zIndex: 11000 }}
@@ -27,7 +28,7 @@ export default function ConfirmModal({
       <div className="standard-confirm-modal" onClick={e => e.stopPropagation()}>
         
         <div className={`standard-confirm-icon ${isDanger ? 'is-danger' : 'is-success'}`}>
-          <AlertTriangle width="22" height="22" />
+          <Icon width="18" height="18" />
         </div>
 
         <h3>{title}</h3>
@@ -39,7 +40,7 @@ export default function ConfirmModal({
             type="button"
             className="btn btn-outline"
             onClick={(e) => {
-              e.stopPropagation(); //  Prevents accidental spread on buttons
+              e.stopPropagation();
               onClose();
             }}
             disabled={loading}
@@ -50,7 +51,7 @@ export default function ConfirmModal({
             type="button"
             className={`btn ${isDanger ? 'btn-danger' : 'btn-primary'}`}
             onClick={(e) => {
-              e.stopPropagation(); //  Prevents accidental spread on buttons
+              e.stopPropagation();
               onConfirm();
             }}
             disabled={loading}

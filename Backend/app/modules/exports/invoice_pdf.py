@@ -41,6 +41,12 @@ from reportlab.lib.units import inch
 from app.core.config import settings
 from app.modules.billing.models import Invoice
 
+# Logo por defecto empaquetado junto al módulo de exportaciones.
+# Se resuelve de forma relativa al archivo para que funcione sin importar
+# el directorio de trabajo desde el que se ejecute el proceso.
+_EXPORTS_MODULE_DIR = os.path.dirname(os.path.abspath(__file__))  # .../exports
+_DEFAULT_LOGO_PATH = os.path.join(_EXPORTS_MODULE_DIR, "assets", "logo.png")
+
 
 class InvoicePDFDataError(ValueError):
     """
@@ -100,12 +106,16 @@ def _generate_qr_code_image(data: str) -> BytesIO:
 
 def _load_company_logo_flowable():
     """
-    Carga el logotipo de la empresa desde `settings.COMPANY_LOGO_PATH` si
-    está configurado y el archivo existe. Si no hay logo disponible, retorna
-    None y el encabezado se renderiza solo con el nombre/razón social (no
-    debe romper la generación del PDF).
+    Carga el logotipo de la empresa. Prioridad:
+    1. `settings.COMPANY_LOGO_PATH`, si está configurado y el archivo existe
+       (permite personalizar el logo por entorno/tenant sin tocar código).
+    2. El logo por defecto empaquetado en `exports/assets/logo.png`.
+    Si ninguno existe, retorna None y el encabezado se renderiza solo con
+    el nombre/razón social (no debe romper la generación del PDF).
     """
-    logo_path = getattr(settings, "COMPANY_LOGO_PATH", None)
+    configured_path = getattr(settings, "COMPANY_LOGO_PATH", None)
+    logo_path = configured_path if (configured_path and os.path.isfile(configured_path)) else _DEFAULT_LOGO_PATH
+
     if not logo_path or not os.path.isfile(logo_path):
         return None
     try:

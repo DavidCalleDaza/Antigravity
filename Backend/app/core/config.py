@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     # --- Security / JWT ---
     SECRET_KEY: str = "change-me-to-a-very-long-random-string-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480 # -- Duración en minutos de la sesión, por defecto 480 minutos = 8 horas
     FIELD_ENCRYPTION_KEY: str = ""
 
     @field_validator("FIELD_ENCRYPTION_KEY", mode="after")

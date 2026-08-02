@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon, Power, Calendar } from 'lucide-react';
+import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon, Power, Calendar, Trash2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
-import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
@@ -43,6 +42,7 @@ export default function Services() {
   // Estados de Main (Borrado duro y filtros)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [dbCategories, setDbCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -225,15 +225,17 @@ export default function Services() {
   };
 
   const handleDelete = async () => {
+    setDeleting(true);
     try {
       await serviceClient.delete(deletingId);
       setServices(services.filter(s => s.id !== deletingId));
       toast.success('Servicio eliminado.');
+      setIsConfirmOpen(false);
+      setDeletingId(null);
     } catch (err) {
       toast.error('Error al eliminar');
     } finally {
-      setIsConfirmOpen(false);
-      setDeletingId(null);
+      setDeleting(false);
     }
   };
 
@@ -583,18 +585,18 @@ export default function Services() {
         </form>
       </Drawer>
 
-      <Modal
+      <ConfirmModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
-        title="Eliminar Servicio"
-        size="sm"
-        actions={[
-          { label: 'Cancelar', onClick: () => setIsConfirmOpen(false) },
-          { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
-        ]}
+        onConfirm={handleDelete}
+        title="¿Eliminar este servicio?"
+        confirmText="Sí, Eliminar"
+        isDanger={true}
+        icon={Trash2}
+        loading={deleting}
       >
-        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este servicio?</div>
-      </Modal>
+        ¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.
+      </ConfirmModal>
 
       <ShareModal
         isOpen={shareModal.isOpen}
@@ -611,6 +613,7 @@ export default function Services() {
           title={toggleTarget?.status === 'active' ? '¿Desactivar este servicio?' : '¿Reactivar este servicio?'}
           confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
           isDanger={toggleTarget?.status === 'active'}
+          icon={Power}
           loading={toggling}
         >
           {toggleTarget?.status === 'active' ? (

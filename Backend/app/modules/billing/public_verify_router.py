@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.core.config import settings
 from app.modules.billing.crud import get_invoice_by_public_identifier
-from app.modules.billing.pdf_service import render_invoice_pdf_bytes, InvoicePDFDataError
+from app.modules.exports.invoice_pdf import render_invoice_pdf_bytes, InvoicePDFDataError
 
 router = APIRouter(prefix="/verify", tags=["public-verify"])
 logger = logging.getLogger(__name__)

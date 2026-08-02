@@ -55,7 +55,7 @@ export default function Products() {
     category_id: '',
     price: 0,
     stock: 0,
-    status: 'active',
+    status: '',
     description: '',
     store_location_id: '',
   });
@@ -67,6 +67,11 @@ export default function Products() {
   const categoryOptions = [
     { value: '', label: 'Todas las categorías' },
     ...dbCategories.map(c => ({ value: c.id, label: c.name })),
+  ];
+  const productStatusOptions = [
+    { value: 'active', label: 'Activo' },
+    { value: 'inactive', label: 'Inactivo' },
+    { value: 'out_of_stock', label: 'Agotado' },
   ];
 
   const statusOptions = [
@@ -188,6 +193,14 @@ export default function Products() {
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
+    if (!formData.status) {
+      toast.error('Debes seleccionar un estado.');
+      return;
+    }
+    if (!formData.category_id) {
+      toast.error('Debes seleccionar una categoría.');
+      return;
+    }
     try {
       const payload = { 
         ...formData,
@@ -257,7 +270,7 @@ export default function Products() {
       category_id: '',
       price: 0,
       stock: 0,
-      status: 'active',
+      status: '',
       description: '',
       store_location_id: '',
     });
@@ -336,7 +349,7 @@ export default function Products() {
   );
 
   return (
-    <div className="page-content">
+    <div className="page-content products-page">
       <div className="page-header">
         <div>
           <Package width="20" height="20" className="page-title-icon" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }} />
@@ -345,7 +358,7 @@ export default function Products() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingProduct(null); setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={() => { setEditingProduct(null); setFormData({ name: '', category_id: '', price: 0, stock: 0, status: '', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
               <Plus width="18" height="18" />
               Nuevo Producto
             </button>
@@ -445,7 +458,7 @@ export default function Products() {
         position="right"
         title={editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
       >
-        <form className="d-flex flex-col gap-5" onSubmit={handleSaveProduct}>
+        <form className="products-form d-flex flex-col gap-5" onSubmit={handleSaveProduct}>
           <MediaUploader
             preview={preview || Helpers.resolveMediaUrl(editingProduct?.image_url)}
             uploading={uploading}
@@ -463,6 +476,7 @@ export default function Products() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              placeholder='Nombre del producto'
             />
           </div>
 
@@ -482,7 +496,9 @@ export default function Products() {
               <input
                 type="number"
                 className="form-input"
-                value={formData.price}
+                placeholder="0"
+                value={formData.price === 0 ? '' : formData.price}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                 required
                 min="0"
@@ -496,22 +512,21 @@ export default function Products() {
               <input
                 type="number"
                 className="form-input"
-                value={formData.stock}
+                placeholder="0"
+                value={formData.stock === 0 ? '' : formData.stock}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                 min="0"
               />
             </div>
             <div className="form-group">
               <label className="form-label">Estado</label>
-              <select
-                className="form-select"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
-                <option value="out_of_stock">Agotado</option>
-              </select>
+                <Dropdown
+                    options={productStatusOptions}
+                    value={formData.status}
+                    onChange={(val) => setFormData({ ...formData, status: val })}
+                    placeholder="Seleccionar estado"
+                />
             </div>
           </div>
 
@@ -523,6 +538,7 @@ export default function Products() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows="3"
               style={{ resize: 'vertical' }}
+              placeholder='Descripción del producto'
             />
           </div>
 
@@ -625,56 +641,6 @@ export default function Products() {
         item={shareModal.item}
         onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
       />
-
-      <style>{`
-        .loading-state, .error-state {
-          text-align: center;
-          padding: var(--space-12);
-          color: var(--text-secondary);
-        }
-        .error-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-4);
-        }
-        .error-state-icon {
-          font-size: var(--text-4xl);
-        }
-        .error-state-title {
-          font-size: var(--text-xl);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-        }
-        .error-state-text {
-          max-width: 400px;
-          color: var(--text-secondary);
-        }
-
-        .share-on-save {
-          border-top: 1px solid var(--neutral-700);
-          padding-top: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-networks-inline {
-          display: flex;
-          gap: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          cursor: pointer;
-          font-size: var(--text-sm);
-        }
-
-        .share-checkbox-label input {
-          accent-color: var(--gold);
-        }
-      `}</style>
     </div>
   );
 }

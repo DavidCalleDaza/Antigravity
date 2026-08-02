@@ -86,3 +86,18 @@ async def require_staff(current_user: User = Depends(get_current_user)) -> User:
             detail="Acceso restringido al equipo interno"
         )
     return current_user
+
+
+async def require_seller(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency that requires the user to have an admin or seller role.
+
+    Used by /social/* endpoints.  Existing inline checks in products/,
+    services/, categories/, locations/ routers use the same logic but are
+    NOT migrated here — this dependency is available for future cleanup.
+    """
+    if current_user.role not in ("admin", "seller"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso restringido a administradores y vendedores",
+        )
+    return current_user

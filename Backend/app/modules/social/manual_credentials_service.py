@@ -56,7 +56,7 @@ async def save_manual_credentials(
                 f"https://graph.facebook.com/{settings.META_API_VERSION}/me/accounts",
                 params={
                     "access_token": access_token,
-                    "fields": "id,name,instagram_business_account",
+                    "fields": "id,name,instagram_business_account{id,username}",
                 }
             )
             me_data = me_resp.json()
@@ -77,13 +77,12 @@ async def save_manual_credentials(
                 
         elif platform_group == "tiktok":
             # TikTok validation via /user/info/
-            user_resp = await client.post(
+            user_resp = await client.get(
                 "https://open.tiktokapis.com/v2/user/info/",
                 headers={
                     "Authorization": f"Bearer {access_token}",
-                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                data={
+                params={
                     "fields": "open_id,display_name"
                 }
             )

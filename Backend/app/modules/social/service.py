@@ -58,6 +58,33 @@ async def exchange_meta_code(code: str, redirect_uri: str) -> dict:
         return long_data
 
 
+async def extend_meta_token(
+    access_token: str,
+    client_id: str | None = None,
+    client_secret: str | None = None,
+) -> dict:
+    """Extend a Meta long-lived access token.
+    
+    When *client_id* / *client_secret* are provided (manual-credential accounts),
+    they are used instead of the global settings.
+    """
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.get(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/oauth/access_token",
+            params={
+                "grant_type": "fb_exchange_token",
+                "client_id": client_id or settings.META_APP_ID,
+                "client_secret": client_secret or settings.META_APP_SECRET,
+                "fb_exchange_token": access_token,
+            },
+        )
+        data = response.json()
+        if "error" in data:
+            raise ValueError(f"Meta OAuth error (extend token): {data['error'].get('message')}")
+        return data
+
+
+
 async def exchange_tiktok_code(code: str, redirect_uri: str) -> dict:
     """Exchange a TikTok OAuth code for an access token."""
     async with httpx.AsyncClient(timeout=60.0) as client:
@@ -294,15 +321,24 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
             return {"status": "success", "platform_post_id": init_data.get("data", {}).get("publish_id")}
 
 
-async def refresh_tiktok_token(refresh_token: str) -> dict:
-    """Refresh a TikTok access token using the refresh token."""
+async def refresh_tiktok_token(
+    refresh_token: str,
+    client_key: str | None = None,
+    client_secret: str | None = None,
+) -> dict:
+    """Refresh a TikTok access token using the refresh token.
+
+    When *client_key* / *client_secret* are provided (manual-credential accounts),
+    they are used instead of the global settings.  Falls back to
+    ``settings.TIKTOK_CLIENT_KEY`` / ``settings.TIKTOK_CLIENT_SECRET`` otherwise.
+    """
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             "https://open.tiktokapis.com/v2/oauth/token/",
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             data={
-                "client_key": settings.TIKTOK_CLIENT_KEY,
-                "client_secret": settings.TIKTOK_CLIENT_SECRET,
+                "client_key": client_key or settings.TIKTOK_CLIENT_KEY,
+                "client_secret": client_secret or settings.TIKTOK_CLIENT_SECRET,
                 "grant_type": "refresh_token",
                 "refresh_token": refresh_token,
             },

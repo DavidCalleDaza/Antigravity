@@ -112,8 +112,13 @@ async def admin_delete_account(
     current_staff=Depends(require_staff),
     db: AsyncSession = Depends(get_db)
 ):
-    """Delete a social account for a specific user."""
-    deleted = await crud.delete_social_account(db, user_id, platform)
+    """Delete all social accounts for a specific user on a given platform.
+
+    Uses bulk delete (delete_accounts_by_platform) because this admin screen
+    is frozen at per-platform granularity (decision #4) and would crash with
+    MultipleResultsFound if the user had multiple accounts.
+    """
+    deleted = await crud.delete_accounts_by_platform(db, user_id, platform)
     if not deleted:
         raise HTTPException(status_code=404, detail="Account not found")
     return None

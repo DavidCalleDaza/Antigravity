@@ -7,6 +7,8 @@ Covers the Meta/Facebook/Instagram OAuth flow:
   expired) — all must redirect to the frontend, never return a raw 500.
 - Happy-path callback with mocked Graph API: page selected, Instagram business
   account resolved, and the IG username fetched with the page access token.
+- Role gating: sellers/admins can access, clients get 403.
+- Multi-account: multiple pages create multiple accounts with correct is_default.
 """
 
 import uuid
@@ -34,14 +36,26 @@ def _signed_state(user_id: uuid.UUID, platform: str = "meta") -> str:
     return _state_serializer.dumps({"user_id": str(user_id), "platform": platform})
 
 
-async def test_authorize_meta_returns_well_formed_auth_url(client: AsyncClient, db_session):
-    """Authenticated GET /authorize/meta returns a fully formed Facebook auth URL."""
-    user = User(email="social@example.com", full_name="Social User", role="client", hashed_password="dummy")
+# ── Helper: create a user with a given role and return a Bearer token ───────
+
+async def _create_user_with_token(db_session, role: str = "seller", email: str = "social@example.com"):
+    """Create a user and return (user, token)."""
+    user = User(email=email, full_name="Social User", role=role, hashed_password="dummy")
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
-
     token = create_access_token({"sub": str(user.id)})
+    return user, token
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Role gating tests (Phase 5)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+async def test_authorize_meta_returns_well_formed_auth_url(client: AsyncClient, db_session):
+    """Authenticated GET /authorize/meta returns a fully formed Facebook auth URL."""
+    user, token = await _create_user_with_token(db_session, role="seller")
     response = await client.get(AUTHORIZE_URL, headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == 200
@@ -66,10 +80,29 @@ async def test_authorize_meta_returns_well_formed_auth_url(client: AsyncClient, 
     assert payload["platform"] == "meta"
 
 
+async def test_authorize_meta_forbidden_for_client_role(client: AsyncClient, db_session):
+    """GET /authorize/meta with role='client' must return 403 (role gating)."""
+    _, token = await _create_user_with_token(db_session, role="client", email="client@example.com")
+    response = await client.get(AUTHORIZE_URL, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 403
+
+
+async def test_authorize_meta_allowed_for_admin_role(client: AsyncClient, db_session):
+    """GET /authorize/meta with role='admin' must return 200."""
+    _, token = await _create_user_with_token(db_session, role="admin", email="admin@example.com")
+    response = await client.get(AUTHORIZE_URL, headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
+
+
 async def test_authorize_meta_requires_auth(client: AsyncClient):
     """GET /authorize/meta without a Bearer token must return 401."""
     response = await client.get(AUTHORIZE_URL)
     assert response.status_code == 401
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Callback redirect tests (no Bearer needed — uses signed state)
+# ═══════════════════════════════════════════════════════════════════════════════
 
 
 async def test_callback_missing_state_redirects_to_frontend(client: AsyncClient):
@@ -221,3 +254,93 @@ async def test_callback_success_fetches_ig_username_with_page_token(client: Asyn
     assert len(ig_calls) == 1
     assert ig_calls[0].kwargs["params"]["access_token"] == "page-access-token"
     assert ig_calls[0].kwargs["params"]["fields"] == "username"
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Multi-account: two pages → two accounts, only first is_default (Phase 8)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+async def test_callback_two_pages_creates_two_fb_accounts_first_is_default(
+    client: AsyncClient, db_session,
+):
+    """When the Meta callback returns two pages, both are saved as separate
+    SocialAccount rows and only the first one is marked is_default=True."""
+    from sqlalchemy.future import select
+    from app.modules.social.models import SocialAccount
+
+    async def _fake_exchange(code, redirect_uri):
+        return {"access_token": "long-lived-token", "expires_in": 5_184_000}
+
+    user_id = uuid.uuid4()
+
+    def _make_me_accounts_response():
+        return {
+            "data": [
+                {
+                    "id": "page_AAA",
+                    "name": "Page A",
+                    "access_token": "pat-a",
+                },
+                {
+                    "id": "page_BBB",
+                    "name": "Page B",
+                    "access_token": "pat-b",
+                    "instagram_business_account": {"id": "ig_999"},
+                },
+            ]
+        }
+
+    def _make_ig_response():
+        return {"username": "ig_user_b"}
+
+    with patch("app.modules.social.router.service.exchange_meta_code", new=_fake_exchange):
+        with patch("app.modules.social.router.httpx.AsyncClient") as mock_client:
+            mock_instance = MagicMock()
+
+            def _fake_get(url, **kwargs):
+                if url.endswith("/me/accounts"):
+                    return MagicMock(json=MagicMock(return_value=_make_me_accounts_response()))
+                if url.endswith("/ig_999"):
+                    resp = MagicMock()
+                    resp.json.return_value = _make_ig_response()
+                    return resp
+                return MagicMock()
+
+            mock_instance.get = AsyncMock(side_effect=_fake_get)
+            mock_client.return_value.__aenter__.return_value = mock_instance
+
+            response = await client.get(
+                f"{CALLBACK_URL}?code=abc&state={_signed_state(user_id)}",
+                follow_redirects=False,
+            )
+
+    assert response.status_code == 307
+    assert "social_status=success" in response.headers.get("location", "")
+
+    # Query the DB for all facebook accounts of that user
+    async with db_session as session:
+        result = await session.execute(
+            select(SocialAccount)
+            .where(SocialAccount.user_id == user_id, SocialAccount.platform == "facebook")
+            .order_by(SocialAccount.created_at)
+        )
+        fb_accounts = list(result.scalars().all())
+
+    assert len(fb_accounts) == 2
+    assert fb_accounts[0].platform_user_id == "page_AAA"
+    assert fb_accounts[0].is_default is True
+    assert fb_accounts[1].platform_user_id == "page_BBB"
+    assert fb_accounts[1].is_default is False
+
+    # Instagram account should also exist (from page B)
+    async with db_session as session:
+        result = await session.execute(
+            select(SocialAccount)
+            .where(SocialAccount.user_id == user_id, SocialAccount.platform == "instagram")
+        )
+        ig_accounts = list(result.scalars().all())
+
+    assert len(ig_accounts) == 1
+    assert ig_accounts[0].platform_user_id == "ig_999"
+    assert ig_accounts[0].platform_username == "ig_user_b"

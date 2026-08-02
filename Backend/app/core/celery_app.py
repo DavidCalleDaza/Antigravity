@@ -39,3 +39,18 @@ def init_worker(**kwargs):
 
     # Store the loop so task modules can reference it
     celery_app._worker_loop = loop
+
+
+# ── Phase 4.3: Background Token Refresh (WRITTEN BUT INACTIVE) ──────────────
+#
+# DO NOT ACTIVATE THIS YET. In the current production environment (Render),
+# there is NO Celery worker deployed, only Redis. We rely on lazy refresh 
+# at publish time (in tasks.py). If we add a worker in the future, uncomment this.
+#
+# from celery.schedules import crontab
+# celery_app.conf.beat_schedule = {
+#     "refresh-expiring-tokens-daily": {
+#         "task": "social.refresh_expiring_tokens",
+#         "schedule": crontab(hour=2, minute=0),  # Run daily at 2:00 AM UTC
+#     },
+# }

@@ -6,6 +6,7 @@ import Drawer from '../../components/ui/Drawer';
 import { useStore } from '../../store/useStore';
 import '../../../css/pages/Categories.css';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import Dropdown from '../../components/ui/Dropdown';
 
 const EMPTY_FORM = { name: '', description: '', parent_id: '' };
 const DRAG_THRESHOLD = 6; // px mínimos de movimiento para iniciar el arrastre
@@ -122,6 +123,14 @@ export default function Categories() {
     const excluded = getSelfAndDescendantIds(categories, editingCategory.id);
     return buildOrderedTree(activeCategories).filter((c) => !excluded.has(c.id));
   }, [categories, editingCategory]);
+  
+  const parentDropdownOptions = useMemo(
+    () => parentOptions.map((c) => ({
+      value: c.id,
+      label: `${'—'.repeat(c.depth || 0)} ${c.name}`,
+    })),
+    [parentOptions]
+  );
   const openCreateDrawer = () => {
     setEditingCategory(null);
     setForm(EMPTY_FORM);
@@ -582,18 +591,12 @@ export default function Categories() {
 
           <div className="form-group">
             <label className="form-label">Categoría Padre (opcional)</label>
-            <select
-              className="form-select"
+            <Dropdown
+              options={parentDropdownOptions}
               value={form.parent_id}
-              onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
-            >
-              <option value="">Sin categoría padre (nivel raíz)</option>
-              {parentOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {'—'.repeat(c.depth || 0)} {c.name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setForm({ ...form, parent_id: val })}
+              placeholder="Sin categoría padre (nivel raíz)"
+            />
           </div>
 
           {formError && <div className="categories-form-error">{formError}</div>}

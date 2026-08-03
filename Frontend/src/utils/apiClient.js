@@ -273,9 +273,13 @@ export const socialClient = {
   getAuthorizeUrl: (platform) => apiClient.get(`/social/authorize/${platform}`),
   publish: (data) => apiClient.post('/social/publish', data),
   listPosts: () => apiClient.get('/social/posts'),
-  deleteAccount: (platform) => apiClient.delete(`/social/accounts/${platform}`),
+  deleteAccount: (platform) => apiClient.delete(`/social/accounts/platform/${platform}`),
+  deleteAccountById: (accountId) => apiClient.delete(`/social/accounts/${accountId}`),
+  updateAccount: (accountId, data) => apiClient.patch(`/social/accounts/${accountId}`, data),
   connectManualValidate: (data) => apiClient.post('/social/accounts/manual/validate', data),
   connectManualConfirm: (data) => apiClient.post('/social/accounts/manual/confirm', data),
+  getAppCredentials: (platformGroup) => apiClient.get(`/social/accounts/app-credentials/${platformGroup}`),
+  revealAppCredentials: (platformGroup, password) => apiClient.post(`/social/accounts/app-credentials/${platformGroup}/reveal`, { password }),
 };
 
 export const adminSocialClient = {

@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Facebook, Instagram, Share2, Plus, Trash2, CheckCircle2, AlertCircle, Info, Loader2 } from 'lucide-react';
+import { Facebook, Instagram, Share2, Plus, Trash2, CheckCircle2, AlertCircle, Info, Loader2, Star, AlertTriangle, XCircle, Eye, EyeOff, Lock, RefreshCw, Sparkles } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { socialClient } from '../../utils/apiClient';
 import { useStore } from '../../store/useStore';
+
+const PLATFORM_LABELS = {
+  meta: { appId: 'App ID', appSecret: 'App Secret', accessToken: 'Access Token (Page Token)' },
+  tiktok: { appId: 'Client Key (App ID)', appSecret: 'Client Secret', accessToken: 'Access Token' },
+};
+
+const REGEN_LINKS = {
+  facebook: 'https://developers.facebook.com/tools/explorer/',
+  instagram: 'https://developers.facebook.com/tools/explorer/',
+};
 
 export default function SocialSettings() {
   const [accounts, setAccounts] = useState([]);
@@ -18,9 +28,28 @@ export default function SocialSettings() {
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [selectedInstagramId, setSelectedInstagramId] = useState('');
 
+  // ── Credential lock / reveal state ──────────────────────────────────────
+  const [savedCred, setSavedCred] = useState({ app_id: null, has_credential: false });
+  const [editingCredentials, setEditingCredentials] = useState(false);
+  const [showAccessToken, setShowAccessToken] = useState(false);
+  const [showRevealPrompt, setShowRevealPrompt] = useState(false);
+  const [revealPassword, setRevealPassword] = useState('');
+  const [revealLoading, setRevealLoading] = useState(false);
+  const [revealedSecret, setRevealedSecret] = useState(null);
+  const [secretVisible, setSecretVisible] = useState(false);
+
   useEffect(() => {
     fetchAccounts();
   }, []);
+
+  useEffect(() => {
+    if (!revealedSecret) return;
+    const t = setTimeout(() => {
+      setRevealedSecret(null);
+      setSecretVisible(false);
+    }, 20000);
+    return () => clearTimeout(t);
+  }, [revealedSecret]);
 
   const fetchAccounts = async () => {
     try {
@@ -33,24 +62,85 @@ export default function SocialSettings() {
     }
   };
 
-  const handleDisconnect = async (platform) => {
+  const handleDisconnectById = async (accountId) => {
     try {
-      await socialClient.deleteAccount(platform);
-      setAccounts(accounts.filter(a => a.platform !== platform));
-      toast.success(`${platform} desconectado correctamente.`, 'Éxito');
+      await socialClient.deleteAccountById(accountId);
+      setAccounts(accounts.filter(a => a.id !== accountId));
+      toast.success('Cuenta desconectada correctamente.', 'Éxito');
     } catch (error) {
       toast.error('No se pudo desconectar la cuenta.', 'Error');
     }
   };
 
-  const startConnect = (platformId) => {
+  const handleMakeDefault = async (accountId) => {
+    try {
+      await socialClient.updateAccount(accountId, { is_default: true });
+      fetchAccounts();
+      toast.success('Cuenta marcada como predeterminada.');
+    } catch (error) {
+      toast.error('Error al actualizar cuenta predeterminada.');
+    }
+  };
+
+  const startConnect = async (platformId) => {
     setActiveForm(platformId);
     setStep(1);
-    setFormData({ app_id: '', app_secret: '', access_token: '' });
     setAvailableAccounts([]);
     setSelectedAccountId('');
     setSelectedInstagramId('');
+    setFormData({ app_id: '', app_secret: '', access_token: '' });
+    setEditingCredentials(false);
+    setShowAccessToken(false);
+    setShowRevealPrompt(false);
+    setRevealPassword('');
+    setRevealedSecret(null);
+    setSecretVisible(false);
+    setSavedCred({ app_id: null, has_credential: false });
+
+    try {
+      const cred = await socialClient.getAppCredentials(platformId);
+      setSavedCred(cred);
+      if (cred.has_credential) {
+        setFormData(prev => ({ ...prev, app_id: cred.app_id || '' }));
+      }
+    } catch (err) {
+      // No hay credenciales guardadas todavía — se queda en modo "primera vez"
+      setSavedCred({ app_id: null, has_credential: false });
+    }
   };
+
+  const handleEditCredentials = () => {
+    setEditingCredentials(true);
+    setRevealedSecret(null);
+    setSecretVisible(false);
+    setFormData(prev => ({ ...prev, app_secret: '' }));
+  };
+
+  const handleRevealSecret = async () => {
+    if (!revealPassword) return;
+    setRevealLoading(true);
+    try {
+      const data = await socialClient.revealAppCredentials(activeForm, revealPassword);
+      setRevealedSecret(data.app_secret);
+      setSecretVisible(true);
+      setShowRevealPrompt(false);
+      setRevealPassword('');
+    } catch (err) {
+      toast.error('Contraseña incorrecta.', 'Error');
+    } finally {
+      setRevealLoading(false);
+    }
+  };
+
+  const toggleSecretVisibility = () => {
+    if (revealedSecret) {
+      setSecretVisible(v => !v);
+    } else {
+      setShowRevealPrompt(v => !v);
+    }
+  };
+
+  const usingSavedCredential = savedCred.has_credential && !editingCredentials;
 
   const handleValidate = async (e) => {
     e.preventDefault();
@@ -58,7 +148,9 @@ export default function SocialSettings() {
     try {
       const res = await socialClient.connectManualValidate({
         platform_group: activeForm,
-        ...formData
+        app_id: formData.app_id,
+        app_secret: usingSavedCredential ? undefined : formData.app_secret,
+        access_token: formData.access_token,
       });
       setAvailableAccounts(res.accounts || []);
       if (activeForm === 'tiktok' && res.accounts?.length > 0) {
@@ -78,17 +170,19 @@ export default function SocialSettings() {
     setValidating(true);
     try {
       const selected = availableAccounts.find(a => a.id === selectedAccountId);
-      
+
       await socialClient.connectManualConfirm({
         platform_group: activeForm,
         app_id: formData.app_id,
-        app_secret: formData.app_secret,
+        app_secret: usingSavedCredential ? undefined : formData.app_secret,
         access_token: formData.access_token,
         selected_account_id: selectedAccountId,
         selected_account_name: selected?.name || '',
-        instagram_business_account_id: selectedInstagramId || undefined
+        instagram_business_account_id: selectedInstagramId || undefined,
+        instagram_username: selectedInstagramId ? selected?.instagram_business_account?.username : undefined,
+        account_type: activeForm === 'meta' ? 'business' : 'personal'
       });
-      
+
       toast.success('Cuenta conectada correctamente');
       setActiveForm(null);
       fetchAccounts();
@@ -99,198 +193,266 @@ export default function SocialSettings() {
     }
   };
 
-  const isConnected = (platform) => accounts.some(a => a.platform === platform);
-  const getAccount = (platform) => accounts.find(a => a.platform === platform);
-
-  return (
-    <div className="social-settings">
-      <div className="section-header">
-        <Share2 width="20" height="20" />
-        <h3>Gestión de Redes Sociales</h3>
+  const renderStatusRow = (account) => {
+    const dotClass = account.status === 'active' ? 'active' : (account.status === 'expired' ? 'expired' : 'error');
+    const label = account.status === 'active' ? 'Activa' : (account.status === 'expired' ? 'Expirada' : (account.status === 'revoked' ? 'Revocada' : 'Error'));
+    return (
+      <div className="sns-status-row">
+        <span className={`sns-status-dot ${dotClass}`} />
+        <span>{label}</span>
+        <span>·</span>
+        <span>Añadida {new Date(account.created_at).toLocaleDateString()}</span>
+        {account.last_modified_by && account.last_modified_by !== currentUser?.id && (
+          <span className="text-primary" title="Modificado por soporte"><Info width={11} className="inline mr-1" />Soporte</span>
+        )}
       </div>
-      
-      <div className="social-info-banner mb-8 p-4 rounded-xl border border-primary-subtle bg-primary-subtle/10 flex gap-3">
-        <AlertCircle className="text-primary shrink-0" width="20" height="20" />
-        <p className="text-sm text-secondary">
-          <strong>Modo Desarrollador Activo:</strong> Servinow se encuentra en fase de desarrollo para integraciones sociales. 
-          Para conectar tus cuentas y publicar desde Productos/Servicios, debes generar un Token de Acceso desde el portal de 
-          <strong> Meta for Developers</strong> o <strong>TikTok for Developers</strong> y pegarlo aquí, junto con las credenciales de tu App.
-        </p>
+    );
+  };
+
+  const renderAccountList = (platformFilter) => {
+    const platformAccounts = accounts.filter(a => platformFilter.includes(a.platform));
+    if (platformAccounts.length === 0) {
+      return <p className="sns-empty-hint">Todavía no has conectado ninguna cuenta.</p>;
+    }
+
+    return (
+      <div className="sns-accounts">
+        {platformAccounts.map(account => (
+          <div key={account.id} className="sns-account-chip">
+            <div className="sns-account-main">
+              <div className="sns-account-avatar">
+                {account.platform === 'facebook' && <Facebook width={16} />}
+                {account.platform === 'instagram' && <Instagram width={16} />}
+                {account.platform === 'tiktok' && <Share2 width={16} />}
+              </div>
+              <div className="sns-account-info">
+                <div className="sns-account-name-row">
+                  <span className="sns-account-name">{account.display_label || account.platform_username || account.platform_user_id}</span>
+                  <span className={`sns-badge ${account.account_type === 'business' ? 'business' : 'personal'}`}>
+                    {account.account_type === 'business' ? 'Business' : 'Personal'}
+                  </span>
+                  {account.is_default && (
+                    <span className="sns-badge default"><Star width={9} /> Default</span>
+                  )}
+                </div>
+                {renderStatusRow(account)}
+                {account.last_error && <div className="sns-error-text">{account.last_error}</div>}
+              </div>
+            </div>
+            <div className="sns-account-actions">
+              {account.status === 'expired' && REGEN_LINKS[account.platform] && (
+                <a href={REGEN_LINKS[account.platform]} target="_blank" rel="noopener noreferrer" className="sns-regen-btn">
+                  <RefreshCw width={11} /> Regenerar token
+                </a>
+              )}
+              {!account.is_default && (
+                <button className="sns-icon-btn" onClick={() => handleMakeDefault(account.id)} title="Hacer predeterminada">
+                  <Star width={15} height={15} />
+                </button>
+              )}
+              <button className="sns-icon-btn danger" onClick={() => handleDisconnectById(account.id)} title="Desconectar cuenta">
+                <Trash2 width={16} height={16} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
+    );
+  };
 
-      <div className="social-platforms-grid">
-        {/* Render Meta Group */}
-        <div className="social-platform-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'stretch' }}>
-           <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-3">
-                <div className="platform-icon-wrapper" style={{ backgroundColor: '#1877F215', color: '#1877F2', borderRadius: '50%', padding: '8px' }}>
-                  <Facebook width="24" height="24" />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0 }}>Meta (Facebook / Instagram)</h4>
-                </div>
-              </div>
-              <div>
-                {!isConnected('facebook') && !isConnected('instagram') ? (
-                   <button className="btn btn-outline btn-sm" onClick={() => startConnect('meta')}>
-                     <Plus width="16" height="16" style={{ marginRight: '4px' }} /> Conectar Meta
-                   </button>
-                ) : (
-                   <div className="flex gap-2">
-                      {isConnected('facebook') && (
-                        <button className="btn btn-ghost btn-sm text-danger" onClick={() => handleDisconnect('facebook')} title="Desconectar Facebook">
-                          <Trash2 width="18" height="18" /> FB
-                        </button>
-                      )}
-                      {isConnected('instagram') && (
-                        <button className="btn btn-ghost btn-sm text-danger" onClick={() => handleDisconnect('instagram')} title="Desconectar Instagram">
-                          <Trash2 width="18" height="18" /> IG
-                        </button>
-                      )}
-                   </div>
-                )}
-              </div>
-           </div>
+  const renderCredentialForm = () => {
+    const labels = PLATFORM_LABELS[activeForm] || PLATFORM_LABELS.meta;
 
-           {(isConnected('facebook') || isConnected('instagram')) && (
-             <div className="text-sm text-secondary border-t border-neutral-700 pt-3 mt-1">
-                <div className="flex flex-col gap-2">
-                  {isConnected('facebook') && (
-                     <div className="flex justify-between items-center w-full">
-                        <span><CheckCircle2 width={14} className="inline text-success mr-1" /> Facebook conectado</span>
-                        {getAccount('facebook')?.last_modified_by && getAccount('facebook').last_modified_by !== currentUser?.id && (
-                           <span className="text-xs text-primary"><Info width={12} className="inline mr-1" />Modificado por soporte</span>
-                        )}
-                     </div>
-                  )}
-                  {isConnected('instagram') && (
-                     <div className="flex justify-between items-center w-full">
-                        <span><CheckCircle2 width={14} className="inline text-success mr-1" /> Instagram conectado</span>
-                        {getAccount('instagram')?.last_modified_by && getAccount('instagram').last_modified_by !== currentUser?.id && (
-                           <span className="text-xs text-primary"><Info width={12} className="inline mr-1" />Modificado por soporte</span>
-                        )}
-                     </div>
-                  )}
-                  <div className="text-xs opacity-70 mt-1">
-                    Token guardado: •••••••••••••••
+    return (
+      <form onSubmit={handleValidate} className="flex flex-col gap-3">
+        {usingSavedCredential ? (
+          <>
+            <div>
+              <label className="sns-field-label"><Lock width={11} /> {labels.appId}</label>
+              <div className="sns-locked-field plain">{formData.app_id}</div>
+            </div>
+            <div>
+              <label className="sns-field-label"><Lock width={11} /> {labels.appSecret}</label>
+              <div className="sns-locked-field">
+                <span>{revealedSecret && secretVisible ? revealedSecret : '••••••••••••••••••'}</span>
+                <button type="button" className="sns-eye-btn" onClick={toggleSecretVisibility}>
+                  {revealedSecret && secretVisible ? <EyeOff width={15} /> : <Eye width={15} />}
+                </button>
+              </div>
+              {showRevealPrompt && (
+                <div className="sns-reveal-popover">
+                  <p className="text-xs text-secondary" style={{ margin: 0 }}>Ingresa tu contraseña de cuenta para ver el {labels.appSecret}</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      className="form-input"
+                      placeholder="Tu contraseña"
+                      value={revealPassword}
+                      onChange={e => setRevealPassword(e.target.value)}
+                      autoFocus
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={handleRevealSecret} disabled={revealLoading}>
+                      {revealLoading ? <Loader2 className="spin" width={14} /> : 'Ver'}
+                    </button>
                   </div>
                 </div>
-             </div>
-           )}
+              )}
+            </div>
+            <button type="button" className="sns-edit-creds-link" onClick={handleEditCredentials}>
+              ¿Necesitas cambiar el {labels.appId} o {labels.appSecret}? Editar credenciales guardadas
+            </button>
+          </>
+        ) : (
+          <>
+            <div>
+              <label className="sns-field-label">{labels.appId}</label>
+              <input required type="text" className="form-input" placeholder={labels.appId} value={formData.app_id} onChange={e => setFormData({ ...formData, app_id: e.target.value })} />
+            </div>
+            <div>
+              <label className="sns-field-label">{labels.appSecret}</label>
+              <input required type="password" className="form-input" placeholder={labels.appSecret} value={formData.app_secret} onChange={e => setFormData({ ...formData, app_secret: e.target.value })} />
+            </div>
+          </>
+        )}
 
-           {activeForm === 'meta' && (
-             <div className="bg-neutral-800 p-4 rounded-lg mt-2">
-               {step === 1 ? (
-                 <form onSubmit={handleValidate} className="flex flex-col gap-3">
-                    <input required type="text" className="form-input" placeholder="App ID" value={formData.app_id} onChange={e => setFormData({...formData, app_id: e.target.value})} />
-                    <input required type="password" className="form-input" placeholder="App Secret" value={formData.app_secret} onChange={e => setFormData({...formData, app_secret: e.target.value})} />
-                    <input required type="password" className="form-input" placeholder="Access Token (Page Token)" value={formData.access_token} onChange={e => setFormData({...formData, access_token: e.target.value})} />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveForm(null)}>Cancelar</button>
-                      <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
-                        {validating ? <Loader2 className="spin" width={16} /> : 'Validar'}
-                      </button>
-                    </div>
-                 </form>
-               ) : (
-                 <form onSubmit={handleConfirm} className="flex flex-col gap-3">
-                    <label className="text-sm font-semibold">Selecciona la Página de Facebook</label>
-                    <select required className="form-input" value={selectedAccountId} onChange={e => setSelectedAccountId(e.target.value)}>
-                      <option value="">Seleccione...</option>
-                      {availableAccounts.map(a => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                      ))}
-                    </select>
-
-                    {selectedAccountId && availableAccounts.find(a => a.id === selectedAccountId)?.instagram_business_account && (
-                      <>
-                        <label className="text-sm font-semibold mt-2">Cuenta de Instagram detectada</label>
-                        <div className="flex items-center gap-2">
-                           <input type="checkbox" id="link_ig" checked={!!selectedInstagramId} onChange={(e) => setSelectedInstagramId(e.target.checked ? availableAccounts.find(a => a.id === selectedAccountId).instagram_business_account.id : '')} />
-                           <label htmlFor="link_ig" className="text-sm">Vincular cuenta de Instagram asociada</label>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setStep(1)}>Atrás</button>
-                      <button type="submit" className="btn btn-primary btn-sm" disabled={validating || !selectedAccountId}>
-                        {validating ? <Loader2 className="spin" width={16} /> : 'Conectar cuenta'}
-                      </button>
-                    </div>
-                 </form>
-               )}
-             </div>
-           )}
+        <div>
+          <label className="sns-field-label">{labels.accessToken}</label>
+          <div className="sns-input-wrapper">
+            <input
+              required
+              type={showAccessToken ? 'text' : 'password'}
+              className="form-input"
+              placeholder={labels.accessToken}
+              value={formData.access_token}
+              onChange={e => setFormData({ ...formData, access_token: e.target.value })}
+            />
+            <button type="button" className="sns-input-eye" onClick={() => setShowAccessToken(v => !v)}>
+              {showAccessToken ? <EyeOff width={16} /> : <Eye width={16} />}
+            </button>
+          </div>
         </div>
 
-        {/* Render TikTok Group */}
-        <div className="social-platform-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'stretch' }}>
-           <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-3">
-                <div className="platform-icon-wrapper" style={{ backgroundColor: '#00000015', color: '#000000', borderRadius: '50%', padding: '8px' }}>
-                  <Share2 width="24" height="24" />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0 }}>TikTok</h4>
-                </div>
-              </div>
+        <div className="flex justify-end gap-2 mt-2">
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveForm(null)}>Cancelar</button>
+          <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
+            {validating ? <Loader2 className="spin" width={16} /> : 'Validar'}
+          </button>
+        </div>
+      </form>
+    );
+  };
+
+  return (
+    <div className="sns-wrapper">
+      <div className="sns-hero">
+        <div className="sns-hero-icon"><Sparkles width={22} height={22} /></div>
+        <div className="sns-hero-text">
+          <h4>Gestión de Redes Sociales</h4>
+          <p>
+            Conecta todas tus páginas de Facebook, perfiles de Instagram y cuentas de TikTok.
+            Selecciona una cuenta como predeterminada por plataforma para agilizar tus publicaciones.
+          </p>
+        </div>
+      </div>
+
+      <div className="sns-grid">
+        {/* ── Meta ── */}
+        <div className="sns-card sns-card--meta">
+          <div className="sns-card-header">
+            <div className="sns-card-title">
+              <div className="sns-card-icon"><Facebook width={22} height={22} /></div>
               <div>
-                {!isConnected('tiktok') ? (
-                   <button className="btn btn-outline btn-sm" onClick={() => startConnect('tiktok')}>
-                     <Plus width="16" height="16" style={{ marginRight: '4px' }} /> Conectar
-                   </button>
-                ) : (
-                   <button className="btn btn-ghost btn-sm text-danger" onClick={() => handleDisconnect('tiktok')} title="Desconectar TikTok">
-                     <Trash2 width="18" height="18" /> Desconectar
-                   </button>
-                )}
+                <h4>Meta</h4>
+                <span>Facebook &amp; Instagram</span>
               </div>
-           </div>
+            </div>
+            <button className="sns-add-btn" onClick={() => startConnect('meta')}>
+              <Plus width={14} height={14} /> Agregar cuenta
+            </button>
+          </div>
 
-           {isConnected('tiktok') && (
-             <div className="text-sm text-secondary border-t border-neutral-700 pt-3 mt-1 flex flex-col gap-2">
-                <div className="flex justify-between items-center w-full">
-                   <span><CheckCircle2 width={14} className="inline text-success mr-1" /> Conectado</span>
-                   {getAccount('tiktok')?.last_modified_by && getAccount('tiktok').last_modified_by !== currentUser?.id && (
-                       <span className="text-xs text-primary"><Info width={12} className="inline mr-1" />Modificado por soporte</span>
-                   )}
-                </div>
-                <div className="text-xs opacity-70 mt-1">
-                    Token guardado: •••••••••••••••
-                </div>
-             </div>
-           )}
+          {renderAccountList(['facebook', 'instagram'])}
 
-           {activeForm === 'tiktok' && (
-             <div className="bg-neutral-800 p-4 rounded-lg mt-2">
-               {step === 1 ? (
-                 <form onSubmit={handleValidate} className="flex flex-col gap-3">
-                    <input required type="text" className="form-input" placeholder="Client Key (App ID)" value={formData.app_id} onChange={e => setFormData({...formData, app_id: e.target.value})} />
-                    <input required type="password" className="form-input" placeholder="Client Secret" value={formData.app_secret} onChange={e => setFormData({...formData, app_secret: e.target.value})} />
-                    <input required type="password" className="form-input" placeholder="Access Token" value={formData.access_token} onChange={e => setFormData({...formData, access_token: e.target.value})} />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveForm(null)}>Cancelar</button>
-                      <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
-                        {validating ? <Loader2 className="spin" width={16} /> : 'Validar'}
-                      </button>
-                    </div>
-                 </form>
-               ) : (
-                 <form onSubmit={handleConfirm} className="flex flex-col gap-3">
-                    <div className="text-sm">
-                      Se ha detectado la cuenta: <strong>{availableAccounts[0]?.name}</strong>
-                    </div>
-                    <div className="flex justify-end gap-2 mt-2">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setStep(1)}>Atrás</button>
-                      <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
-                        {validating ? <Loader2 className="spin" width={16} /> : 'Conectar cuenta'}
-                      </button>
-                    </div>
-                 </form>
-               )}
-             </div>
-           )}
+          {activeForm === 'meta' && (
+            <div className="sns-form-panel">
+              <div className="sns-steps">
+                <span className={`sns-step-dot ${step === 1 ? 'active' : ''}`} />
+                <span className="sns-step-line" />
+                <span className={`sns-step-dot ${step === 2 ? 'active' : ''}`} />
+              </div>
+
+              {step === 1 ? renderCredentialForm() : (
+                <form onSubmit={handleConfirm} className="flex flex-col gap-3">
+                  <label className="sns-field-label">Selecciona la Página de Facebook</label>
+                  <select required className="form-input" value={selectedAccountId} onChange={e => setSelectedAccountId(e.target.value)}>
+                    <option value="">Seleccione...</option>
+                    {availableAccounts.map(a => (
+                      <option key={a.id} value={a.id}>{a.name}</option>
+                    ))}
+                  </select>
+
+                  {selectedAccountId && availableAccounts.find(a => a.id === selectedAccountId)?.instagram_business_account && (
+                    <>
+                      <label className="sns-field-label mt-2">Cuenta de Instagram detectada</label>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="link_ig" checked={!!selectedInstagramId} onChange={(e) => setSelectedInstagramId(e.target.checked ? availableAccounts.find(a => a.id === selectedAccountId).instagram_business_account.id : '')} />
+                        <label htmlFor="link_ig" className="text-sm">Vincular cuenta de Instagram asociada</label>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setStep(1)}>Atrás</button>
+                    <button type="submit" className="btn btn-primary btn-sm" disabled={validating || !selectedAccountId}>
+                      {validating ? <Loader2 className="spin" width={16} /> : 'Conectar cuenta'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ── TikTok ── */}
+        <div className="sns-card sns-card--tiktok">
+          <div className="sns-card-header">
+            <div className="sns-card-title">
+              <div className="sns-card-icon"><Share2 width={22} height={22} /></div>
+              <div>
+                <h4>TikTok</h4>
+                <span>Cuentas de creador</span>
+              </div>
+            </div>
+            <button className="sns-add-btn" onClick={() => startConnect('tiktok')}>
+              <Plus width={14} height={14} /> Agregar cuenta
+            </button>
+          </div>
+
+          {renderAccountList(['tiktok'])}
+
+          {activeForm === 'tiktok' && (
+            <div className="sns-form-panel">
+              <div className="sns-steps">
+                <span className={`sns-step-dot ${step === 1 ? 'active' : ''}`} />
+                <span className="sns-step-line" />
+                <span className={`sns-step-dot ${step === 2 ? 'active' : ''}`} />
+              </div>
+
+              {step === 1 ? renderCredentialForm() : (
+                <form onSubmit={handleConfirm} className="flex flex-col gap-3">
+                  <div className="text-sm">
+                    Se ha detectado la cuenta: <strong>{availableAccounts[0]?.name}</strong>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setStep(1)}>Atrás</button>
+                    <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
+                      {validating ? <Loader2 className="spin" width={16} /> : 'Conectar cuenta'}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

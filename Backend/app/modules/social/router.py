@@ -21,6 +21,7 @@ from typing import List, Optional
 from app.db.session import get_db
 from app.modules.auth.deps import require_seller
 from app.core.config import settings
+from app.core.security import verify_password
 
 from . import crud, schemas, service
 from .models import SocialAppCredential
@@ -351,6 +352,49 @@ async def manual_confirm(
 
     await db.commit()
     return {"status": "success"}
+
+
+@router.get("/accounts/app-credentials/{platform_group}", response_model=schemas.AppCredentialResponse)
+async def get_app_credentials(
+    platform_group: str,
+    current_user=Depends(require_seller),
+    db: AsyncSession = Depends(get_db),
+):
+    """Devuelve el App ID guardado para precargar el formulario. Nunca el secret."""
+    result = await db.execute(
+        select(SocialAppCredential).where(
+            SocialAppCredential.user_id == current_user.id,
+            SocialAppCredential.platform_group == platform_group,
+        )
+    )
+    cred = result.scalar_one_or_none()
+    if not cred:
+        return schemas.AppCredentialResponse(app_id=None, has_credential=False)
+    return schemas.AppCredentialResponse(app_id=cred.app_id, has_credential=True)
+
+
+@router.post("/accounts/app-credentials/{platform_group}/reveal", response_model=schemas.AppCredentialReveal)
+async def reveal_app_credentials(
+    platform_group: str,
+    req: schemas.RevealCredentialRequest,
+    current_user=Depends(require_seller),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-autentica con la contraseña de la cuenta y devuelve App ID/Secret en claro."""
+    if not current_user.hashed_password or not verify_password(req.password, current_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
+
+    result = await db.execute(
+        select(SocialAppCredential).where(
+            SocialAppCredential.user_id == current_user.id,
+            SocialAppCredential.platform_group == platform_group,
+        )
+    )
+    cred = result.scalar_one_or_none()
+    if not cred:
+        raise HTTPException(status_code=404, detail="No hay credenciales guardadas para esta plataforma.")
+
+    return schemas.AppCredentialReveal(app_id=cred.app_id, app_secret=cred.app_secret)
 
 
 @router.get("/accounts", response_model=List[schemas.SocialAccountResponse])

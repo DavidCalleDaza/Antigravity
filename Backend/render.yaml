@@ -24,6 +24,20 @@ services:
         sync: false  # Set manually with your Vercel URL
       - key: FRONTEND_URL
         sync: false  # Set manually with your Vercel URL
+      - key: META_APP_ID
+        sync: false  # Configurar manualmente en Render con el App ID de Meta
+      - key: META_APP_SECRET
+        sync: false  # Configurar manualmente en Render con el App Secret de Meta (sensible)
+      - key: META_REDIRECT_URI
+        sync: false  # https://<tu-dominio-render>.onrender.com/api/v1/social/callback/facebook
+      - key: META_API_VERSION
+        value: v21.0
+      - key: TIKTOK_CLIENT_KEY
+        sync: false  # Configurar manualmente en Render con el Client Key de TikTok
+      - key: TIKTOK_CLIENT_SECRET
+        sync: false  # Configurar manualmente en Render con el Client Secret de TikTok (sensible)
+      - key: TIKTOK_REDIRECT_URI
+        sync: false  # https://<tu-dominio-render>.onrender.com/api/v1/social/callback/tiktok
       - key: APP_NAME
         value: Servinow API
       - key: APP_VERSION

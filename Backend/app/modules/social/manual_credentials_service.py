@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException
@@ -15,7 +15,7 @@ async def save_manual_credentials(
     acting_user_id: uuid.UUID,
     platform_group: str,
     app_id: str,
-    app_secret: str,
+    app_secret: Optional[str],
     access_token: str,
 ) -> Dict[str, Any]:
     """
@@ -26,7 +26,23 @@ async def save_manual_credentials(
     
     if platform_group not in ("meta", "tiktok"):
         raise HTTPException(status_code=400, detail="Invalid platform group")
-        
+
+    # Si no mandaron app_secret, reusa el guardado de una conexión anterior
+    if not app_secret:
+        existing_cred_result = await db.execute(
+            select(SocialAppCredential).where(
+                SocialAppCredential.user_id == target_user_id,
+                SocialAppCredential.platform_group == platform_group,
+            )
+        )
+        existing_cred = existing_cred_result.scalar_one_or_none()
+        if not existing_cred:
+            raise HTTPException(
+                status_code=400,
+                detail="Debes ingresar el App Secret la primera vez que conectas esta plataforma."
+            )
+        app_secret = existing_cred.app_secret
+
     accounts_data = []
 
     async with httpx.AsyncClient(timeout=60.0) as client:

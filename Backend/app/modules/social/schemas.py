@@ -59,7 +59,7 @@ class SocialAccountResponse(SocialAccountBase):
 class ManualValidateRequest(BaseModel):
     platform_group: str
     app_id: str
-    app_secret: str
+    app_secret: Optional[str] = None  # omitido => reusa el guardado
     access_token: str
 
 
@@ -77,6 +77,21 @@ class ManualConfirmRequest(BaseModel):
     # New optional fields for multi-account (defaults preserve backward compat)
     account_type: str = "personal"
     display_label: Optional[str] = None
+
+
+class AppCredentialResponse(BaseModel):
+    """Devuelve el App ID guardado. Nunca incluye el App Secret."""
+    app_id: Optional[str] = None
+    has_credential: bool = False
+
+
+class RevealCredentialRequest(BaseModel):
+    password: str
+
+
+class AppCredentialReveal(BaseModel):
+    app_id: str
+    app_secret: str
 
 
 # ── Social Post ─────────────────────────────────────────────────────────────

@@ -20,7 +20,6 @@ export default function GoogleCallback() {
 
     if (socialStatus === 'error') {
       const ERROR_MESSAGES = {
-        email_already_registered: 'Ese correo ya tiene una cuenta. Inicia sesión en su lugar.',
         user_cancelled: 'Cancelaste el inicio de sesión con Google.',
       };
       setError(ERROR_MESSAGES[detail] || detail || 'Ocurrió un error con el inicio de sesión de Google.');
@@ -47,9 +46,17 @@ export default function GoogleCallback() {
           token: response.access_token,
           location: response.user.location,
           is_staff: response.user.is_staff,
+          needsOnboarding: response.user.needs_onboarding,
+          hasPassword: response.user.has_password,
+          businessName: response.user.business_name,
         });
-        toast.success('Sesión iniciada con Google', 'Bienvenido');
-        navigate('/dashboard');
+        if (response.user.needs_onboarding) {
+          toast.success('¡Cuenta creada! Completa tu perfil para continuar.', 'Bienvenido');
+          navigate('/profile');
+        } else {
+          toast.success('Sesión iniciada con Google', 'Bienvenido');
+          navigate('/dashboard');
+        }
       } catch (err) {
         setError(err.message || 'Error al validar credenciales con Google.');
       }

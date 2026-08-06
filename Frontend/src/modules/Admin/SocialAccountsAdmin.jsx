@@ -4,6 +4,12 @@ import { useToast } from '../../components/ui/Toast';
 import { adminSocialClient } from '../../utils/apiClient';
 import { useStore } from '../../store/useStore';
 
+// TODO (Tech Debt - Phase 7): 
+// Este componente de Admin requiere un rediseño completo para soportar
+// el renderizado de múltiples cuentas (array de accounts por plataforma),
+// similar a la actualización realizada en Profile/SocialSettings.jsx.
+// Actualmente utiliza lógica heredada de un solo registro por plataforma.
+
 export default function SocialAccountsAdmin() {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);

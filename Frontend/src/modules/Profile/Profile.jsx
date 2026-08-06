@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation, Store, Lock } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { authClient, locationClient } from '../../utils/apiClient';
@@ -16,16 +17,24 @@ const ROLE_OPTIONS = Object.entries(APP_CONFIG.ROLES).map(([key, value]) => ({
   value,
   label: APP_CONFIG.ROLE_LABELS[value],
 }));
-
 export default function Profile() {
   const { currentUser, setCurrentUser, logout } = useStore();
+  const navigate = useNavigate();
   const toast = useToast();
   const userRole = currentUser?.role;
+  const canManageIntegrations = userRole === SELLER || userRole === ADMIN;
+  const roleSelectOptions = currentUser?.needsOnboarding
+    ? ROLE_OPTIONS.filter((opt) => opt.value !== ADMIN)
+    : ROLE_OPTIONS;
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'social'
 
   const [formData, setFormData] = useState({
     full_name: currentUser?.name || '',
     email: currentUser?.email || '',
+    role: currentUser?.role || '',
+    business_name: currentUser?.businessName || '',
+    password: '',
+    confirmPassword: '',
     country: currentUser?.location?.country || '',
     countryCode: currentUser?.location?.country_code || '',
     state: currentUser?.location?.state || '',
@@ -60,11 +69,19 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
+    if (currentUser?.needsOnboarding && activeTab !== 'personal') {
+      setActiveTab('personal');
+    }
+  }, [currentUser?.needsOnboarding, activeTab]);
+
+  useEffect(() => {
     if (currentUser) {
       setFormData((prev) => ({
         ...prev,
         full_name: currentUser.name || '',
         email: currentUser.email || '',
+        role: currentUser.role || '',
+        business_name: currentUser.businessName || '',
         country: currentUser.location?.country || '',
         countryCode: currentUser.location?.country_code || '',
         state: currentUser.location?.state || '',
@@ -83,6 +100,30 @@ export default function Profile() {
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    if (formData.role === 'seller' && !formData.business_name.trim()) {
+      toast.error('El nombre del negocio es obligatorio.', 'Error');
+      setLoading(false);
+      return;
+    }
+    if (!currentUser?.hasPassword && formData.password) {
+      if (formData.password.length < 8) {
+        toast.error('La contraseña debe tener al menos 8 caracteres.', 'Error');
+        setLoading(false);
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('Las contraseñas no coinciden.', 'Error');
+        setLoading(false);
+        return;
+      }
+    }
+    if (currentUser?.needsOnboarding && !currentUser?.hasPassword && !formData.password) {
+      toast.error('Debes definir una contraseña para continuar.', 'Error');
+      setLoading(false);
+      return;
+    }
+
     try {
       let finalNeighborhood = formData.neighborhood;
       // If it's a new neighborhood, register it first
@@ -98,9 +139,10 @@ export default function Profile() {
         }
       }
 
-      const response = await authClient.updateMe({
+      const payload = {
         full_name: formData.full_name,
         email: formData.email,
+        business_name: formData.role === 'seller' ? formData.business_name : undefined,
         location: {
           country: formData.country,
           country_code: formData.countryCode,
@@ -110,15 +152,32 @@ export default function Profile() {
           neighborhood: finalNeighborhood,
           address: formData.address,
         }
-      });
+      };
+      if (currentUser?.needsOnboarding) {
+        payload.role = formData.role;
+      }
+      if (formData.password) {
+        payload.password = formData.password;
+      }
+
+      const response = await authClient.updateMe(payload);
       setCurrentUser({
         ...currentUser,
         name: response.full_name,
         email: response.email,
+        role: response.role,
         avatar_url: response.avatar_url,
         location: response.location,
+        businessName: response.business_name,
+        needsOnboarding: response.needs_onboarding,
+        hasPassword: response.has_password,
       });
-      toast.success('Perfil actualizado correctamente.', 'Éxito');
+      if (currentUser?.needsOnboarding && !response.needs_onboarding) {
+        toast.success('¡Perfil completado! Bienvenido a ServiNow.', 'Éxito');
+        navigate('/dashboard');
+      } else {
+        toast.success('Perfil actualizado correctamente.', 'Éxito');
+      }
     } catch (error) {
       toast.error(error.message || 'No se pudo actualizar el perfil.', 'Error');
     } finally {
@@ -271,6 +330,13 @@ export default function Profile() {
         </div>
       </div>
 
+      {currentUser?.needsOnboarding && (
+        <div className="onboarding-banner">
+          <AlertTriangle width="18" height="18" />
+          <span>Completa los campos obligatorios para continuar usando ServiNow.</span>
+        </div>
+      )}
+
       <div className="profile-tabs mb-8">
         <button 
           className={`profile-tab ${activeTab === 'personal' ? 'active' : ''}`}
@@ -279,20 +345,24 @@ export default function Profile() {
           <User width="18" height="18" />
           Información Personal
         </button>
-        <button 
-          className={`profile-tab ${activeTab === 'social' ? 'active' : ''}`}
-          onClick={() => setActiveTab('social')}
-        >
-          <Share2 width="18" height="18" />
-          Redes Sociales
-        </button>
-        <button
-          className={`profile-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
-          onClick={() => setActiveTab('whatsapp')}
-        >
-          <MessageCircle width="18" height="18" />
-          WhatsApp
-        </button>
+        {canManageIntegrations && !currentUser?.needsOnboarding && (
+          <>
+            <button 
+              className={`profile-tab ${activeTab === 'social' ? 'active' : ''}`}
+              onClick={() => setActiveTab('social')}
+            >
+              <Share2 width="18" height="18" />
+              Redes Sociales
+            </button>
+            <button
+              className={`profile-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
+              onClick={() => setActiveTab('whatsapp')}
+            >
+              <MessageCircle width="18" height="18" />
+              WhatsApp
+            </button>
+          </>
+        )}
       </div>
 
       <div className="profile-layout">
@@ -383,14 +453,72 @@ export default function Profile() {
               <label htmlFor="role">Rol en la Plataforma</label>
               <div className="input-with-icon">
                 <Shield width="18" height="18" />
-                <select className="form-select" id="role" value={userRole || ''} disabled>
-                  {ROLE_OPTIONS.map((opt) => (
+                <select className="form-select" id="role" value={formData.role} onChange={handleChange} disabled={!currentUser?.needsOnboarding}>
+                  {roleSelectOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
-              <p className="text-xs text-tertiary mt-1">El rol es asignado por administración y no puede ser cambiado por el usuario.</p>
+              <p className="text-xs text-tertiary mt-1">
+                {currentUser?.needsOnboarding
+                  ? 'Selecciona el tipo de cuenta que mejor describe tu uso de ServiNow.'
+                  : 'El rol es asignado por administración y no puede ser cambiado por el usuario.'}
+              </p>
             </div>
+
+            {formData.role === 'seller' && (
+              <div className="profile-field full-width">
+                <label htmlFor="business_name">Nombre del Negocio</label>
+                <div className="input-with-icon">
+                  <Store width="18" height="18" />
+                  <input
+                    type="text"
+                    className="form-input"
+                    id="business_name"
+                    placeholder="Mi Tienda de Barrio"
+                    value={formData.business_name}
+                    onChange={handleChange}
+                    required={currentUser?.needsOnboarding}
+                  />
+                </div>
+              </div>
+            )}
+
+            {!currentUser?.hasPassword && (
+              <>
+                <div className="profile-field">
+                  <label htmlFor="password">Nueva Contraseña</label>
+                  <div className="input-with-icon">
+                    <Lock width="18" height="18" />
+                    <input
+                      type="password"
+                      className="form-input"
+                      id="password"
+                      placeholder="Mínimo 8 caracteres"
+                      value={formData.password}
+                      onChange={handleChange}
+                      minLength={8}
+                      required={currentUser?.needsOnboarding}
+                    />
+                  </div>
+                </div>
+                <div className="profile-field">
+                  <label htmlFor="confirmPassword">Repetir Contraseña</label>
+                  <div className="input-with-icon">
+                    <Lock width="18" height="18" />
+                    <input
+                      type="password"
+                      className="form-input"
+                      id="confirmPassword"
+                      placeholder="Repite la contraseña"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required={currentUser?.needsOnboarding}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* ── Location Fields ── */}
             <div className="profile-field full-width mt-4 mb-2">
@@ -500,15 +628,15 @@ export default function Profile() {
           </div>
         </div>
       </>
-    ) : activeTab === 'social' ? (
+    ) : activeTab === 'social' && canManageIntegrations ? (
       <div className="profile-section-card">
         <SocialSettings />
       </div>
-    ) : (
+    ) : activeTab === 'whatsapp' && canManageIntegrations ? (
       <div className="profile-section-card">
         <WhatsAppSettings />
       </div>
-    )}
+    ) : null}
   </div>
 
       <Modal

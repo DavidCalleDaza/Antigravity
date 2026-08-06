@@ -192,7 +192,6 @@ export const authClient = {
   register: (data) => apiClient.post('/auth/register', data),
   login: (data) => apiClient.post('/auth/login', data),
   googleExchange: (code) => apiClient.post('/auth/google/exchange', { code }),
-  stageGoogleRegistration: (data) => apiClient.post('/auth/google/stage-registration', data),
   me: () => apiClient.get('/auth/me'),
   updateMe: (data) => apiClient.patch('/auth/me', data),
   deleteAccount: (permanent = false) =>

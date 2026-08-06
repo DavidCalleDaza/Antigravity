@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import BadRequestException, UnauthorizedException
-from app.core.security import create_access_token, hash_password
+from app.core.security import create_access_token
 from app.db.session import get_db
 from app.modules.auth.crud import get_user_by_email
 from app.modules.auth.models import User, UserIdentity
@@ -60,45 +60,8 @@ def generate_pkce_pair() -> tuple[str, str]:
     return code_verifier, code_challenge
 
 
-class StageRegistrationRequest(BaseModel):
-    """Payload para 'poner en espera' los datos de registro antes de ir a Google."""
-
-    first_name: str
-    last_name: str
-    business_name: str
-    role: str
-    password: str
-
-
-@router.post("/stage-registration", dependencies=[Depends(check_rate_limit)])
-async def stage_registration(payload: StageRegistrationRequest):
-    """
-    Guarda temporalmente (10 min) los datos del formulario de registro en Redis
-    y retorna un staging_token. El frontend lo adjunta a ``/google/authorize``;
-    el callback lo consume (un solo uso) para crear el usuario con estos datos.
-
-    La contraseña solo viaja en este POST y en Redis — nunca en URLs ni logs.
-    """
-    if payload.role not in ["client", "seller", "admin"]:
-        raise BadRequestException(detail="Tipo de cuenta inválido.")
-
-    if len(payload.password) < 8:
-        raise BadRequestException(detail="La contraseña debe tener al menos 8 caracteres.")
-
-    staging_token = uuid.uuid4().hex
-    data = json.dumps({
-        "first_name": payload.first_name,
-        "last_name": payload.last_name,
-        "business_name": payload.business_name,
-        "role": payload.role,
-        "password": payload.password,
-    })
-    await redis_client.setex(f"reg:{staging_token}", 600, data)
-    return {"staging_token": staging_token}
-
-
 @router.get("/authorize", dependencies=[Depends(check_rate_limit)])
-async def google_authorize(request: Request, role: str = "client", staging: str | None = None):  # <-- Inyectamos 'request'
+async def google_authorize(request: Request, role: str = "client", intent: str = "login"):  # <-- Inyectamos 'request'
     """
     Initiate Google OAuth2 flow with PKCE and OIDC nonce.
     """
@@ -108,13 +71,8 @@ async def google_authorize(request: Request, role: str = "client", staging: str 
     if role not in ["client", "seller", "admin"]:
         raise BadRequestException(detail="Invalid role requested.")
 
-    if staging:
-        staged_data = await redis_client.get(f"reg:{staging}")
-        if not staged_data:
-            raise BadRequestException(
-                detail="La sesión de registro expiró. Intenta nuevamente."
-            )
-        # No se borra aquí: se consume en el callback tras usarlo (un solo uso).
+    if intent not in ["login", "register"]:
+        raise BadRequestException(detail="Intent inválido.")
 
     # --- CAPTURAR ORIGEN DEL FRONTEND DINÁMICAMENTE ---
     referer = request.headers.get("referer")
@@ -137,13 +95,8 @@ async def google_authorize(request: Request, role: str = "client", staging: str 
     })
     await redis_client.setex(f"pkce:{state_id}", 600, pkce_data)
 
-    # Create signed state (only containing state_id, role, action and optional staging_token)
-    state_payload = {
-        "state_id": state_id,
-        "role": role,
-        "action": "register" if staging else "login",
-        "staging_token": staging,
-    }
+    # Create signed state (only containing state_id, role and intent)
+    state_payload = {"state_id": state_id, "role": role, "intent": intent}
     signed_state = signer.dumps(state_payload)
 
     params = {
@@ -207,7 +160,7 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
 
     state_id = state_payload.get("state_id")
     requested_role = state_payload.get("role", "client")
-    staging_token = state_payload.get("staging_token")
+    requested_intent = state_payload.get("intent", "login")
 
     # Get and DELETE pkce_data from Redis (prevents replay)
     redis_key = f"pkce:{state_id}"
@@ -290,15 +243,6 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
 
     # Database Upsert
     user = await get_user_by_email(db, email)
-
-    # Intento de registro con email ya existente: no loguear silenciosamente,
-    # informar al usuario y descartar los datos de staging (un solo uso).
-    if staging_token and user:
-        await redis_client.delete(f"reg:{staging_token}")
-        return RedirectResponse(
-            f"{frontend_url}/auth/callback?social_status=error&detail=email_already_registered"
-        )
-
     if user:
         stmt = select(UserIdentity).where(
             UserIdentity.user_id == user.id,
@@ -316,34 +260,17 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
             except IntegrityError:
                 await db.rollback()
     else:
-        staged = None
-        if staging_token:
-            staged_raw = await redis_client.get(f"reg:{staging_token}")
-            if staged_raw:
-                staged = json.loads(staged_raw)
-                await redis_client.delete(f"reg:{staging_token}")  # un solo uso
+        full_name = payload.get("name", email.split("@")[0])
+        avatar_url = payload.get("picture")
 
-        if staged:
-            full_name = f"{staged['first_name']} {staged['last_name']}".strip()
-            user = User(
-                email=email,
-                full_name=full_name,
-                role=staged["role"],
-                avatar_url=payload.get("picture"),
-                business_name=staged["business_name"],
-                hashed_password=hash_password(staged["password"]),
-            )
-        else:
-            full_name = payload.get("name", email.split("@")[0])
-            avatar_url = payload.get("picture")
-
-            user = User(
-                email=email,
-                full_name=full_name,
-                role=requested_role,
-                avatar_url=avatar_url,
-                hashed_password=None,
-            )
+        user = User(
+            email=email,
+            full_name=full_name,
+            role=requested_role,
+            avatar_url=avatar_url,
+            hashed_password=None,
+            needs_onboarding=(requested_intent == "register"),
+        )
         db.add(user)
         await db.flush()
         

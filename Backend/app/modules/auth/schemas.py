@@ -188,6 +188,30 @@ class UserUpdateMe(BaseModel):
             max_length=500,
         ),
     ]
+    business_name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Nombre del negocio (solo para vendedores).",
+            max_length=255,
+        ),
+    ]
+    password: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Nueva contraseña local (mínimo 8 caracteres).",
+            min_length=8,
+            max_length=128,
+        ),
+    ]
+    role: Annotated[
+        UserRole | None,
+        Field(
+            default=None,
+            description="Nuevo rol (solo editable durante onboarding, client/seller).",
+        ),
+    ] = None
     location: Annotated[LocationCreate | None, Field(default=None)] = None
 
 
@@ -224,6 +248,14 @@ class UserResponse(UserBase):
         str | None,
         Field(description="URL of the user's avatar image.", default=None),
     ]
+    needs_onboarding: Annotated[
+        bool,
+        Field(default=False, description="Si el usuario debe completar su perfil antes de usar la plataforma."),
+    ] = False
+    has_password: Annotated[
+        bool,
+        Field(default=False, description="Si el usuario ya tiene una contraseña local configurada."),
+    ] = False
     location: Annotated[LocationResponse | None, Field(default=None)] = None
 
 

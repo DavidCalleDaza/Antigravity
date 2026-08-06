@@ -6,6 +6,7 @@ All functions receive an ``AsyncSession`` injected by FastAPI's
 dependency system and return ORM model instances.
 """
 
+import logging
 import os
 import shutil
 
@@ -13,9 +14,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.exceptions import BadRequestException
 from app.core.security import hash_password
 from app.modules.auth.models import User
-from app.modules.auth.schemas import UserCreate, UserUpdateMe
+from app.modules.auth.schemas import UserCreate, UserRole, UserUpdateMe
+
+logger = logging.getLogger(__name__)
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
@@ -80,11 +84,23 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
     Returns:
         The updated ``User`` instance.
     """
-    update_data = user_in.model_dump(exclude_unset=True, exclude={"location"})
+    if user_in.role is not None:
+        if not user.needs_onboarding:
+            raise BadRequestException(
+                detail="No puedes cambiar tu rol una vez completado el registro."
+            )
+        if user_in.role not in (UserRole.CLIENT, UserRole.SELLER):
+            raise BadRequestException(detail="Rol no permitido.")
+        user.role = user_in.role.value
+
+    update_data = user_in.model_dump(exclude_unset=True, exclude={"location", "password", "role"})
     for field, value in update_data.items():
         if value is not None:
             setattr(user, field, value)
-            
+
+    if user_in.password:
+        user.hashed_password = hash_password(user_in.password)
+
     if user_in.location is not None:
         from app.modules.locations.models import Location
         if user.location:
@@ -93,8 +109,36 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
         else:
             user.location = Location(**user_in.location.model_dump())
 
+    was_onboarding = user.needs_onboarding
+    if user.needs_onboarding:
+        is_complete = (
+            bool(user.full_name and user.full_name.strip())
+            and (user.role != "seller" or bool(user.business_name and user.business_name.strip()))
+            and user.hashed_password is not None
+        )
+        user.needs_onboarding = not is_complete
+    onboarding_just_completed = was_onboarding and not user.needs_onboarding
+
     await db.commit()
     await db.refresh(user)
+
+    if onboarding_just_completed:
+        try:
+            from app.core.config import settings
+            from app.core.email import send_email
+            send_email(
+                to=user.email,
+                subject="¡Bienvenido a ServiNow!",
+                template_name="welcome.html",
+                context={
+                    "full_name": user.full_name,
+                    "company_name": settings.SMTP_FROM_NAME or "ServiNow",
+                    "role_label": "Vendedor" if user.role == "seller" else "Cliente",
+                },
+            )
+        except Exception as e:
+            logger.warning(f"No se pudo enviar el correo de bienvenida a {user.email}: {e}")
+
     return user
 
 

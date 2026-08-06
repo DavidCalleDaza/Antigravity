@@ -86,6 +86,12 @@ class User(Base):
         nullable=True,
         default=None,
     )
+    needs_onboarding: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
     location_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("locations.id", ondelete="SET NULL"),
@@ -130,6 +136,11 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"<User(id={self.id!r}, email={self.email!r}, role={self.role!r})>"
+
+    @property
+    def has_password(self) -> bool:
+        """Whether the user has a local password configured (vs. Google-only)."""
+        return self.hashed_password is not None
 
 
 from sqlalchemy import UniqueConstraint

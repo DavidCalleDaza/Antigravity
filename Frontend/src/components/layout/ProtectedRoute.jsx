@@ -17,5 +17,9 @@ export default function ProtectedRoute({ allowedRoles, isStaffRequired }) {
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
 
+  if (currentUser?.needsOnboarding && location.pathname !== '/profile') {
+    return <Navigate to="/profile" replace />;
+  }
+
   return <Outlet />;
 }

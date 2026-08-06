@@ -11,6 +11,22 @@
   margin: 0 auto;
 }
 
+/* ── Onboarding Banner ── */
+.onboarding-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 800px;
+  margin: 0 auto var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-xl);
+  background: var(--warning-50);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 /* ── Profile Hero Section ── */
 .profile-hero-card {
   background: var(--glass-bg);

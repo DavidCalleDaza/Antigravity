@@ -5,6 +5,7 @@ import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
 import ServinowLogo from '../../components/ui/ServinowLogo';
+import ParticleNetwork from '../../components/ui/ParticleNetwork';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -49,6 +50,7 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-left">
         <div className="auth-left-orb"></div>
+        <ParticleNetwork particleCount={60} connectionDistance={110} />
         <div className="auth-left-content">
           <div className="auth-left-icon">
             <HeartHandshake width="28" height="28" />

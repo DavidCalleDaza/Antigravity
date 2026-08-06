@@ -9,11 +9,17 @@ import AiVideoGenerator from './AI/AiVideoGenerator';
 import Drawer from './ui/Drawer';
 import Modal from './ui/Modal';
 
-const NETWORKS = [
-  { id: 'facebook', label: 'Facebook', Icon: Facebook },
-  { id: 'instagram', label: 'Instagram', Icon: Instagram },
-  { id: 'tiktok', label: 'TikTok', Icon: Video },
-];
+const NETWORK_ICONS = {
+  facebook: Facebook,
+  instagram: Instagram,
+  tiktok: Video,
+};
+
+const NETWORK_LABELS = {
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+};
 
 function isMobile() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -28,15 +34,13 @@ function buildShareText(item) {
   return `✨ ${nameAndCategory}${desc ? '\n\n' + desc : ''}\n\n💰 Precio: $${Number(item.price || 0).toLocaleString('es-CO')}\n\n¡Contáctanos para más información!`;
 }
 
-// handlePublish ya no se utiliza directamente ya que ahora publicamos vía el backend.
-
 export default function ShareModal({
   isOpen,
   onClose,
   item,
   onPublish,
 }) {
-  const [selectedNetworks, setSelectedNetworks] = useState([]);
+  const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [shareText, setShareText] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const [imageBlob, setImageBlob] = useState(null);
@@ -70,7 +74,7 @@ export default function ShareModal({
   useEffect(() => {
     if (isOpen && item) {
       setShareText(buildShareText(item));
-      setSelectedNetworks([]);
+      setSelectedAccounts([]);
       setShowInstagramPanel(false);
       setImageBlob(null);
       setPreviewUrl(null);
@@ -118,9 +122,9 @@ export default function ShareModal({
 
   if (!isOpen) return null;
 
-  const toggleNetwork = (id) => {
-    setSelectedNetworks(prev =>
-      prev.includes(id) ? prev.filter(n => n !== id) : [...prev, id]
+  const toggleAccount = (accountId) => {
+    setSelectedAccounts(prev =>
+      prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]
     );
   };
 
@@ -140,41 +144,49 @@ export default function ShareModal({
 
   const handlePublishClick = async () => {
     setPublishing(true);
-    try {
-      for (const platform of selectedNetworks) {
-         await socialClient.publish({
-           platform: platform,
-           caption: shareText,
-           media_url: aiVideoUrl || item?.imageUrl || item?.image_url || '',
-           product_id: item?.stock !== undefined ? item?.id : null,
-           service_id: item?.duration !== undefined ? item?.id : null,
-           is_ai_generated: isAiGeneratedPost,
-         });
-      }
+    
+    const publishPromises = selectedAccounts.map(accountId => {
+      const acc = accounts.find(a => a.id === accountId);
+      return socialClient.publish({
+        account_id: accountId,
+        platform: acc ? acc.platform : undefined, // Fallback support
+        caption: shareText,
+        media_url: aiVideoUrl || item?.imageUrl || item?.image_url || '',
+        product_id: item?.stock !== undefined ? item?.id : null,
+        service_id: item?.duration !== undefined ? item?.id : null,
+        is_ai_generated: isAiGeneratedPost,
+      });
+    });
+
+    const results = await Promise.allSettled(publishPromises);
+    setPublishing(false);
+
+    const failures = results.filter(r => r.status === 'rejected');
+    if (failures.length > 0) {
+      console.error("Errors publishing:", failures);
+      const errors = failures.map(f => f.reason?.detail || f.reason?.message || "Desconocido").join(", ");
+      alert(`Hubo errores al publicar en algunas cuentas:\n${errors}`);
+    } else {
       if (onPublish) {
-        onPublish({ networks: selectedNetworks, text: shareText, item });
+        onPublish({ selectedAccounts, text: shareText, item });
       }
       onClose();
-    } catch (err) {
-      console.error(err);
-      alert("Error al publicar: " + (err.detail || err.message || "Desconocido"));
-    } finally {
-      setPublishing(false);
     }
   };
 
-  const connectedNetworkIds = NETWORKS.filter(n => accounts.some(a => a.platform === n.id)).map(n => n.id);
-  const isAllSelected = connectedNetworkIds.length > 0 && connectedNetworkIds.every(id => selectedNetworks.includes(id));
+  const activeAccounts = accounts.filter(a => a.status === 'active');
+  const activeAccountIds = activeAccounts.map(a => a.id);
+  const isAllSelected = activeAccountIds.length > 0 && activeAccountIds.every(id => selectedAccounts.includes(id));
   
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedNetworks(connectedNetworkIds);
+      setSelectedAccounts(activeAccountIds);
     } else {
-      setSelectedNetworks([]);
+      setSelectedAccounts([]);
     }
   };
 
-  const hasSelected = selectedNetworks.length > 0;
+  const hasSelected = selectedAccounts.length > 0;
 
   return (
     <Drawer
@@ -244,46 +256,50 @@ export default function ShareModal({
 
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>Selecciona las redes</label>
+              <label className="form-label" style={{ marginBottom: 0 }}>Selecciona las cuentas</label>
               <label className="share-network-option" style={{ padding: '0', border: 'none', background: 'transparent' }}>
                 <input
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={handleSelectAll}
-                  disabled={connectedNetworkIds.length === 0}
+                  disabled={activeAccountIds.length === 0}
                   className="form-checkbox"
                 />
                 <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
               </label>
             </div>
             <div className="share-networks">
-              {NETWORKS.map(({ id, label, Icon }) => {
-                const isConnected = accounts.some(a => a.platform === id);
-                return (
-                  <div key={id} className="share-network-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}>
-                    <label className="share-network-option" style={{ flex: 1, opacity: isConnected ? 1 : 0.5 }}>
-                      <input
-                        type="checkbox"
-                        disabled={!isConnected}
-                        checked={selectedNetworks.includes(id)}
-                        onChange={() => toggleNetwork(id)}
-                        className="form-checkbox"
-                      />
-                      <span className="share-network-icon"><Icon width="18" height="18" /></span>
-                      <span>{label}</span>
-                    </label>
-                    {!isConnected && (
-                      <button 
-                        className="btn btn-outline btn-sm" 
-                        onClick={() => handleConnect(id)}
-                        style={{ whiteSpace: 'nowrap' }}
-                      >
-                        Conectar
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+              {activeAccounts.length === 0 ? (
+                <div className="text-sm text-secondary p-3 border border-dashed border-neutral-700 rounded-lg w-full text-center">
+                  No hay cuentas conectadas y activas. 
+                  <a href="/profile/social" className="text-primary ml-1 hover:underline">Ir a Configuración</a>
+                </div>
+              ) : (
+                activeAccounts.map((account) => {
+                  const Icon = NETWORK_ICONS[account.platform] || Share2;
+                  const label = account.display_label || account.platform_username || account.platform_user_id;
+                  const platformName = NETWORK_LABELS[account.platform] || account.platform;
+                  return (
+                    <div key={account.id} className="share-network-container" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}>
+                      <label className="share-network-option" style={{ flex: 1 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedAccounts.includes(account.id)}
+                          onChange={() => toggleAccount(account.id)}
+                          className="form-checkbox"
+                        />
+                        <span className="share-network-icon"><Icon width="18" height="18" /></span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '0.875rem' }}>{label}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                            {platformName} {account.account_type === 'business' ? '(Business)' : ''} {account.is_default ? '⭐' : ''}
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

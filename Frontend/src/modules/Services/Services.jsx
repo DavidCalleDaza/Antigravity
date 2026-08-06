@@ -13,7 +13,7 @@ import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import { serviceClient, categoryClient, agendaClient, ApiError } from '../../utils/apiClient';
+import { serviceClient, categoryClient, agendaClient, socialClient, ApiError } from '../../utils/apiClient';
 import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
 import Dropdown from '../../components/ui/Dropdown';
@@ -64,7 +64,8 @@ export default function Services() {
     store_location_id: '',
   });
   const [mediaError, setMediaError] = useState(null);
-  const [shareOnSave, setShareOnSave] = useState({ facebook: false, instagram: false, tiktok: false });
+  const [shareOnSave, setShareOnSave] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [shareModal, setShareModal] = useState({ isOpen: false, item: null });
 
   const toast = useToast();
@@ -94,6 +95,7 @@ export default function Services() {
   useEffect(() => {
     loadServices();
     loadCategories();
+    loadAccounts();
     if (isClient) {
       agendaClient.listSellers().then(setSellers).catch(() => {});
     } else {
@@ -110,7 +112,16 @@ export default function Services() {
       const data = await categoryClient.list('service');
       setDbCategories(data);
     } catch (err) {
-      console.error('Error loading categories:', err);
+      console.error('Error cargando categorías:', err);
+    }
+  };
+
+  const loadAccounts = async () => {
+    try {
+      const data = await socialClient.listAccounts();
+      setAccounts(data.filter(a => a.status === 'active') || []);
+    } catch (err) {
+      console.error('Error cargando cuentas:', err);
     }
   };
  
@@ -187,7 +198,7 @@ export default function Services() {
         toast.success('Servicio creado exitosamente.');
       }
 
-      const hasShareSelected = Object.values(shareOnSave).some(Boolean);
+      const hasShareSelected = shareOnSave.length > 0;
       resetForm();
       if (hasShareSelected) {
         setTimeout(() => {
@@ -268,7 +279,7 @@ export default function Services() {
       description: '',
       store_location_id: '',
     });
-    setShareOnSave({ facebook: false, instagram: false, tiktok: false });
+    setShareOnSave([]);
     reset();
     setMediaError(null);
   };
@@ -544,30 +555,33 @@ export default function Services() {
               <label className="share-checkbox-label" style={{ margin: 0 }}>
                 <input
                   type="checkbox"
-                  checked={shareOnSave.facebook && shareOnSave.instagram && shareOnSave.tiktok}
+                  checked={accounts.length > 0 && shareOnSave.length === accounts.length}
                   onChange={(e) => {
-                    const checked = e.target.checked;
-                    setShareOnSave({ facebook: checked, instagram: checked, tiktok: checked });
+                    if (e.target.checked) setShareOnSave(accounts.map(a => a.id));
+                    else setShareOnSave([]);
                   }}
+                  disabled={accounts.length === 0}
                   className="form-checkbox"
                 />
                 <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
               </label>
             </div>
             <div className="share-networks-inline">
-              {[
-                { id: 'facebook', label: 'Facebook' },
-                { id: 'instagram', label: 'Instagram' },
-                { id: 'tiktok', label: 'TikTok' },
-              ].map(({ id, label }) => (
-                <label key={id} className="share-checkbox-label">
+              {accounts.length === 0 && (
+                <div className="text-xs text-secondary mt-1">No hay cuentas activas. Conecta una en tu perfil.</div>
+              )}
+              {accounts.map(account => (
+                <label key={account.id} className="share-checkbox-label">
                   <input
                     type="checkbox"
-                    checked={shareOnSave[id]}
-                    onChange={(e) => setShareOnSave(prev => ({ ...prev, [id]: e.target.checked }))}
+                    checked={shareOnSave.includes(account.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setShareOnSave([...shareOnSave, account.id]);
+                      else setShareOnSave(shareOnSave.filter(id => id !== account.id));
+                    }}
                     className="form-checkbox"
                   />
-                  <span>{label}</span>
+                  <span>{account.display_label || account.platform_username || account.platform_user_id} ({account.platform})</span>
                 </label>
               ))}
             </div>
@@ -577,8 +591,8 @@ export default function Services() {
             <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>
             <button type="submit" className="btn btn-primary">
               {editingService
-                ? Object.values(shareOnSave).some(Boolean) ? 'Guardar y publicar' : 'Guardar'
-                : Object.values(shareOnSave).some(Boolean) ? 'Crear y publicar' : 'Crear'}
+                ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
+                : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Servicio'}
             </button>
           </div>
         </form>

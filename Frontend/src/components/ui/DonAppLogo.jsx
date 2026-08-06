@@ -1,10 +1,10 @@
 import React from 'react';
 
-export default function DonAppLogo({ 
-  width = 64, 
-  height = 64, 
+export default function DonAppLogo({
+  width = 64,
+  height = 64,
   variant = 'auto',
-  className = '' 
+  className = ''
 }) {
   return (
     <span
@@ -13,8 +13,8 @@ export default function DonAppLogo({
     >
       <style>{`
         .donapp-logo {
-          -webkit-mask-image: url(/assets/logo-mark.png);
-          mask-image: url(/assets/logo-mark.png);
+          -webkit-mask-image: url(/assets/logo-astronauta-mask-detail.png);
+          mask-image: url(/assets/logo-astronauta-mask-detail.png);
           -webkit-mask-size: contain;
           mask-size: contain;
           -webkit-mask-repeat: no-repeat;

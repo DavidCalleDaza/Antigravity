@@ -64,6 +64,14 @@ class UserBase(BaseModel):
         ),
     ]
     location: Annotated[LocationCreate | None, Field(default=None)] = None
+    business_name: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Nombre del negocio del usuario (opcional).",
+            max_length=255,
+        ),
+    ] = None
 
 
 # ── Request Schemas ──────────────────────────────────────────────────────────

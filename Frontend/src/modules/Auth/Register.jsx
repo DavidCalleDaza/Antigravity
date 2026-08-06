@@ -10,6 +10,9 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('seller');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+  const [repeatPassword, setRepeatPassword] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -23,6 +26,74 @@ export default function Register() {
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleRepeatPasswordChange = (e) => setRepeatPassword(e.target.value);
+
+  const validateForGoogle = () => {
+    if (!formData.firstName.trim()) {
+      toast.error('El nombre es obligatorio', 'Error');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      toast.error('El apellido es obligatorio', 'Error');
+      return false;
+    }
+    if (!formData.business.trim()) {
+      toast.error('El nombre del negocio es obligatorio', 'Error');
+      return false;
+    }
+    if (!role) {
+      toast.error('Debe seleccionar un tipo de cuenta', 'Error');
+      return false;
+    }
+    if (!formData.password) {
+      toast.error('La contraseña es obligatoria', 'Error');
+      return false;
+    }
+    if (formData.password.length < 8) {
+      toast.error('La contraseña debe tener al menos 8 caracteres', 'Error');
+      return false;
+    }
+    return true;
+  };
+
+  const validateRepeatPassword = () => {
+    if (!repeatPassword) {
+      toast.error('Debes repetir la contraseña', 'Error');
+      return false;
+    }
+    if (repeatPassword !== formData.password) {
+      toast.error('Las contraseñas no coinciden', 'Error');
+      return false;
+    }
+    return true;
+  };
+
+  const handleGoogleClick = async () => {
+    if (!validateForGoogle()) return;
+
+    if (!showRepeatPassword) {
+      setShowRepeatPassword(true);
+      return;
+    }
+
+    if (!validateRepeatPassword()) return;
+
+    setGoogleLoading(true);
+    try {
+      const { staging_token } = await authClient.stageGoogleRegistration({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        business_name: formData.business,
+        role,
+        password: formData.password,
+      });
+      window.location.href = `${apiClient.baseUrl}/auth/google/authorize?role=${role}&staging=${staging_token}`;
+    } catch (error) {
+      toast.error(error.message || 'No se pudo iniciar el registro con Google.', 'Error');
+      setGoogleLoading(false);
+    }
   };
 
   const handleRegister = async (e) => {
@@ -156,6 +227,31 @@ export default function Register() {
               </div>
             </div>
 
+            {showRepeatPassword && (
+              <div className="form-group">
+                <label htmlFor="repeatPassword">Repetir Contraseña</label>
+                <div className="input-group password-group">
+                  <span className="input-icon"><Lock width="18" height="18" /></span>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-input"
+                    id="repeatPassword"
+                    placeholder="Repite tu contraseña"
+                    required
+                    value={repeatPassword}
+                    onChange={handleRepeatPasswordChange}
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle" 
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff width="18" height="18" /> : <Eye width="18" height="18" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{marginTop: '10px'}}>
               {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
             </button>
@@ -164,10 +260,12 @@ export default function Register() {
               <span>o regístrate con</span>
             </div>
 
-            <a 
-              href={`${apiClient.baseUrl}/auth/google/authorize?role=${role}`} 
+            <button
+              type="button"
               className="btn btn-outline w-full d-flex items-center justify-center gap-2"
               style={{ padding: '0.75rem', marginTop: '15px' }}
+              onClick={handleGoogleClick}
+              disabled={googleLoading}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -176,8 +274,8 @@ export default function Register() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                 <path d="M1 1h22v22H1z" fill="none" />
               </svg>
-              Continuar con Google
-            </a>
+              {googleLoading ? 'Creando cuenta con Google...' : 'Continuar con Google'}
+            </button>
           </form>
 
           <div className="auth-footer">

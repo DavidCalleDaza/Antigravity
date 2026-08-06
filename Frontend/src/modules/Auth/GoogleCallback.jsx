@@ -19,7 +19,11 @@ export default function GoogleCallback() {
     const detail = searchParams.get('detail');
 
     if (socialStatus === 'error') {
-      setError(detail || 'Ocurrió un error con el inicio de sesión de Google.');
+      const ERROR_MESSAGES = {
+        email_already_registered: 'Ese correo ya tiene una cuenta. Inicia sesión en su lugar.',
+        user_cancelled: 'Cancelaste el inicio de sesión con Google.',
+      };
+      setError(ERROR_MESSAGES[detail] || detail || 'Ocurrió un error con el inicio de sesión de Google.');
       return;
     }
 

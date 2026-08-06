@@ -81,6 +81,11 @@ class User(Base):
         nullable=True,
         default=None,
     )
+    business_name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        default=None,
+    )
     location_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("locations.id", ondelete="SET NULL"),

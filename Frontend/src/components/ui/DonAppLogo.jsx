@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ServinowLogo({ 
+export default function DonAppLogo({ 
   width = 64, 
   height = 64, 
   variant = 'auto',
@@ -8,11 +8,11 @@ export default function ServinowLogo({
 }) {
   return (
     <span
-      className={`servinow-logo ${className} variant-${variant}`}
+      className={`donapp-logo ${className} variant-${variant}`}
       style={{ width, height, display: 'inline-block' }}
     >
       <style>{`
-        .servinow-logo {
+        .donapp-logo {
           -webkit-mask-image: url(/assets/logo-mark.png);
           mask-image: url(/assets/logo-mark.png);
           -webkit-mask-size: contain;
@@ -25,18 +25,18 @@ export default function ServinowLogo({
           filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
         }
 
-        .servinow-logo.variant-gold {
+        .donapp-logo.variant-gold {
           background: linear-gradient(135deg, var(--primary-light) 0%, var(--gold) 50%, var(--primary-dark) 100%);
           filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
         }
 
-        [data-theme="light"] .servinow-logo.variant-auto,
-        .servinow-logo.variant-dark {
+        [data-theme="light"] .donapp-logo.variant-auto,
+        .donapp-logo.variant-dark {
           background: #000000;
           filter: none;
         }
 
-        [data-theme="dark"] .servinow-logo.variant-auto {
+        [data-theme="dark"] .donapp-logo.variant-auto {
           background: linear-gradient(135deg, var(--primary-light) 0%, var(--gold) 50%, var(--primary-dark) 100%);
           filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
         }

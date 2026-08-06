@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, HeartHandshake, KeyRound } from 'lucide-react';
 import { authClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
-import ServinowLogo from '../../components/ui/ServinowLogo';
+import DonAppLogo from '../../components/ui/DonAppLogo';
 
 export default function ForgotPassword() {
   const [phase, setPhase] = useState(1); // 1 = Request code, 2 = Verify code & reset
@@ -72,7 +72,7 @@ export default function ForgotPassword() {
       <div className="auth-right">
         <div className="auth-form-container">
           <Link to="/" className="auth-logo">
-            <ServinowLogo width={52} height={52} variant="gold" />
+            <DonAppLogo width={52} height={52} variant="gold" />
           </Link>
 
           {phase === 1 ? (

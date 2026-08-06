@@ -1,5 +1,5 @@
 """
-Servinow API — Auth Module: Route Dependencies.
+DonApp API — Auth Module: Route Dependencies.
 
 Provides FastAPI dependencies for authenticated routes, including JWT
 validation and current user resolution.

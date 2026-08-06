@@ -1,5 +1,5 @@
 """
-Servinow API — Auth Module: CRUD Operations.
+DonApp API — Auth Module: CRUD Operations.
 
 Provides async database operations for user management.
 All functions receive an ``AsyncSession`` injected by FastAPI's
@@ -128,11 +128,11 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
             from app.core.email import send_email
             send_email(
                 to=user.email,
-                subject="¡Bienvenido a ServiNow!",
+                subject="¡Bienvenido a DonApp!",
                 template_name="welcome.html",
                 context={
                     "full_name": user.full_name,
-                    "company_name": settings.SMTP_FROM_NAME or "ServiNow",
+                    "company_name": settings.SMTP_FROM_NAME or "DonApp",
                     "role_label": "Vendedor" if user.role == "seller" else "Cliente",
                 },
             )

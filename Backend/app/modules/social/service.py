@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module: Service Layer.
+DonApp API — Social Module: Service Layer.
 
 Handles OAuth token exchange and content publishing for
 Facebook, Instagram, and TikTok platforms.

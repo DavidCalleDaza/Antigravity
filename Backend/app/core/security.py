@@ -1,5 +1,5 @@
 """
-Servinow API — Core Security Module.
+DonApp API — Core Security Module.
 
 Provides JWT token creation / verification and password hashing utilities.
 """

@@ -3,7 +3,7 @@ Prompts for processing WhatsApp natural language messages into products/services
 """
 
 WHATSAPP_INTENT_SYSTEM_PROMPT = """
-You are a helpful assistant for ServiNow, a platform where sellers manage their products and services.
+You are a helpful assistant for DonApp, a platform where sellers manage their products and services.
 A seller is texting you on WhatsApp.
 
 Your task is to analyze the user's message and determine their intent, and extract any relevant entities to create a product or service.

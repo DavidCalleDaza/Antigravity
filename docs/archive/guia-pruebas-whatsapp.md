@@ -1,4 +1,4 @@
-# Guía de Pruebas — Módulo WhatsApp (ServiNow)
+# Guía de Pruebas — Módulo WhatsApp (DonApp)
 
 ## Arquitectura General
 
@@ -71,7 +71,7 @@ META_APP_SECRET=<app-secret-de-meta-developer>
 WHATSAPP_ACCESS_TOKEN=<token-de-acceso-permanente>
 WHATSAPP_PHONE_ID=<id-del-número-de-teléfono>
 WHATSAPP_BUSINESS_ACCOUNT_ID=<id-de-la-cuenta-de-negocio>
-WHATSAPP_VERIFY_TOKEN=servinow_whatsapp_secret_123
+WHATSAPP_VERIFY_TOKEN=donapp_whatsapp_secret_123
 
 # --- Gemini (AI) ---
 GEMINI_API_KEY=<api-key-de-google-ai-studio>
@@ -246,7 +246,7 @@ curl -s http://localhost:8000/api/v1/health | python -m json.tool
 #### Token válido
 
 ```bash
-curl -s "http://localhost:8000/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.challenge=987654321&hub.verify_token=servinow_whatsapp_secret_123"
+curl -s "http://localhost:8000/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.challenge=987654321&hub.verify_token=donapp_whatsapp_secret_123"
 ```
 
 Respuesta esperada:
@@ -611,7 +611,7 @@ Enviar mensaje desde un número que **no** tiene `UserIdentity`:
 
 Respuesta esperada:
 ```
-"Hola! Tu número no está vinculado a una cuenta de ServiNow.
+"Hola! Tu número no está vinculado a una cuenta de DonApp.
 Ve a tu perfil en la web y añade tu número para empezar a crear
 productos desde aquí. Si ya tienes un código, escríbelo aquí (6 dígitos)."
 ```
@@ -768,12 +768,12 @@ https://tu-subdominio.ngrok-free.dev/api/v1/whatsapp/webhook
 Debe coincidir con `WHATSAPP_VERIFY_TOKEN` en tu `.env`:
 
 ```
-servinow_whatsapp_secret_123
+donapp_whatsapp_secret_123
 ```
 
 #### Proceso de verificación:
 
-1. Meta envía un GET a tu callback URL con `hub.mode=subscribe`, `hub.challenge=XXXX`, `hub.verify_token=servinow_whatsapp_secret_123`
+1. Meta envía un GET a tu callback URL con `hub.mode=subscribe`, `hub.challenge=XXXX`, `hub.verify_token=donapp_whatsapp_secret_123`
 2. Tu endpoint `verify_webhook()` en `router.py` valida el token y responde con el challenge
 3. Si la respuesta es correcta, Meta muestra "Verified" en el dashboard
 
@@ -796,7 +796,7 @@ Guarda en `.env`:
 WHATSAPP_ACCESS_TOKEN=EAA...
 WHATSAPP_PHONE_ID=1279745251878274
 WHATSAPP_BUSINESS_ACCOUNT_ID=1540734430762556
-WHATSAPP_VERIFY_TOKEN=servinow_whatsapp_secret_123
+WHATSAPP_VERIFY_TOKEN=donapp_whatsapp_secret_123
 META_APP_SECRET=eb418859481aa17346d876c31b7370e7
 ```
 
@@ -822,7 +822,7 @@ curl -s https://tu-subdominio.ngrok-free.dev/api/v1/health
 #### Paso 2: Probar GET webhook manual
 
 ```bash
-curl -s "https://tu-subdominio.ngrok-free.dev/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.challenge=123456&hub.verify_token=servinow_whatsapp_secret_123"
+curl -s "https://tu-subdominio.ngrok-free.dev/api/v1/whatsapp/webhook?hub.mode=subscribe&hub.challenge=123456&hub.verify_token=donapp_whatsapp_secret_123"
 # → 123456
 ```
 
@@ -831,7 +831,7 @@ Si esto funciona, Meta podrá verificarlo.
 #### Paso 3: Configurar en Meta Dashboard
 
 1. Callback URL: `https://tu-subdominio.ngrok-free.dev/api/v1/whatsapp/webhook`
-2. Verify Token: `servinow_whatsapp_secret_123`
+2. Verify Token: `donapp_whatsapp_secret_123`
 3. Hacer clic en **Verify and Save**
 4. Debe mostrar **Verified** en verde
 

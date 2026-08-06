@@ -1,4 +1,4 @@
-# SERVINOW CONTEXT V9
+# DONAPP CONTEXT V9
 
 > Última actualización: Julio 2026
 > Estado del proyecto: MVP Avanzado / UI-UX Pulida, Push Drawer, Tablas de Ancho Fijo y Confirmación de Cierre de Sesión (~9.0/10)
@@ -23,7 +23,7 @@
 ## 1. VISIÓN GENERAL DEL PROYECTO
 
 ### Descripción
-**ServiNow** es una plataforma de gestión para PyMEs (SMEs) colombianas con un componente social integrado. Su tagline es: *"Servir es el único negocio donde todos ganan"*.
+**DonApp** es una plataforma de gestión para PyMEs (SMEs) colombianas con un componente social integrado. Su tagline es: *"Servir es el único negocio donde todos ganan"*.
 
 En la versión **V9**, el proyecto ha consolidado su robustez visual e interactiva introduciendo mejoras clave de usabilidad y diseño de interfaz (UI/UX), mitigando problemas de colisiones de CSS y optimizando el rendimiento de renderizado en React.
 

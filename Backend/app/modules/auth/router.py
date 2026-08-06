@@ -1,5 +1,5 @@
 """
-Servinow API — Auth Module: API Routes.
+DonApp API — Auth Module: API Routes.
 
 Defines endpoints for user registration and (future) authentication.
 All routes are mounted under ``/api/v1/auth`` via the main application.
@@ -293,10 +293,10 @@ async def request_password_recovery(
     await redis_client.setex(redis_key, 600, code)
 
     # Send email
-    subject = "Código de recuperación — ServiNow"
+    subject = "Código de recuperación — DonApp"
     context = {
         "code": code,
-        "company_name": settings.SMTP_FROM_NAME or "ServiNow",
+        "company_name": settings.SMTP_FROM_NAME or "DonApp",
     }
     
     email_sent = send_email(

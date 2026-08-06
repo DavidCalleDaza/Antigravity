@@ -161,7 +161,7 @@ Ninguno cubre modelos, CRUD o endpoints del módulo Agenda.
 
 ## 9. Referencias en documentación
 
-`SERVINOW_CONTEXT V10.md` (14 Julio 2026) describe el módulo Agenda:
+`DONAPP_CONTEXT V10.md` (14 Julio 2026) describe el módulo Agenda:
 
 - **Estado actual:** "Agenda - Parcial - Mock data - CRÍTICO"
 - **Backend:** `Backend/app/modules/agenda/` contenía solo `__init__.py` vacío (antes del cambio local)

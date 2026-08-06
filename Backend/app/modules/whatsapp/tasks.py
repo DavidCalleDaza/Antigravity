@@ -110,7 +110,7 @@ async def _handle_otp_attempt(from_phone: str, clean_text: str) -> None:
         await redis_client.delete(lockout_key)
         await whatsapp_service.send_text_message(
             from_phone,
-            "✅ ¡Tu número ha sido vinculado exitosamente a tu cuenta de ServiNow! "
+            "✅ ¡Tu número ha sido vinculado exitosamente a tu cuenta de DonApp! "
             "Ya puedes empezar a crear productos y servicios enviándome mensajes.",
         )
     else:
@@ -224,7 +224,7 @@ async def async_process_message(payload: dict, retries: int = 0):
                             else:
                                 await whatsapp_service.send_text_message(
                                     from_phone,
-                                    "Hola! Tu número no está vinculado a una cuenta de ServiNow. "
+                                    "Hola! Tu número no está vinculado a una cuenta de DonApp. "
                                     "Ve a tu perfil en la web y añade tu número para empezar a crear "
                                     "productos desde aquí. Si ya tienes un código, escríbelo aquí (6 dígitos).",
                                 )

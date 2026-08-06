@@ -9,11 +9,11 @@ export default function ContactSection() {
         
         <div className="contact-grid">
           <div className="contact-info">
-            <a href="mailto:hola@servinow.com" className="contact-card">
+            <a href="mailto:hola@donapp.com" className="contact-card">
               <div className="contact-icon"><Mail size={24} /></div>
               <div className="contact-details">
                 <h4>Email</h4>
-                <p>hola@servinow.com</p>
+                <p>hola@donapp.com</p>
               </div>
             </a>
             

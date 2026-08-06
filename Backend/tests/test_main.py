@@ -1,5 +1,5 @@
 """
-Servinow API — Health Check Endpoint Tests.
+DonApp API — Health Check Endpoint Tests.
 
 Validates the /api/v1/health endpoint returns the expected
 response structure and status code.

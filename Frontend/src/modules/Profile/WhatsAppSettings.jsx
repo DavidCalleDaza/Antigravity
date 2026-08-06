@@ -101,7 +101,7 @@ export default function WhatsAppSettings() {
         <AlertCircle className="text-primary shrink-0" width="20" height="20" />
         <p className="text-sm text-secondary">
           Vincula tu número de WhatsApp para crear productos y servicios enviando mensajes directamente desde tu celular.
-          Envía un mensaje con el nombre y precio de tu producto y ServiNow lo creará por ti.
+          Envía un mensaje con el nombre y precio de tu producto y DonApp lo creará por ti.
         </p>
       </div>
 

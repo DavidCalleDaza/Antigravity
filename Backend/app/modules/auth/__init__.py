@@ -1,1 +1,1 @@
-"""Servinow API — Auth module."""
+"""DonApp API — Auth module."""

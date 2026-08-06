@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module OAuth Tests.
+DonApp API — Social Module OAuth Tests.
 
 Covers the Meta/Facebook/Instagram OAuth flow:
 - Authorization URL shape for GET /social/authorize/meta.
@@ -210,7 +210,7 @@ async def test_callback_success_fetches_ig_username_with_page_token(client: Asyn
             "data": [
                 {
                     "id": "page_123",
-                    "name": "Servinow-test",
+                    "name": "DonApp-test",
                     "access_token": "page-access-token",
                     "instagram_business_account": {"id": "ig_456"},
                 }
@@ -218,7 +218,7 @@ async def test_callback_success_fetches_ig_username_with_page_token(client: Asyn
         }
 
     def _make_ig_response():
-        return {"username": "servinowdpr"}
+        return {"username": "donappdpr"}
 
     with patch("app.modules.social.router.service.exchange_meta_code", new=_fake_exchange):
         with patch("app.modules.social.router.httpx.AsyncClient") as mock_client:

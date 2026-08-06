@@ -1,7 +1,7 @@
 # Informe: Funcionalidad "Iniciar sesión con Google"
 
 **Fecha:** 2026-07-25
-**Proyecto:** Servinow
+**Proyecto:** DonApp
 **Estado general:** Código completo, no funcional en el entorno actual (falta configuración)
 
 ---

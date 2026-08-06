@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import ServinowLogo from '../ui/ServinowLogo';
+import DonAppLogo from '../ui/DonAppLogo';
 
 export default function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -31,7 +31,7 @@ export default function LandingNav() {
   return (
     <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`} id="landing-nav">
       <div className="landing-logo" onClick={toggleTheme} style={{ cursor: "pointer" }}>
-        <ServinowLogo width={60} height={60} variant="auto" />
+        <DonAppLogo width={60} height={60} variant="auto" />
       </div>
 
       <div className="landing-links">

@@ -1,6 +1,6 @@
 # Configuración de Ngrok para Integración Social (V9)
 
-Para que las redes sociales (Meta y TikTok) puedan redirigir de vuelta al backend de ServiNow y enviar webhooks, necesitamos exponer el puerto local mediante un túnel HTTPS.
+Para que las redes sociales (Meta y TikTok) puedan redirigir de vuelta al backend de DonApp y enviar webhooks, necesitamos exponer el puerto local mediante un túnel HTTPS.
 
 ## Pasos manuales requeridos en cada reinicio de túnel
 

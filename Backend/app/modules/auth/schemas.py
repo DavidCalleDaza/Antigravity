@@ -1,5 +1,5 @@
 """
-Servinow API — Auth Module: Pydantic Schemas.
+DonApp API — Auth Module: Pydantic Schemas.
 
 Defines request/response validation models for user-related endpoints.
 These schemas form the API contract visible in Swagger/ReDoc.
@@ -41,7 +41,7 @@ class UserBase(BaseModel):
         Field(
             ...,
             description="User's email address.",
-            examples=["usuario@servinow.com"],
+            examples=["usuario@donapp.com"],
             max_length=255,
         ),
     ]
@@ -105,7 +105,7 @@ class UserLogin(BaseModel):
         Field(
             ...,
             description="User email address.",
-            examples=["usuario@servinow.com"],
+            examples=["usuario@donapp.com"],
             max_length=255,
         ),
     ]
@@ -267,7 +267,7 @@ class PasswordRecoveryRequest(BaseModel):
         Field(
             ...,
             description="Email address to send the recovery code to.",
-            examples=["usuario@servinow.com"],
+            examples=["usuario@donapp.com"],
             max_length=255,
         ),
     ]
@@ -281,7 +281,7 @@ class PasswordRecoveryReset(BaseModel):
         Field(
             ...,
             description="User email address.",
-            examples=["usuario@servinow.com"],
+            examples=["usuario@donapp.com"],
             max_length=255,
         ),
     ]

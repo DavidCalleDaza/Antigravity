@@ -6,7 +6,7 @@ const features = [
     icon: Building2,
     title: 'Multi-negocio',
     description: 'Gestiona varios negocios o puntos de venta desde una sola cuenta. Ideal para emprendedores con múltiples proyectos.',
-    detailedInfo: 'Con Servinow, puedes centralizar la administración de todos tus establecimientos. Cambia entre perfiles en segundos, consolida reportes financieros y gestiona inventarios compartidos o independientes. La escalabilidad es parte de nuestro ADN.',
+    detailedInfo: 'Con DonApp, puedes centralizar la administración de todos tus establecimientos. Cambia entre perfiles en segundos, consolida reportes financieros y gestiona inventarios compartidos o independientes. La escalabilidad es parte de nuestro ADN.',
     benefits: [
       'Cambio rápido entre sedes',
       'Reportes consolidados por grupo',
@@ -45,7 +45,7 @@ const features = [
     icon: Users,
     title: 'Comunidad Activa',
     description: 'Forma parte de una red de negocios que se apoyan mutuamente y contribuyen al bienestar común.',
-    detailedInfo: 'Servinow es más que un sistema; es un ecosistema. Accede a foros exclusivos, alianzas con proveedores locales y programas de mentoría entre dueños de negocios. Juntos, fortalecemos el comercio local.',
+    detailedInfo: 'DonApp es más que un sistema; es un ecosistema. Accede a foros exclusivos, alianzas con proveedores locales y programas de mentoría entre dueños de negocios. Juntos, fortalecemos el comercio local.',
     benefits: [
       'Red de networking local',
       'Descuentos exclusivos con proveedores',
@@ -60,7 +60,7 @@ export default function FeaturesSection({ onFeatureClick }) {
     <section className="features-section" id="servicios">
       <div className="container">
         <span className="section-label" style={{ textAlign: 'center' }}>Ventajas</span>
-        <h2 className="features-title">Por qué elegir <span>Servinow</span></h2>
+        <h2 className="features-title">Por qué elegir <span>DonApp</span></h2>
         <p className="features-subtitle">
           No es solo un software. Es una comunidad de negocios que demuestran que servir es el único negocio donde todos ganan.
         </p>

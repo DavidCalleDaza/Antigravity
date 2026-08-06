@@ -1,5 +1,5 @@
 """
-Servinow API – Billing Module: ORM Models.
+DonApp API – Billing Module: ORM Models.
 
 Defines all database tables required for the complete electronic invoicing
 (facturación electrónica) system, including customers, invoices, line items,

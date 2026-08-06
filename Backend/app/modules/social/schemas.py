@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module: Pydantic Schemas.
+DonApp API — Social Module: Pydantic Schemas.
 
 Request/response models for social account management, publishing, and admin flows.
 """

@@ -1,5 +1,5 @@
 # ============================================
-# Servinow Backend — Render Blueprint
+# DonApp Backend — Render Blueprint
 # ============================================
 # Docs: https://docs.render.com/blueprint-spec
 
@@ -39,7 +39,7 @@ services:
       - key: TIKTOK_REDIRECT_URI
         sync: false  # https://<tu-dominio-render>.onrender.com/api/v1/social/callback/tiktok
       - key: APP_NAME
-        value: Servinow API
+        value: DonApp API
       - key: APP_VERSION
         value: 0.1.0
       - key: DEBUG

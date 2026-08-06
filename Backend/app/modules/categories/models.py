@@ -1,5 +1,5 @@
 """
-Servinow API — Categories Module: ORM Models.
+DonApp API — Categories Module: ORM Models.
 
 Defines the ``categories`` table using SQLAlchemy 2.0.
 """

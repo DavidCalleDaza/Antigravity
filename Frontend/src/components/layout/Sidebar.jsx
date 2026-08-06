@@ -4,7 +4,7 @@ import * as LucideIcons from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../ui/Toast';
-import ServinowLogo from '../ui/ServinowLogo';
+import DonAppLogo from '../ui/DonAppLogo';
 import Helpers from '../../utils/helpers';
 import Modal from '../ui/Modal';
 
@@ -77,7 +77,7 @@ export default function Sidebar({ isOpen, closeMobile }) {
       <aside className={`sidebar`} id="sidebar">
         <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div className="sidebar-logo">
-            <ServinowLogo width={56} height={56} variant="auto" />
+            <DonAppLogo width={56} height={56} variant="auto" />
           </div>
           <button className="btn btn-ghost btn-icon-only sidebar-toggle-btn" onClick={toggleSidebar} title="Alternar menú">
             <LucideIcons.Menu width="20" height="20" />

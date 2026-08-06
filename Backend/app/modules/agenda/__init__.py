@@ -1,1 +1,1 @@
-"""Servinow API — Agenda module (availability + appointments)."""
+"""DonApp API — Agenda module (availability + appointments)."""

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import ServinowLogo from '../ui/ServinowLogo';
+import DonAppLogo from '../ui/DonAppLogo';
 
 export default function LandingFooter() {
   return (
@@ -7,7 +7,7 @@ export default function LandingFooter() {
       <div className="footer-grid">
         <div>
           <div className="landing-logo">
-            <ServinowLogo width={40} height={40} variant="gold" />
+            <DonAppLogo width={40} height={40} variant="gold" />
           </div>
           <p className="footer-brand-text">Tecnología que sirve. Un gestor de productos y servicios pensado para los negocios que mueven la economía real de un país.</p>
         </div>
@@ -37,7 +37,7 @@ export default function LandingFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Servinow. Hecho con propósito desde Colombia.</p>
+        <p>&copy; {new Date().getFullYear()} DonApp. Hecho con propósito desde Colombia.</p>
       </div>
     </footer>
   );

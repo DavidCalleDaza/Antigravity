@@ -1,5 +1,5 @@
 """
-Servinow API — Shared Pydantic Schemas.
+DonApp API — Shared Pydantic Schemas.
 
 Generic response models reused across multiple modules.
 """

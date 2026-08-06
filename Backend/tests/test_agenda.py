@@ -1,5 +1,5 @@
 """
-Servinow API — Agenda Module Critical Tests.
+DonApp API — Agenda Module Critical Tests.
 
 Tests for appointment authorization, CRUD operations, and slot calculation.
 """

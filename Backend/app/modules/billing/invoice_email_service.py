@@ -1,5 +1,5 @@
 """
-Servinow API — Billing Module: Invoice Email Service.
+DonApp API — Billing Module: Invoice Email Service.
 
 Envía la factura electrónica al correo del cliente, adjuntando el PDF
 generado por pdf_service.py (reutilizado, sin duplicar lógica de render).

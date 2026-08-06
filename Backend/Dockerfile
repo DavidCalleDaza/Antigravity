@@ -1,5 +1,5 @@
 # ============================================
-# Servinow Backend - Multi-stage Dockerfile
+# DonApp Backend - Multi-stage Dockerfile
 # ============================================
 FROM python:3.11-slim AS base
 

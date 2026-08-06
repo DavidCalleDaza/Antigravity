@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, ShoppingCart, CalendarPlus, Play, Share2 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
-import ServinowLogo from './ServinowLogo';
+import DonAppLogo from './DonAppLogo';
 
 const STATUS_CONFIG = {
   product: {
@@ -58,7 +58,7 @@ export default function MediaCard({
 
   const renderPlaceholder = () => (
     <div className="media-card-placeholder">
-      <ServinowLogo width={64} height={64} variant="gold" />
+      <DonAppLogo width={64} height={64} variant="gold" />
     </div>
   );
 

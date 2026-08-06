@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import ServinowLogo from '../../components/ui/ServinowLogo';
+import DonAppLogo from '../../components/ui/DonAppLogo';
 import ParticleNetwork from '../../components/ui/ParticleNetwork';
 
 export default function Login() {
@@ -54,13 +54,13 @@ export default function Login() {
         <div className="auth-left-content">
           <div className="auth-left-card">
             <Link to="/" className="auth-left-icon-link">
-              <ServinowLogo width={58} height={58} variant="auto" className="auth-left-icon" />
+              <DonAppLogo width={58} height={58} variant="auto" className="auth-left-icon" />
             </Link>
             <h2 className="auth-left-title">Bienvenido<br/>de nuevo</h2>
             <p className="auth-left-text">Gestiona tu negocio y transforma tu comunidad desde un solo lugar.</p>
           </div>
           <div className="auth-left-quote auth-left-card">
-            "No buscamos aplausos. Servinow existe porque servir es el único negocio donde todos ganan."
+            "No buscamos aplausos. DonApp existe porque servir es el único negocio donde todos ganan."
           </div>
         </div>
 
@@ -80,7 +80,7 @@ export default function Login() {
               <p className="auth-subtitle">Ingresa tus datos para acceder a tu cuenta</p>
             </div>
             <Link to="/" className="auth-logo">
-              <ServinowLogo width={68} height={68} variant="gold" />
+              <DonAppLogo width={68} height={68} variant="gold" />
             </Link>
           </div>
 

@@ -1,4 +1,4 @@
-# SERVINOW CONTEXT V11
+# DONAPP CONTEXT V11
 
 ## Diagnóstico de Integración Google Gemini/Veo — Backend
 
@@ -13,7 +13,7 @@
 GEMINI_API_KEY: str = ""
 GOOGLE_CLOUD_PROJECT: str = ""
 GOOGLE_CLOUD_LOCATION: str = "global"
-GCS_VIDEO_BUCKET: str = "servinow-ai-video-dev"
+GCS_VIDEO_BUCKET: str = "donapp-ai-video-dev"
 AI_VIDEO_DAILY_LIMIT: int = 50
 ```
 
@@ -409,7 +409,7 @@ async def main():
     print("GEMINI_API_KEY configurada. Llamando a Gemini...")
     try:
         copy = await generate_social_copy(
-            product_name="Miel Orgánica Servinow",
+            product_name="Miel Orgánica DonApp",
             description="Miel pura de abejas, 100% natural, recolectada de forma sostenible."
         )
         print("--------------------------------------------------")

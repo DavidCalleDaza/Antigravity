@@ -1,4 +1,4 @@
-# SERVINOW PROJECT - CONTEXT DOCUMENTATION
+# DONAPP PROJECT - CONTEXT DOCUMENTATION
 
 ## Tabla de Contenidos
 
@@ -17,7 +17,7 @@
 
 ## Resumen Ejecutivo
 
-**Servinow** es una aplicación web full-stack diseñada para gestión empresarial con enfoque en impacto social. El eslogan de la aplicación es: *"Servir es el único negocio donde todos ganan"*.
+**DonApp** es una aplicación web full-stack diseñada para gestión empresarial con enfoque en impacto social. El eslogan de la aplicación es: *"Servir es el único negocio donde todos ganan"*.
 
 La aplicación gestiona productos, servicios, facturación, citas/turnos, estadísticas y un muro social para donaciones/testimonios. El proyecto está compuesto por:
 
@@ -31,7 +31,7 @@ La aplicación gestiona productos, servicios, facturación, citas/turnos, estad�
 ## Estructura del Proyecto
 
 ```
-Servinow/
+DonApp/
 ├── Backend/                          # API REST - FastAPI + Python
 │   ├── app/
 │   │   ├── __init__.py
@@ -228,7 +228,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 
 # App
-APP_NAME=Servinow API
+APP_NAME=DonApp API
 APP_VERSION=0.1.0
 DEBUG=True
 ```
@@ -848,5 +848,5 @@ Esta versión fue probablemente la implementación inicial antes de migrar a Rea
 
 ---
 
-*Documento generado automáticamente para contexto del proyecto Servinow*
+*Documento generado automáticamente para contexto del proyecto DonApp*
 *Fecha: Mayo 2026*

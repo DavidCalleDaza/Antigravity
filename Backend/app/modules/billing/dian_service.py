@@ -1,5 +1,5 @@
 """
-Servinow API — Billing Module: DIAN Integration Service.
+DonApp API — Billing Module: DIAN Integration Service.
 
 Generates regulatory-compliant UBL 2.1 XML files for Colombian electronic
 invoices, generates verification hashes (CUFE, QR data), signs documents, and

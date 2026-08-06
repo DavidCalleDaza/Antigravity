@@ -1,5 +1,5 @@
 """
-Servinow API — Wall Module: CRUD Operations.
+DonApp API — Wall Module: CRUD Operations.
 
 Provides async database operations for posts and comments.
 All functions receive an ``AsyncSession`` injected via FastAPI dependency.

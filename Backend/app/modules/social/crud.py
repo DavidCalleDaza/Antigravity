@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module: CRUD Operations.
+DonApp API — Social Module: CRUD Operations.
 
 Multi-account aware: accounts are keyed by (user_id, platform, platform_user_id).
 Each (user_id, platform) group has exactly one is_default account.

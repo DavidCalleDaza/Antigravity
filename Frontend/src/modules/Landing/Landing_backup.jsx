@@ -91,7 +91,7 @@ export default function Landing() {
       />
 
       <footer className="landing-footer" style={{ textAlign: 'center', padding: '40px', borderTop: '1px solid var(--line)', color: 'var(--muted)' }}>
-        <p>&copy; 2026 Servinow. Servir es el único negocio donde todos ganan.</p>
+        <p>&copy; 2026 DonApp. Servir es el único negocio donde todos ganan.</p>
       </footer>
     </div>
   );

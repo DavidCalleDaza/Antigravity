@@ -1,5 +1,5 @@
 """
-Servinow API — Uploads Router.
+DonApp API — Uploads Router.
 
 Provides file upload endpoints for products and services media.
 Includes magic byte validation for security.

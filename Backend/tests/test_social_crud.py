@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module CRUD and Publish Tests.
+DonApp API — Social Module CRUD and Publish Tests.
 """
 
 import uuid

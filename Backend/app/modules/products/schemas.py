@@ -1,5 +1,5 @@
 """
-Servinow API — Products Module: Schemas.
+DonApp API — Products Module: Schemas.
 
 Defines request/response validation models for products.
 """

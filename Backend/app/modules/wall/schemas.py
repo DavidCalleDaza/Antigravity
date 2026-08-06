@@ -1,5 +1,5 @@
 """
-Servinow API — Wall Module: Pydantic Schemas.
+DonApp API — Wall Module: Pydantic Schemas.
 
 Defines request/response validation models for wall posts and comments.
 """

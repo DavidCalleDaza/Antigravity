@@ -1,9 +1,9 @@
 ---
-name: servinow-qa-conventions
-description: Convenciones de QA y testing de ServiNow — formato de test case, regla estricta de solo lectura contra la base de datos, y herramientas estandarizadas (openpyxl). Consulta esta skill SIEMPRE que generes test cases, scripts de validación contra PostgreSQL, o reportes de QA para ServiNow. Regla innegociable: cualquier script de validación de base de datos debe ser SOLO LECTURA (SELECT) — nunca DDL ni INSERT/UPDATE/DELETE directos que evadan el ORM/FastAPI.
+name: donapp-qa-conventions
+description: Convenciones de QA y testing de DonApp — formato de test case, regla estricta de solo lectura contra la base de datos, y herramientas estandarizadas (openpyxl). Consulta esta skill SIEMPRE que generes test cases, scripts de validación contra PostgreSQL, o reportes de QA para DonApp. Regla innegociable: cualquier script de validación de base de datos debe ser SOLO LECTURA (SELECT) — nunca DDL ni INSERT/UPDATE/DELETE directos que evadan el ORM/FastAPI.
 ---
 
-# Convenciones de QA en ServiNow
+# Convenciones de QA en DonApp
 
 ## Formato de test case
 

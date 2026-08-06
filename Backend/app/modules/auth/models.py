@@ -1,5 +1,5 @@
 """
-Servinow API — Auth Module: User ORM Model.
+DonApp API — Auth Module: User ORM Model.
 
 Defines the ``users`` table schema using SQLAlchemy 2.0 mapped columns.
 Supports role-based access control with three predefined roles:

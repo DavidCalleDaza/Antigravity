@@ -1,5 +1,5 @@
 """
-Servinow API — Declarative Base Class.
+DonApp API — Declarative Base Class.
 
 All ORM models must inherit from Base so that Alembic can discover
 them automatically for migration auto-generation.
@@ -10,7 +10,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 class Base(DeclarativeBase):
     """
-    SQLAlchemy declarative base for all Servinow ORM models.
+    SQLAlchemy declarative base for all DonApp ORM models.
 
     Extend this class when defining new database tables::
 

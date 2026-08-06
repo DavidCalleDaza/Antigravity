@@ -4,7 +4,7 @@ from celery.signals import worker_process_init
 from app.core.config import settings
 
 celery_app = Celery(
-    "servinow_worker",
+    "donapp_worker",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
     include=["app.modules.social.tasks", "app.modules.ai.tasks", "app.modules.whatsapp.tasks", "app.modules.agenda.tasks"]

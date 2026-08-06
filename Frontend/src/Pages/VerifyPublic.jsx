@@ -127,7 +127,7 @@ export default function VerifyPublic() {
         </div>
 
         <p className="verify-footer">
-          Este documento fue verificado a través del portal público de Servinow.
+          Este documento fue verificado a través del portal público de DonApp.
         </p>
       </div>
     </div>

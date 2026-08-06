@@ -1,5 +1,5 @@
 """
-Servinow API — Billing Module: Pydantic Schemas.
+DonApp API — Billing Module: Pydantic Schemas.
 
 Defines request/response validation models for customers, invoices,
 invoice items, credit notes, and billing summaries.

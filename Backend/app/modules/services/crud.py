@@ -1,5 +1,5 @@
 """
-Servinow API — Services Module: CRUD Operations.
+DonApp API — Services Module: CRUD Operations.
 
 Provides async database operations for services.
 All functions receive an ``AsyncSession`` injected via FastAPI dependency.

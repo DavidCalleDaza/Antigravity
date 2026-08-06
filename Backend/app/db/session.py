@@ -1,5 +1,5 @@
 """
-Servinow API — Async Database Session Management.
+DonApp API — Async Database Session Management.
 
 Configures the SQLAlchemy 2.0 async engine and provides a dependency-injectable
 session factory for FastAPI route handlers.

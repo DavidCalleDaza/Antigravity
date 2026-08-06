@@ -1,5 +1,5 @@
 """
-Servinow API — Exports Module: Constants.
+DonApp API — Exports Module: Constants.
 
 Valores fijos de identidad corporativa y textos institucionales,
 usados por excel.py, csv.py y charts.py. Cambiar la marca, el pie de
@@ -12,7 +12,7 @@ from pathlib import Path
 # IDENTIDAD CORPORATIVA
 # ==========================================================
 
-SYSTEM_NAME = "SERVINOW"
+SYSTEM_NAME = "DONAPP"
 SYSTEM_SLOGAN = "Sistema Inteligente de Facturación"
 SYSTEM_VERSION = "1.0.0"
 
@@ -29,7 +29,7 @@ DEFAULT_LOGO_PATH = ASSETS_DIR / "logo.png"
 # PIE DE PÁGINA
 # ==========================================================
 
-FOOTER_LINE_1 = "Reporte generado automáticamente por Servinow."
+FOOTER_LINE_1 = "Reporte generado automáticamente por DonApp."
 FOOTER_LINE_2 = (
     "Este documento fue generado por el Sistema Inteligente de Facturación."
 )

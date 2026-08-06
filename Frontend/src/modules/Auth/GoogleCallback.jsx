@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authClient } from '../../utils/apiClient';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../../components/ui/Toast';
-import ServinowLogo from '../../components/ui/ServinowLogo';
+import DonAppLogo from '../../components/ui/DonAppLogo';
 
 export default function GoogleCallback() {
   const [searchParams] = useSearchParams();
@@ -70,7 +70,7 @@ export default function GoogleCallback() {
       <div className="auth-page" style={{ justifyContent: 'center' }}>
         <div className="auth-form-container" style={{ textAlign: 'center', maxWidth: '400px' }}>
           <div className="auth-logo mx-auto">
-            <ServinowLogo width={50} height={50} variant="gold" />
+            <DonAppLogo width={50} height={50} variant="gold" />
           </div>
           <h2 style={{ marginTop: '20px', color: 'var(--danger-color, #ef4444)' }}>Error de Autenticación</h2>
           <p style={{ marginTop: '10px', marginBottom: '20px' }}>{error}</p>
@@ -86,7 +86,7 @@ export default function GoogleCallback() {
     <div className="auth-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
       <div style={{ textAlign: 'center' }}>
         <div className="auth-logo mx-auto heartbeat" style={{ animation: 'pulse 1.5s infinite' }}>
-          <ServinowLogo width={60} height={60} variant="gold" />
+          <DonAppLogo width={60} height={60} variant="gold" />
         </div>
         <h2 style={{ marginTop: '20px', color: 'var(--text-color)' }}>Validando cuenta...</h2>
         <p style={{ color: 'var(--text-muted)' }}>Por favor espera un momento.</p>

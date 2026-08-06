@@ -1,4 +1,4 @@
-# SERVINOW CONTEXT V8
+# DONAPP CONTEXT V8
 
 > Última actualización: Julio 2026
 > Estado del proyecto: MVP Avanzado / Integración Completa de Facturación y Redes Sociales (~8.5/10)
@@ -23,7 +23,7 @@
 ## 1. VISIÓN GENERAL DEL PROYECTO
 
 ### Descripción
-**ServiNow** es una plataforma de gestión para PyMEs (SMEs) colombianas con un componente social integrado. Su tagline es: *"Servir es el único negocio donde todos ganan"*.
+**DonApp** es una plataforma de gestión para PyMEs (SMEs) colombianas con un componente social integrado. Su tagline es: *"Servir es el único negocio donde todos ganan"*.
 
 En la versión **V8**, el proyecto ha logrado la **unificación total** de sus dos grandes ramas de desarrollo:
 1. **Facturación Electrónica V2:** Plena integración con el webservice DIAN (UBL 2.1, CUFE, códigos QR), generación de PDF (ReportLab), notas crédito y envío automático de facturas por correo electrónico (plantillas Jinja2).
@@ -50,7 +50,7 @@ En la versión **V8**, el proyecto ha logrado la **unificación total** de sus d
 ### Estructura de Directorios
 
 ```
-Servinow/
+DonApp/
 ├── Frontend/
 │   ├── src/
 │   │   ├── App.jsx                    # Router + ProtectedRoute
@@ -167,7 +167,7 @@ Se ha consolidado un único cliente HTTP asíncrono para gestionar todas las int
 ### 3.2 Los Módulos Clave en Detalle
 
 #### A. Facturación Electrónica V2
-Es el core empresarial de ServiNow.
+Es el core empresarial de DonApp.
 - **Validación DIAN:** Generación automática de XML estructurado bajo el estándar UBL 2.1, firmado digitalmente, con cálculo de código **CUFE** y generación de código **QR** reglamentario.
 - **PDF Profesional:** Plantillas estructuradas dinámicas utilizando ReportLab, que integran todos los datos tributarios, tabla de conceptos e información de resolución de pruebas de la DIAN.
 - **Notificación por Email:** Plantillas en HTML (utilizando Jinja2) que le permiten al vendedor despachar la factura en formato PDF directamente al correo electrónico del cliente desde la interfaz de usuario.
@@ -175,7 +175,7 @@ Es el core empresarial de ServiNow.
 
 #### B. Redes Sociales & OAuth
 Permite automatizar la promoción de los productos y servicios del inventario.
-- **OAuth 2.0:** Flujos integrados para que los usuarios autoricen a ServiNow a publicar en sus cuentas de Facebook, Instagram y TikTok.
+- **OAuth 2.0:** Flujos integrados para que los usuarios autoricen a DonApp a publicar en sus cuentas de Facebook, Instagram y TikTok.
 - **Background workers:** Publicaciones gestionadas en segundo plano a través de APIs de Meta y TikTok.
 - **Generación de Imagen:** Utilidad canvas en el Frontend (`generateShareImage.js`) que compila la foto, el nombre y el precio del ítem para generar una tarjeta de redes sociales lista para publicar.
 
@@ -189,7 +189,7 @@ Permite automatizar la promoción de los productos y servicios del inventario.
 ## 4. SISTEMA DE DISEÑO
 
 ### 4.1 Identidad Visual Bipolar
-ServiNow cuenta con una interfaz premium que se adapta según el modo visual seleccionado:
+DonApp cuenta con una interfaz premium que se adapta según el modo visual seleccionado:
 
 | Tema | Acento Primary | Enfoque de Interfaz |
 |------|----------------|---------------------|

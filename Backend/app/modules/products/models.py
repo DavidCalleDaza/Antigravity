@@ -1,5 +1,5 @@
 """
-Servinow API — Products Module: ORM Models.
+DonApp API — Products Module: ORM Models.
 
 Defines the ``products`` table using SQLAlchemy 2.0.
 """

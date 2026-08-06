@@ -1,5 +1,5 @@
 """
-Servinow API — Products Module: CRUD Operations.
+DonApp API — Products Module: CRUD Operations.
 
 Provides async database operations for products.
 All functions receive an ``AsyncSession`` injected via FastAPI dependency.

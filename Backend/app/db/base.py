@@ -1,5 +1,5 @@
 """
-Servinow API — Model Registry for Alembic.
+DonApp API — Model Registry for Alembic.
 
 This module imports the declarative Base AND every ORM model in
 the application.  Alembic's ``env.py`` imports ``Base`` from here

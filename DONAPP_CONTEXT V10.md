@@ -1,4 +1,4 @@
-# SERVINOW CONTEXT V10
+# DONAPP CONTEXT V10
 
 > **Última actualización:** Julio 2026
 > **Estado del proyecto:** MVP Avanzado / Módulos backbone completos / Integración Social + IA + WhatsApp + Facturación DIAN (~8.5/10)
@@ -27,7 +27,7 @@
 
 ### Descripción
 
-**ServiNow** es una plataforma de gestión empresarial para PyMEs colombianas con un componente social integrado. Su tagline: *"Servir es el único negocio donde todos ganan"*.
+**DonApp** es una plataforma de gestión empresarial para PyMEs colombianas con un componente social integrado. Su tagline: *"Servir es el único negocio donde todos ganan"*.
 
 En la versión **V10**, el proyecto ha expandido significativamente su alcance más allá de lo documentado en V9. Se incorporaron módulos completos de integración con WhatsApp Cloud API, generación de contenido por IA, publicación en redes sociales (Facebook/Instagram/TikTok), autenticación con Google OAuth, y un sistema robusto de facturación electrónica DIAN.
 
@@ -95,7 +95,7 @@ En la versión **V10**, el proyecto ha expandido significativamente su alcance m
 ### 2.1 Estructura del Proyecto
 
 ```
-Servinow/
+DonApp/
 ├── Backend/
 │   ├── app/
 │   │   ├── main.py                  # FastAPI app factory
@@ -581,7 +581,7 @@ Implementado después de V9 (commits: `02d1858`, `9582e21`).
 4. Frontend envía `code` a `POST /auth/google/exchange`
 5. Backend valida state, intercambia code por tokens, verifica JWT de Google con JWKS
 6. Busca o crea `User` + `UserIdentity(provider="google")`
-7. Devuelve JWT de ServiNow
+7. Devuelve JWT de DonApp
 
 **Seguridad adicional:**
 - PKCE (Proof Key for Code Exchange) — protege contra ataques de interceptación

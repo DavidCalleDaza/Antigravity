@@ -1,5 +1,5 @@
 """
-Servinow API — Exports Module: Templates.
+DonApp API — Exports Module: Templates.
 
 Estructuras de datos genéricas que cualquier módulo (Billing, Statistics,
 Products, etc.) usa para describir QUÉ exportar, sin saber CÓMO se
@@ -37,10 +37,10 @@ class ReportMetadata:
     """Encabezado corporativo del reporte: quién, cuándo, para quién, con qué filtros."""
     report_title: str
     generated_by: str
-    company: str = "Servinow"                 # empresa/cliente para la que se genera el reporte
+    company: str = "DonApp"                 # empresa/cliente para la que se genera el reporte
     period_label: str | None = None
     filters: dict[str, Any] = field(default_factory=dict)
-    system_name: str = "Servinow"
+    system_name: str = "DonApp"
     sheet_name: str | None = None             # nombre corto de hoja; si None se infiere del título
     logo_path: str | None = None              # ruta al logo; si None o inexistente, se omite
 

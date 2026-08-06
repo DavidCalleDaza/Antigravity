@@ -381,9 +381,9 @@ export default function Landing() {
               <div className="model-grid">
                 <div>
                   <div className="section-label reveal">Modelo de Negocio</div>
-                  <h2 className="reveal reveal-delay-1">Cómo funciona<br/><em>Servinow</em></h2>
+                  <h2 className="reveal reveal-delay-1">Cómo funciona<br/><em>DonApp</em></h2>
                   <p className="section-intro reveal reveal-delay-2" style={{marginBottom: 'clamp(28px,5vw,56px)'}}>
-                    Un ecosistema donde crecer y dar van de la mano. Cada negocio que usa Servinow contribuye al bienestar de su comunidad.
+                    Un ecosistema donde crecer y dar van de la mano. Cada negocio que usa DonApp contribuye al bienestar de su comunidad.
                   </p>
                   <div className="model-steps">
                     <div className="model-step reveal reveal-delay-1">
@@ -411,7 +411,7 @@ export default function Landing() {
                       <span className="step-num">04</span>
                       <div className="step-content">
                         <h4>Impacto real en la comunidad</h4>
-                        <p>Tus contribuciones llegan a quienes más lo necesitan. La comunidad crece contigo y Servinow crece con todos.</p>
+                        <p>Tus contribuciones llegan a quienes más lo necesitan. La comunidad crece contigo y DonApp crece con todos.</p>
                       </div>
                     </div>
                   </div>
@@ -432,7 +432,7 @@ export default function Landing() {
             <div className="container">
               <div className="benefits-header">
                 <div className="section-label reveal">Ventajas</div>
-                <h2 className="reveal reveal-delay-1">Por qué elegir<br/><em>Servinow</em></h2>
+                <h2 className="reveal reveal-delay-1">Por qué elegir<br/><em>DonApp</em></h2>
                 <p className="section-intro reveal reveal-delay-2">
                   No es solo un software. Es una comunidad de negocios que demuestran que servir es el único negocio donde todos ganan.
                 </p>
@@ -476,7 +476,7 @@ export default function Landing() {
                 <div className="section-label reveal">Impacto</div>
                 <h2 className="reveal reveal-delay-1">El ciclo que<br/><em>transforma vidas</em></h2>
                 <p className="section-intro reveal reveal-delay-2" style={{maxWidth: '580px', margin: '0 auto'}}>
-                  No es caridad. Es un ecosistema donde crecer y dar van de la mano. Cada negocio que se une a Servinow fortalece este ciclo virtuoso.
+                  No es caridad. Es un ecosistema donde crecer y dar van de la mano. Cada negocio que se une a DonApp fortalece este ciclo virtuoso.
                 </p>
               </div>
               <div className="impact-cards">
@@ -500,9 +500,9 @@ export default function Landing() {
             <div className="container">
               <div className="philosophy-content reveal">
                 <p className="philosophy-quote">
-                  No buscamos aplausos. No buscamos vitrinas. Servinow existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
+                  No buscamos aplausos. No buscamos vitrinas. DonApp existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
                 </p>
-                <p className="philosophy-author">— El equipo detrás de Servinow</p>
+                <p className="philosophy-author">— El equipo detrás de DonApp</p>
               </div>
             </div>
           </section>
@@ -538,9 +538,9 @@ export default function Landing() {
                     Estamos aquí para escucharte y ayudarte a transformar tu comunidad. Escríbenos y te responderemos lo antes posible.
                   </p>
                   <div className="contact-detail reveal reveal-delay-3">
-                    <a href="mailto:hola@servinow.com" className="contact-item">
+                    <a href="mailto:hola@donapp.com" className="contact-item">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" width="17" height="17"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                      <span>hola@servinow.com</span>
+                      <span>hola@donapp.com</span>
                     </a>
                     <a href="https://wa.me/573000000000" target="_blank" rel="noopener" className="contact-item">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" width="17" height="17"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 12 19.79 19.79 0 0 1 1.27 3.18 2 2 0 0 1 3.24 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/></svg>
@@ -564,7 +564,7 @@ export default function Landing() {
                       <label>Asunto</label>
                       <select>
                         <option value="">Selecciona una opción...</option>
-                        <option>Quiero usar Servinow</option>
+                        <option>Quiero usar DonApp</option>
                         <option>Tengo un negocio y quiero integrarme</option>
                         <option>Quiero hacer una donación</option>
                         <option>Preguntas sobre el modelo de impacto</option>

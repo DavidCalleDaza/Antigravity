@@ -1,5 +1,5 @@
 """
-Servinow API — Exports Module: Styles.
+DonApp API — Exports Module: Styles.
 
 Paleta corporativa y estilos reutilizables de OpenPyXL, independientes
 de cualquier módulo. Cambiar la identidad visual del reporte se hace
@@ -8,7 +8,7 @@ de cualquier módulo. Cambiar la identidad visual del reporte se hace
 
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
-# Paleta corporativa Servinow ("Royal Velvet" — dorado + fondo oscuro)
+# Paleta corporativa DonApp ("Royal Velvet" — dorado + fondo oscuro)
 COLOR_PRIMARY = "1C1924"      # fondo de encabezado corporativo
 COLOR_GOLD = "D4AF37"         # acento dorado
 COLOR_HEADER_TEXT = "FFFFFF"

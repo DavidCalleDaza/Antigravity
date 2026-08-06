@@ -1,6 +1,6 @@
-# Guía de Instalación y Ejecución de Servinow
+# Guía de Instalación y Ejecución de DonApp
 
-Esta guía contiene los pasos necesarios para clonar, configurar e instalar **Servinow** en una nueva computadora.
+Esta guía contiene los pasos necesarios para clonar, configurar e instalar **DonApp** en una nueva computadora.
 
 ---
 
@@ -18,8 +18,8 @@ Antes de comenzar, asegúrate de tener instalado en tu sistema:
 
 Abre tu terminal y ejecuta el siguiente comando para clonar el repositorio:
 ```bash
-git clone https://github.com/DavidCalleDaza/Antigravity.git Servinow
-cd Servinow
+git clone https://github.com/DavidCalleDaza/Antigravity.git DonApp
+cd DonApp
 ```
 
 ---

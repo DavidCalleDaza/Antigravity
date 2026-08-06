@@ -1,4 +1,4 @@
-# SERVINOW_CONTEXT V5
+# DONAPP_CONTEXT V5
 ## Plataforma de Gestión Empresarial con Impacto Social
 
 **Fecha de generación:** 13 de Mayo de 2026
@@ -27,9 +27,9 @@
 
 ## 1. VISIÓN GENERAL DEL PROYECTO
 
-### 1.1 ¿Qué es Servinow?
+### 1.1 ¿Qué es DonApp?
 
-**Servinow** es una aplicación web full-stack (SPA) diseñada para la **gestión empresarial con enfoque de impacto social**. Está orientada a pequeñas y medianas empresas en Colombia, permitiéndoles:
+**DonApp** es una aplicación web full-stack (SPA) diseñada para la **gestión empresarial con enfoque de impacto social**. Está orientada a pequeñas y medianas empresas en Colombia, permitiéndoles:
 
 - **Gestionar productos y servicios** - Inventario, precios, categorías
 - **Facturación** - Control de ingresos, gastos, facturas
@@ -101,7 +101,7 @@ La plataforma se diferencia al combinar herramientas de gestión empresarial con
 ### 3.1 Estructura de Directorios
 
 ```
-Servinow/
+DonApp/
 ├── Backend/
 │   ├── app/
 │   │   ├── main.py                    # Punto de entrada, CORS, routers
@@ -157,7 +157,7 @@ Servinow/
 │   │       ├── Statistics/           # ◐ Mock data
 │   │       └── Wall/                 # ✓ API real + WebSocket
 │   └── css/
-└── SERVINOW_CONTEXT V*.md
+└── DONAPP_CONTEXT V*.md
 ```
 
 ### 3.2 Diagrama de Arquitectura
@@ -1216,7 +1216,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 
 # Application
-APP_NAME=Servinow API
+APP_NAME=DonApp API
 APP_VERSION=0.1.0
 DEBUG=True
 ```

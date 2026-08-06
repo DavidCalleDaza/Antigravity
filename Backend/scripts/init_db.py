@@ -1,5 +1,5 @@
 """
-Servinow — Database Initialization Script
+DonApp — Database Initialization Script
 
 Usage:
     python scripts/init_db.py

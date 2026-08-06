@@ -1,5 +1,5 @@
 # ============================================
-# Servinow Backend - Python Dependencies
+# DonApp Backend - Python Dependencies
 # ============================================
 
 # --- Web Framework ---

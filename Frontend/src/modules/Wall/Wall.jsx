@@ -326,7 +326,7 @@ export default function Wall() {
       <div className="wall-header reveal">
         <div className="wall-quote">
           <span className="wall-quote-mark">“</span>
-          No buscamos aplausos. No buscamos vitrinas. Servinow existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
+          No buscamos aplausos. No buscamos vitrinas. DonApp existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
         </div>
         <div className="wall-subtitle">Evidencia de impacto real</div>
         

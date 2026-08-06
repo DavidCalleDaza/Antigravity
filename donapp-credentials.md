@@ -1,9 +1,9 @@
 ---
-name: servinow-credentials
-description: Modelo de datos, cifrado y reglas de acceso del sistema de credenciales de apps sociales (`social_app_credentials`) en ServiNow. Consulta esta skill SIEMPRE que trabajes con almacenamiento de App ID/Secret, cifrado de tokens, auditoría de cambios de credenciales, o los endpoints `/social/accounts/manual/*`. Regla innegociable: `app_secret` y los tokens de acceso NUNCA se exponen en schemas de respuesta, logs, ni al frontend en texto plano.
+name: donapp-credentials
+description: Modelo de datos, cifrado y reglas de acceso del sistema de credenciales de apps sociales (`social_app_credentials`) en DonApp. Consulta esta skill SIEMPRE que trabajes con almacenamiento de App ID/Secret, cifrado de tokens, auditoría de cambios de credenciales, o los endpoints `/social/accounts/manual/*`. Regla innegociable: `app_secret` y los tokens de acceso NUNCA se exponen en schemas de respuesta, logs, ni al frontend en texto plano.
 ---
 
-# Gestión de credenciales sociales en ServiNow
+# Gestión de credenciales sociales en DonApp
 
 ## Modelo de datos
 
@@ -26,7 +26,7 @@ Si agregas un campo nuevo a esta tabla, cualquier dato sensible (secrets, tokens
 
 El `user_id` es el dueño del negocio. Las credenciales de aplicación pueden venir de dos fuentes:
 
-1. **Sistema global**: cargadas desde variables de entorno `.env` (la app developer de ServiNow).
+1. **Sistema global**: cargadas desde variables de entorno `.env` (la app developer de DonApp).
 2. **Por usuario/negocio**: un `seller`/dueño puede proveer su propia App de Facebook/Instagram vía validación manual (`/accounts/manual/validate` → `/manual/confirm`).
 
 Los usuarios tienen un flag `is_staff` que reserva vistas de administración global, pero las rutas de credenciales actuales están acopladas a `current_user.id`, no a `is_staff` — **si vas a construir un panel de administración global de credenciales, necesitas agregar explícitamente la verificación de `is_staff`, no está implementada todavía en ese flujo.**
@@ -44,7 +44,7 @@ Los usuarios tienen un flag `is_staff` que reserva vistas de administración glo
 
 ## Flujos existentes
 
-- **App centralizada**: login OAuth estándar heredando secretos globales del `.env` (flujo normal descrito en `servinow-social-oauth`).
+- **App centralizada**: login OAuth estándar heredando secretos globales del `.env` (flujo normal descrito en `donapp-social-oauth`).
 - **Credenciales manuales propias**: `POST /social/accounts/manual/validate` valida `app_id`/`app_secret` provistos por el negocio contra la API externa; `manual/confirm` persiste el registro cifrado y verifica el `access_token` resultante antes de darlo por válido.
 
 Si vas a modificar este flujo, no bajes la validación de `manual/validate` — es lo único que evita guardar credenciales inválidas cifradas en base de datos.

@@ -1,5 +1,5 @@
 /* =======================================================================
-   SERVINOW — Módulo de Estadísticas (Paleta de Identificación de Alto Contraste)
+   DONAPP — Módulo de Estadísticas (Paleta de Identificación de Alto Contraste)
    ================================================================─────── */
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -18,7 +18,7 @@
    2. ENCABEZADO
    El título/ícono/descripción usan las clases genéricas compartidas
    (.page-header, .page-title, .page-description, .page-title-icon) que
-   vienen del layout general de Servinow (mismas que Productos/Servicios/
+   vienen del layout general de DonApp (mismas que Productos/Servicios/
    Billing). Aquí solo se sobreescribe el layout de esa fila para que,
    dentro de Estadísticas, los botones CSV/Excel (.actions-button-group)
    queden pegados a la derecha en la misma línea del título.

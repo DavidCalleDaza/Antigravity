@@ -1,8 +1,8 @@
-# SERVINOW CONTEXT V3 - Estado Actual del Proyecto
+# DONAPP CONTEXT V3 - Estado Actual del Proyecto
 
 **Fecha de generación:** 11 de Mayo de 2026
-**Versión anterior:** SERVINOW_CONTEXT V2.md
-**Proyecto:** Servinow - Plataforma de gestión empresarial con impacto social
+**Versión anterior:** DONAPP_CONTEXT V2.md
+**Proyecto:** DonApp - Plataforma de gestión empresarial con impacto social
 **Slogan:** *"Servir es el único negocio donde todos ganan"*
 
 ---
@@ -23,7 +23,7 @@
 ## 2. ESTRUCTURA DE DIRECTORIOS
 
 ```
-Servinow/
+DonApp/
 ├── Backend/
 │   ├── app/
 │   │   ├── __init__.py
@@ -162,8 +162,8 @@ Servinow/
 │   ├── vite.config.js
 │   └── public/
 │
-├── SERVINOW_CONTEXT V1.md
-└── SERVINOW_CONTEXT V2.md
+├── DONAPP_CONTEXT V1.md
+└── DONAPP_CONTEXT V2.md
 ```
 
 ---
@@ -522,7 +522,7 @@ aiofiles>=23.0.0
 
 ### Backend (.env)
 ```
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/servinow
+DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/donapp
 JWT_SECRET_KEY=your-secret-key-here
 JWT_ALGORITHM=HS256
 JWT_EXPIRATION_MINUTES=30
@@ -567,9 +567,9 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: servinow
-      POSTGRES_PASSWORD: servinow123
-      POSTGRES_DB: servinow
+      POSTGRES_USER: donapp
+      POSTGRES_PASSWORD: donapp123
+      POSTGRES_DB: donapp
     ports:
       - "5432:5432"
     volumes:
@@ -580,7 +580,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://servinow:servinow123@db:5432/servinow
+      DATABASE_URL: postgresql+asyncpg://donapp:donapp123@db:5432/donapp
     depends_on:
       - db
     volumes:

@@ -12,7 +12,7 @@ async def main():
     print("GEMINI_API_KEY configurada. Llamando a Gemini...")
     try:
         copy = await generate_social_copy(
-            product_name="Miel Orgánica Servinow",
+            product_name="Miel Orgánica DonApp",
             description="Miel pura de abejas, 100% natural, recolectada de forma sostenible."
         )
         print("--------------------------------------------------")

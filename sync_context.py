@@ -43,7 +43,7 @@ ttl = datetime.timedelta(minutes=60)
 
 cache = genai.caching.CachedContent.create(
     model='models/gemini-1.5-pro-001',
-    display_name='servinow-context',
+    display_name='donapp-context',
     system_instruction=(
         'Eres un ingeniero de software senior y QA automation experto. '
         'Utiliza el siguiente código y arquitectura adjunta para responder '

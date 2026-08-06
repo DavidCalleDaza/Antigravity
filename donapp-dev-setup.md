@@ -1,9 +1,9 @@
 ---
-name: servinow-dev-setup
-description: Instalación, variables de entorno y arranque local de ServiNow (Docker vs. instalación nativa, healthcheck, script start.bat). Consulta esta skill SIEMPRE que el usuario reporte un problema al levantar el entorno de desarrollo, pida ayuda con Docker/venv/pnpm, o necesite saber qué variables de entorno son obligatorias. No uses esta skill para decisiones de arquitectura o código de features — solo para diagnóstico y arranque de entorno.
+name: donapp-dev-setup
+description: Instalación, variables de entorno y arranque local de DonApp (Docker vs. instalación nativa, healthcheck, script start.bat). Consulta esta skill SIEMPRE que el usuario reporte un problema al levantar el entorno de desarrollo, pida ayuda con Docker/venv/pnpm, o necesite saber qué variables de entorno son obligatorias. No uses esta skill para decisiones de arquitectura o código de features — solo para diagnóstico y arranque de entorno.
 ---
 
-# Entorno de desarrollo de ServiNow
+# Entorno de desarrollo de DonApp
 
 ## Prerrequisitos
 
@@ -43,7 +43,7 @@ Frontend igual en ambos métodos: `cd Frontend && pnpm install && pnpm dev`.
 - **CORS**: `CORS_ORIGINS`
 - **App**: `APP_NAME`, `APP_VERSION`, `DEBUG`
 
-**Meta/TikTok**: confirmado que estas variables **no existen** en `.env.example` a la fecha. Si vas a implementar o probar el flujo OAuth social, primero hay que añadirlas a la plantilla — no asumas que ya están ahí solo porque el módulo social existe en `servinow-social-oauth`.
+**Meta/TikTok**: confirmado que estas variables **no existen** en `.env.example` a la fecha. Si vas a implementar o probar el flujo OAuth social, primero hay que añadirlas a la plantilla — no asumas que ya están ahí solo porque el módulo social existe en `donapp-social-oauth`.
 
 ## Verificar que el entorno funciona
 
@@ -55,7 +55,7 @@ Frontend igual en ambos métodos: `cd Frontend && pnpm install && pnpm dev`.
 Abre 3 paneles en Windows Terminal vía WSL: Backend (`uvicorn --reload`), Frontend (`npm run dev`), Ngrok (expone puerto 8000 con dominio fijo `limeade-legible-fifth.ngrok-free.dev`).
 
 **⚠️ No es genérico — está hardcodeado para una máquina específica**:
-- Rutas absolutas WSL quemadas (`\\wsl$\Ubuntu\home\davidcalle\Projects\Servinow`)
+- Rutas absolutas WSL quemadas (`\\wsl$\Ubuntu\home\davidcalle\Projects\DonApp`)
 - Asume el entorno virtual se llama `venv`, **pero `INSTALL.md`/`README.md` indican `.venv`** — esta inconsistencia de nombre puede romper el script si alguien siguió la guía de instalación al pie de la letra. Si te piden arreglar `start.bat`, señala este desajuste y confirma cuál es el nombre real de la carpeta del entorno virtual antes de asumir uno.
 - Dominio ngrok fijo a una cuenta particular
 

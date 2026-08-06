@@ -1,5 +1,5 @@
 """
-Servinow API – Billing Module: CRUD Operations.
+DonApp API – Billing Module: CRUD Operations.
 
 Provides async database operations for customers, invoices, invoice items,
 credit notes, and billing summaries. Includes atomic invoice numbering

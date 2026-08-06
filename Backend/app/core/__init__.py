@@ -1,1 +1,1 @@
-"""Servinow API — Core package."""
+"""DonApp API — Core package."""

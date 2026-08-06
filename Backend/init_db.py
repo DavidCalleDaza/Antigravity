@@ -1,5 +1,5 @@
 """
-Servinow — Emergency Database Initialization Script
+DonApp — Emergency Database Initialization Script
 
 Usage:
     cd Backend

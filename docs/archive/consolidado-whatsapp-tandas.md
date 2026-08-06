@@ -1,4 +1,4 @@
-# CONSOLIDADO TANDA 1-4 — Modulo WhatsApp (ServiNow)
+# CONSOLIDADO TANDA 1-4 — Modulo WhatsApp (DonApp)
 
 ## Arquitectura General
 

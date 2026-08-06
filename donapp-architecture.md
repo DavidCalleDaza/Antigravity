@@ -1,9 +1,9 @@
 ---
-name: servinow-architecture
-description: Arquitectura, stack técnico y convenciones de código de ServiNow (FastAPI + PostgreSQL en backend, React + Vite + Zustand en frontend). Consulta esta skill SIEMPRE que vayas a crear o modificar código en ServiNow, decidir dónde ubicar un archivo nuevo, elegir un patrón de estado o de estilos, evaluar si un módulo tiene backend real o es mock, o tocar el modelo de datos multi-tenant. Úsala también antes de proponer librerías nuevas (Tailwind, MUI, etc.) o refactors de estado — hay decisiones ya tomadas que no se deben revertir sin justificación explícita.
+name: donapp-architecture
+description: Arquitectura, stack técnico y convenciones de código de DonApp (FastAPI + PostgreSQL en backend, React + Vite + Zustand en frontend). Consulta esta skill SIEMPRE que vayas a crear o modificar código en DonApp, decidir dónde ubicar un archivo nuevo, elegir un patrón de estado o de estilos, evaluar si un módulo tiene backend real o es mock, o tocar el modelo de datos multi-tenant. Úsala también antes de proponer librerías nuevas (Tailwind, MUI, etc.) o refactors de estado — hay decisiones ya tomadas que no se deben revertir sin justificación explícita.
 ---
 
-# Arquitectura de ServiNow
+# Arquitectura de DonApp
 
 Estado del proyecto: MVP avanzado, UI/UX pulida (~9.0/10). Última actualización de contexto: julio 2026 (V9).
 
@@ -60,7 +60,7 @@ El backend valida identidad vía `get_current_user`, pero la distinción fuerte 
 | Services | ✅ | ✅ | Mismo diseño que Products |
 | Categories | ✅ | ✅ | Filtro por tipo de entidad |
 | Billing | ✅ | ✅ | DIAN, PDFs, notas crédito, email |
-| Social/OAuth | ✅ | ✅ | Ver skill `servinow-social-oauth` |
+| Social/OAuth | ✅ | ✅ | Ver skill `donapp-social-oauth` |
 | Wall | ✅ | ✅ | WebSockets |
 | Profile | ✅ | ✅ | Incluye conexión de redes |
 | Dashboard | ⚠️ parcial | ❌ | Mock, sin queries agregadas reales |

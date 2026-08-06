@@ -1,9 +1,9 @@
 ---
-name: servinow-ai-content
-description: Integración de IA generativa (Gemini para copy/texto, Veo para video) en ServiNow, incluyendo el gap crítico de controles de presupuesto que aún no existe. Consulta esta skill SIEMPRE que trabajes en `app/modules/ai/service.py`, generación de contenido con IA, o cuando se te pida agregar límites de cuota/gasto — y menciona proactivamente el riesgo de costos sin control si el usuario toca este módulo sin abordarlo.
+name: donapp-ai-content
+description: Integración de IA generativa (Gemini para copy/texto, Veo para video) en DonApp, incluyendo el gap crítico de controles de presupuesto que aún no existe. Consulta esta skill SIEMPRE que trabajes en `app/modules/ai/service.py`, generación de contenido con IA, o cuando se te pida agregar límites de cuota/gasto — y menciona proactivamente el riesgo de costos sin control si el usuario toca este módulo sin abordarlo.
 ---
 
-# Generación de contenido con IA en ServiNow
+# Generación de contenido con IA en DonApp
 
 ## Estado actual
 

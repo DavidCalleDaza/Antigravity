@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module: API Routes.
+DonApp API — Social Module: API Routes.
 
 Handles OAuth authorization, callbacks, multi-account management,
 content publishing, and post status polling for Facebook, Instagram, and TikTok.

@@ -1,5 +1,5 @@
 """
-Servinow API — Billing Module: PDF Generation Service.
+DonApp API — Billing Module: PDF Generation Service.
 
 Generates professional, regulatory-compliant PDFs for invoices using ReportLab.
 Includes styling, item tables, totals, payment details, and QR codes for DIAN.
@@ -490,7 +490,7 @@ def _build_invoice_pdf(invoice: Invoice, destination, verify_base_url: str = Non
     story.append(Spacer(1, 20))
     footer_text = (
         "Esta factura es una representación gráfica de un documento electrónico autorizado por la DIAN. "
-        "Servinow API v0.1.0 — Módulo de Facturación Electrónica. ¡Gracias por su confianza!"
+        "DonApp API v0.1.0 — Módulo de Facturación Electrónica. ¡Gracias por su confianza!"
     )
     story.append(Paragraph(f"<center><font size=7 color='#94A3B8'>{footer_text}</font></center>", style_normal))
 

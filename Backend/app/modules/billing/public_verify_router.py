@@ -1,5 +1,5 @@
 """
-Servinow API — Billing Module: Public Invoice Verification.
+DonApp API — Billing Module: Public Invoice Verification.
 
 Endpoint público (sin autenticación) para que cualquier persona con el
 CUFE (o, temporalmente, el id de la factura) pueda verificar su

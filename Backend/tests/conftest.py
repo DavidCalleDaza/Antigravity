@@ -1,5 +1,5 @@
 """
-Servinow API — Test Configuration & Fixtures.
+DonApp API — Test Configuration & Fixtures.
 
 Provides an async test client and an in-memory SQLite database session
 for isolated, repeatable integration tests.

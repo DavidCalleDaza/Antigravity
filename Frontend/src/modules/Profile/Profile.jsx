@@ -173,7 +173,7 @@ export default function Profile() {
         hasPassword: response.has_password,
       });
       if (currentUser?.needsOnboarding && !response.needs_onboarding) {
-        toast.success('¡Perfil completado! Bienvenido a ServiNow.', 'Éxito');
+        toast.success('¡Perfil completado! Bienvenido a DonApp.', 'Éxito');
         navigate('/dashboard');
       } else {
         toast.success('Perfil actualizado correctamente.', 'Éxito');
@@ -196,7 +196,7 @@ export default function Profile() {
         try {
           const { latitude, longitude } = position.coords;
           const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`, {
-            headers: { 'User-Agent': 'Servinow/1.0' },
+            headers: { 'User-Agent': 'DonApp/1.0' },
           });
           const data = await response.json();
           if (data && data.address) {
@@ -333,7 +333,7 @@ export default function Profile() {
       {currentUser?.needsOnboarding && (
         <div className="onboarding-banner">
           <AlertTriangle width="18" height="18" />
-          <span>Completa los campos obligatorios para continuar usando ServiNow.</span>
+          <span>Completa los campos obligatorios para continuar usando DonApp.</span>
         </div>
       )}
 
@@ -461,7 +461,7 @@ export default function Profile() {
               </div>
               <p className="text-xs text-tertiary mt-1">
                 {currentUser?.needsOnboarding
-                  ? 'Selecciona el tipo de cuenta que mejor describe tu uso de ServiNow.'
+                  ? 'Selecciona el tipo de cuenta que mejor describe tu uso de DonApp.'
                   : 'El rol es asignado por administración y no puede ser cambiado por el usuario.'}
               </p>
             </div>

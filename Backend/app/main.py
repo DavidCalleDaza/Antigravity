@@ -1,5 +1,5 @@
 """
-Servinow API — Application Entrypoint.
+DonApp API — Application Entrypoint.
 Configures the FastAPI application instance, registers middleware,
 exception handlers, and API routers.
 """
@@ -51,7 +51,7 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "Servinow — Plataforma SPA de gestion empresarial. "
+        "DonApp — Plataforma SPA de gestion empresarial. "
         "API REST construida con FastAPI, SQLAlchemy 2.0 y PostgreSQL."
     ),
     docs_url="/docs",
@@ -193,7 +193,7 @@ async def health_check() -> HealthCheckResponse:
     return HealthCheckResponse(status="ok", db_connection=db_ok)
 @app.get("/", include_in_schema=False)
 async def root():
-    return {"message": "Servinow API is running"}
+    return {"message": "DonApp API is running"}
 @app.get("/tiktok{verification_id}.txt", include_in_schema=False)
 async def tiktok_verify_dynamic(verification_id: str):
     from fastapi.responses import PlainTextResponse

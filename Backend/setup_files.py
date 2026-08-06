@@ -14,7 +14,7 @@ FILES: dict[str, str] = {}
 # ─── .env.example ─────────────────────────────────────────────────────────
 FILES[".env.example"] = """\
 # ============================================
-# Servinow Backend - Environment Configuration
+# DonApp Backend - Environment Configuration
 # ============================================
 # Copy this file to .env and fill in the values.
 
@@ -35,7 +35,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 
 # --- Application ---
-APP_NAME=Servinow API
+APP_NAME=DonApp API
 APP_VERSION=0.1.0
 DEBUG=True
 """
@@ -43,7 +43,7 @@ DEBUG=True
 # ─── Dockerfile ───────────────────────────────────────────────────────────
 FILES["Dockerfile"] = """\
 # ============================================
-# Servinow Backend - Multi-stage Dockerfile
+# DonApp Backend - Multi-stage Dockerfile
 # ============================================
 FROM python:3.11-slim AS base
 
@@ -73,7 +73,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload
 # ─── docker-compose.yml ──────────────────────────────────────────────────
 FILES["docker-compose.yml"] = """\
 # ============================================
-# Servinow Backend - Docker Compose (Local Dev)
+# DonApp Backend - Docker Compose (Local Dev)
 # ============================================
 version: "3.9"
 
@@ -128,15 +128,15 @@ python_functions = ["test_*"]
 """
 
 # ─── app/__init__.py ─────────────────────────────────────────────────────
-FILES["app/__init__.py"] = '\"\"\"Servinow API — Application root package.\"\"\"\n'
+FILES["app/__init__.py"] = '\"\"\"DonApp API — Application root package.\"\"\"\n'
 
 # ─── app/core/__init__.py ────────────────────────────────────────────────
-FILES["app/core/__init__.py"] = '\"\"\"Servinow API — Core package.\"\"\"\n'
+FILES["app/core/__init__.py"] = '\"\"\"DonApp API — Core package.\"\"\"\n'
 
 # ─── app/core/config.py ─────────────────────────────────────────────────
 FILES["app/core/config.py"] = '''\
 """
-Servinow API — Core Configuration Module.
+DonApp API — Core Configuration Module.
 
 Loads all application settings from environment variables using
 pydantic-settings. Values fallback to defaults defined here.
@@ -158,7 +158,7 @@ class Settings(BaseSettings):
     )
 
     # --- Application ---
-    APP_NAME: str = "Servinow API"
+    APP_NAME: str = "DonApp API"
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = True
 
@@ -206,7 +206,7 @@ settings = Settings()
 # ─── app/core/security.py ───────────────────────────────────────────────
 FILES["app/core/security.py"] = '''\
 """
-Servinow API — Core Security Module.
+DonApp API — Core Security Module.
 
 Provides JWT token creation / verification and password hashing utilities.
 """
@@ -281,7 +281,7 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
 # ─── app/core/exceptions.py ─────────────────────────────────────────────
 FILES["app/core/exceptions.py"] = '''\
 """
-Servinow API — Centralized HTTP Exception Handlers.
+DonApp API — Centralized HTTP Exception Handlers.
 
 Defines custom exception classes and registers global handlers
 on the FastAPI application to return consistent JSON error responses.
@@ -294,8 +294,8 @@ from fastapi.responses import JSONResponse
 # ── Custom Exception Classes ────────────────────────────────────────────────
 
 
-class ServinowException(Exception):
-    """Base exception for all Servinow domain errors."""
+class DonAppException(Exception):
+    """Base exception for all DonApp domain errors."""
 
     def __init__(
         self,
@@ -307,35 +307,35 @@ class ServinowException(Exception):
         super().__init__(detail)
 
 
-class NotFoundException(ServinowException):
+class NotFoundException(DonAppException):
     """Raised when a requested resource does not exist."""
 
     def __init__(self, detail: str = "Resource not found.") -> None:
         super().__init__(status_code=404, detail=detail)
 
 
-class UnauthorizedException(ServinowException):
+class UnauthorizedException(DonAppException):
     """Raised when authentication credentials are missing or invalid."""
 
     def __init__(self, detail: str = "Invalid or missing credentials.") -> None:
         super().__init__(status_code=401, detail=detail)
 
 
-class ForbiddenException(ServinowException):
+class ForbiddenException(DonAppException):
     """Raised when the user lacks permission for the requested action."""
 
     def __init__(self, detail: str = "You do not have permission to perform this action.") -> None:
         super().__init__(status_code=403, detail=detail)
 
 
-class BadRequestException(ServinowException):
+class BadRequestException(DonAppException):
     """Raised when the client sends malformed or invalid data."""
 
     def __init__(self, detail: str = "Bad request.") -> None:
         super().__init__(status_code=400, detail=detail)
 
 
-class ConflictException(ServinowException):
+class ConflictException(DonAppException):
     """Raised when a resource conflict occurs (e.g. duplicate entry)."""
 
     def __init__(self, detail: str = "Resource conflict.") -> None:
@@ -349,7 +349,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     """
     Attach global exception handlers to the FastAPI application instance.
 
-    This ensures every ``ServinowException`` (and unhandled ``Exception``)
+    This ensures every ``DonAppException`` (and unhandled ``Exception``)
     returns a uniform JSON envelope:
 
     .. code-block:: json
@@ -357,10 +357,10 @@ def register_exception_handlers(app: FastAPI) -> None:
         {"detail": "Human-readable error message"}
     """
 
-    @app.exception_handler(ServinowException)
-    async def servinow_exception_handler(
+    @app.exception_handler(DonAppException)
+    async def donapp_exception_handler(
         _request: Request,
-        exc: ServinowException,
+        exc: DonAppException,
     ) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
@@ -380,12 +380,12 @@ def register_exception_handlers(app: FastAPI) -> None:
 '''
 
 # ─── app/db/__init__.py ─────────────────────────────────────────────────
-FILES["app/db/__init__.py"] = '\"\"\"Servinow API — Database package.\"\"\"\n'
+FILES["app/db/__init__.py"] = '\"\"\"DonApp API — Database package.\"\"\"\n'
 
 # ─── app/db/session.py ──────────────────────────────────────────────────
 FILES["app/db/session.py"] = '''\
 """
-Servinow API — Async Database Session Management.
+DonApp API — Async Database Session Management.
 
 Configures the SQLAlchemy 2.0 async engine and provides a dependency-injectable
 session factory for FastAPI route handlers.
@@ -443,7 +443,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 # ─── app/db/base_class.py ───────────────────────────────────────────────
 FILES["app/db/base_class.py"] = '''\
 """
-Servinow API — Declarative Base Class.
+DonApp API — Declarative Base Class.
 
 All ORM models must inherit from ``Base`` so that Alembic can discover
 them automatically for migration auto-generation.
@@ -454,7 +454,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 class Base(DeclarativeBase):
     """
-    SQLAlchemy declarative base for all Servinow ORM models.
+    SQLAlchemy declarative base for all DonApp ORM models.
 
     Extend this class when defining new database tables::
 
@@ -467,12 +467,12 @@ class Base(DeclarativeBase):
 '''
 
 # ─── app/shared/__init__.py ─────────────────────────────────────────────
-FILES["app/shared/__init__.py"] = '\"\"\"Servinow API — Shared utilities package.\"\"\"\n'
+FILES["app/shared/__init__.py"] = '\"\"\"DonApp API — Shared utilities package.\"\"\"\n'
 
 # ─── app/shared/schemas.py ──────────────────────────────────────────────
 FILES["app/shared/schemas.py"] = '''\
 """
-Servinow API — Shared Pydantic Schemas.
+DonApp API — Shared Pydantic Schemas.
 
 Generic response models reused across multiple modules.
 """
@@ -494,16 +494,16 @@ class HealthCheckResponse(BaseModel):
 '''
 
 # ─── app/modules/__init__.py ────────────────────────────────────────────
-FILES["app/modules/__init__.py"] = '\"\"\"Servinow API — Modules package (Modular Monolith).\"\"\"\n'
+FILES["app/modules/__init__.py"] = '\"\"\"DonApp API — Modules package (Modular Monolith).\"\"\"\n'
 
 # ─── Module placeholders ────────────────────────────────────────────────
 for mod in ("auth", "products", "billing", "agenda", "wall"):
-    FILES[f"app/modules/{mod}/__init__.py"] = f'\"\"\"Servinow API — {mod.capitalize()} module.\"\"\"\n'
+    FILES[f"app/modules/{mod}/__init__.py"] = f'\"\"\"DonApp API — {mod.capitalize()} module.\"\"\"\n'
 
 # ─── app/main.py ─────────────────────────────────────────────────────────
 FILES["app/main.py"] = '''\
 """
-Servinow API — Application Entrypoint.
+DonApp API — Application Entrypoint.
 
 Configures the FastAPI application instance, registers middleware,
 exception handlers, and API routers.
@@ -544,7 +544,7 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "Servinow — Plataforma SPA de gestión empresarial. "
+        "DonApp — Plataforma SPA de gestión empresarial. "
         "API REST construida con FastAPI, SQLAlchemy 2.0 y PostgreSQL."
     ),
     docs_url="/docs",
@@ -601,12 +601,12 @@ async def health_check() -> HealthCheckResponse:
 '''
 
 # ─── tests/__init__.py ──────────────────────────────────────────────────
-FILES["tests/__init__.py"] = '\"\"\"Servinow API — Tests package.\"\"\"\n'
+FILES["tests/__init__.py"] = '\"\"\"DonApp API — Tests package.\"\"\"\n'
 
 # ─── tests/conftest.py ──────────────────────────────────────────────────
 FILES["tests/conftest.py"] = '''\
 """
-Servinow API — Test Configuration & Fixtures.
+DonApp API — Test Configuration & Fixtures.
 
 Provides an async test client and an in-memory SQLite database session
 for isolated, repeatable integration tests.
@@ -718,7 +718,7 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 # ─── tests/test_main.py ─────────────────────────────────────────────────
 FILES["tests/test_main.py"] = '''\
 """
-Servinow API — Health Check Endpoint Tests.
+DonApp API — Health Check Endpoint Tests.
 
 Validates the /api/v1/health endpoint returns the expected
 response structure and status code.

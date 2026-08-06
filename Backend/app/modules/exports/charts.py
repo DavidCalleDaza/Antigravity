@@ -1,5 +1,5 @@
 """
-Servinow API — Exports Module: Charts.
+DonApp API — Exports Module: Charts.
 
 Genera gráficos nativos de Excel (NUNCA imágenes) a partir de ChartSpec,
 respetando las reglas de diseño del reporte corporativo:

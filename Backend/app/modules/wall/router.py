@@ -1,5 +1,5 @@
 """
-Servinow API — Wall Module: API Routes.
+DonApp API — Wall Module: API Routes.
 
 Defines endpoints for wall posts, comments, and real-time WebSocket events.
 Mounted under ``/api/v1/wall`` via the main application.

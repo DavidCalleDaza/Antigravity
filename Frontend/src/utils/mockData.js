@@ -3,10 +3,10 @@ export const MockData = {
   currentUser: {
     id: 'usr_001',
     name: 'David Calle',
-    email: 'david@servinow.com',
+    email: 'david@donapp.com',
     role: 'admin',
     avatar: null,
-    business: 'Servinow HQ'
+    business: 'DonApp HQ'
   },
 
   // ── Products ──
@@ -58,7 +58,7 @@ export const MockData = {
   wallPosts: [
     {
       id: 'post_001',
-      author: 'Servinow',
+      author: 'DonApp',
       authorRole: 'admin',
       type: 'donation',
       text: 'Hoy llevamos 50 kits escolares a los niños de la vereda El Progreso. Cada mochila llena de lápices, cuadernos y sueños. Gracias a la tienda "Don José" por hacer esto posible con sus donaciones.',
@@ -72,7 +72,7 @@ export const MockData = {
       author: 'Tienda La Esperanza',
       authorRole: 'seller',
       type: 'testimony',
-      text: 'Llevamos 3 meses usando Servinow y no solo hemos organizado nuestro inventario, sino que hemos podido donar productos a familias del barrio. Es bonito poder dar mientras creces.',
+      text: 'Llevamos 3 meses usando DonApp y no solo hemos organizado nuestro inventario, sino que hemos podido donar productos a familias del barrio. Es bonito poder dar mientras creces.',
       image: null,
       date: '2026-04-28',
       thanks: 18,
@@ -80,7 +80,7 @@ export const MockData = {
     },
     {
       id: 'post_003',
-      author: 'Servinow',
+      author: 'DonApp',
       authorRole: 'admin',
       type: 'impact',
       text: 'Doña Carmen, desplazada de Urabá, ahora vende sus dulces artesanales con facturación digital. Su negocio creció un 40% en dos meses. Esto es lo que pasa cuando la tecnología sirve a quien más lo necesita.',
@@ -102,7 +102,7 @@ export const MockData = {
     },
     {
       id: 'post_005',
-      author: 'Servinow',
+      author: 'DonApp',
       authorRole: 'admin',
       type: 'impact',
       text: 'En 6 meses: 127 negocios de barrio activos, 340 familias impactadas, 2,150 productos donados. Cada número es un nombre, una historia, una vida que tocamos sin buscar aplausos.',

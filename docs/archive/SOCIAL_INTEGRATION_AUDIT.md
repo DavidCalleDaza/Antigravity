@@ -1,17 +1,17 @@
 # AUDITORÍA TÉCNICA: MÓDULO DE INTEGRACIÓN SOCIAL (PRE-IMPLEMENTACIÓN)
 
-Este documento presenta el estado de preparación técnica de ServiNow (FastAPI + React) con respecto a la pre-implementación de la funcionalidad de publicación de productos y servicios en redes sociales (Facebook, Instagram y TikTok).
+Este documento presenta el estado de preparación técnica de DonApp (FastAPI + React) con respecto a la pre-implementación de la funcionalidad de publicación de productos y servicios en redes sociales (Facebook, Instagram y TikTok).
 
 ---
 
 ## 1. BACKEND — MÓDULO `social/`
 
 ### 1.1 Estructura de Archivos
-La lista de archivos presentes en la ruta [Backend/app/modules/social/](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/) y su respectivo propósito técnico:
-1. [models.py](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/models.py): Contiene las definiciones ORM de SQLAlchemy para las tablas de base de datos asociadas a cuentas vinculadas (`SocialAccount`) y posts publicados (`SocialPost`).
-2. [schemas.py](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/schemas.py): Define los esquemas de validación y serialización de datos de Pydantic para peticiones y respuestas.
-3. [router.py](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/router.py): Expone los endpoints de la API FastAPI correspondientes al módulo.
-4. [crud.py](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/crud.py): Encapsula las operaciones asíncronas de lectura y escritura en la base de datos PostgreSQL utilizando SQLAlchemy.
+La lista de archivos presentes en la ruta [Backend/app/modules/social/](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/) y su respectivo propósito técnico:
+1. [models.py](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/models.py): Contiene las definiciones ORM de SQLAlchemy para las tablas de base de datos asociadas a cuentas vinculadas (`SocialAccount`) y posts publicados (`SocialPost`).
+2. [schemas.py](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/schemas.py): Define los esquemas de validación y serialización de datos de Pydantic para peticiones y respuestas.
+3. [router.py](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/router.py): Expone los endpoints de la API FastAPI correspondientes al módulo.
+4. [crud.py](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/crud.py): Encapsula las operaciones asíncronas de lectura y escritura en la base de datos PostgreSQL utilizando SQLAlchemy.
 
 ### 1.2 Modelos de Datos en `social/models.py`
 
@@ -43,7 +43,7 @@ Almacena el historial y estado de las publicaciones realizadas. Sus campos exact
 * `created_at`: `DateTime(timezone=True)` (Fecha de creación del registro, obligatorio).
 
 ### 1.3 Endpoint `/publish` y Lógica Real de Envío
-En [router.py (Línea 20)](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/router.py#L20), el endpoint POST `/publish` está definido de la siguiente forma:
+En [router.py (Línea 20)](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/router.py#L20), el endpoint POST `/publish` está definido de la siguiente forma:
 
 ```python
 @router.post("/publish", response_model=SocialPostResponse, status_code=status.HTTP_201_CREATED)
@@ -56,7 +56,7 @@ async def publish_content(
     return await crud.create_social_post(db, current_user.id, post_in)
 ```
 
-Al evaluar la función `crud.create_social_post` en [crud.py (Línea 39)](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/crud.py#L39):
+Al evaluar la función `crud.create_social_post` en [crud.py (Línea 39)](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/crud.py#L39):
 ```python
 async def create_social_post(db: AsyncSession, user_id: str, post_in: SocialPostCreate) -> SocialPost:
     db_post = SocialPost(user_id=user_id, **post_in.model_dump())
@@ -76,7 +76,7 @@ async def create_social_post(db: AsyncSession, user_id: str, post_in: SocialPost
 **NO IMPLEMENTADO**. Al no haber lógica de publicación real y al no existir interacción con APIs de terceros, no hay mecanismos que controlen si una red falla y otra tiene éxito en una publicación simultánea.
 
 ### 1.6 Dependencias Instaladas (`requirements.txt`)
-Al revisar [requirements.txt](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/requirements.txt):
+Al revisar [requirements.txt](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/requirements.txt):
 * Hay cliente HTTP genérico: `httpx>=0.27.0` (usado principalmente en testing).
 * **NO EXISTEN** SDKs oficiales de Meta (como `facebook-sdk` o `facebook-business`) ni librerías de TikTok instaladas.
 
@@ -86,11 +86,11 @@ Al revisar [requirements.txt](file:///Ubuntu/home/davidcalle/Projects/Servinow/B
 
 ### 2.1 Mecanismo de Almacenamiento
 * **Tipo:** **Local Filesystem** (Almacenamiento en disco local).
-* En [uploads.py (Líneas 34-35)](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/api/uploads.py#L34-L35), se especifica el directorio destino:
+* En [uploads.py (Líneas 34-35)](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/api/uploads.py#L34-L35), se especifica el directorio destino:
   ```python
   UPLOAD_DIR = Path("uploads/items")
   ```
-* En [main.py (Línea 128)](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/main.py#L128), el directorio se monta como ruta estática en FastAPI:
+* En [main.py (Línea 128)](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/main.py#L128), el directorio se monta como ruta estática en FastAPI:
   ```python
   app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
   ```
@@ -105,7 +105,7 @@ Al revisar [requirements.txt](file:///Ubuntu/home/davidcalle/Projects/Servinow/B
 ## 3. FRONTEND — MODAL DE PUBLICACIÓN SOCIAL
 
 ### 3.1 Componente del Modal
-* **Ruta del Archivo:** [Frontend/src/components/ShareModal.jsx](file:///Ubuntu/home/davidcalle/Projects/Servinow/Frontend/src/components/ShareModal.jsx)
+* **Ruta del Archivo:** [Frontend/src/components/ShareModal.jsx](file:///Ubuntu/home/davidcalle/Projects/DonApp/Frontend/src/components/ShareModal.jsx)
 * **Props que recibe:**
   * `isOpen` (boolean): Controla la visibilidad en el portal.
   * `onClose` (function): Callback al cerrar el modal.
@@ -122,12 +122,12 @@ Al revisar [requirements.txt](file:///Ubuntu/home/davidcalle/Projects/Servinow/B
 
 ### 3.2 Invocación en el Proyecto
 Es invocado en dos pantallas de administración del catálogo:
-1. [Products.jsx](file:///Ubuntu/home/davidcalle/Projects/Servinow/Frontend/src/modules/Products/Products.jsx) (Línea 442) a través de la prop `onShare` de la tarjeta del ítem.
-2. [Services.jsx](file:///Ubuntu/home/davidcalle/Projects/Servinow/Frontend/src/modules/Services/Services.jsx) (Línea 335) de manera homóloga para servicios.
+1. [Products.jsx](file:///Ubuntu/home/davidcalle/Projects/DonApp/Frontend/src/modules/Products/Products.jsx) (Línea 442) a través de la prop `onShare` de la tarjeta del ítem.
+2. [Services.jsx](file:///Ubuntu/home/davidcalle/Projects/DonApp/Frontend/src/modules/Services/Services.jsx) (Línea 335) de manera homóloga para servicios.
 
 ### 3.3 Conexión real con `apiClient` / `socialClient`
 El modal **NO** llama al backend al presionar "Publicar".
-Al revisar la función `handlePublishClick` en [ShareModal.jsx (Línea 102)](file:///Ubuntu/home/davidcalle/Projects/Servinow/Frontend/src/components/ShareModal.jsx#L102):
+Al revisar la función `handlePublishClick` en [ShareModal.jsx (Línea 102)](file:///Ubuntu/home/davidcalle/Projects/DonApp/Frontend/src/components/ShareModal.jsx#L102):
 ```javascript
   const handlePublishClick = async () => {
     setPublishing(true);
@@ -150,7 +150,7 @@ La lógica de `handlePublish` se limita a:
 * En ningún momento invoca a `apiClient` o `socialClient`.
 
 ### 3.4 Métodos del `socialClient` en `apiClient.js`
-Definidos en [apiClient.js (Líneas 156-161)](file:///Ubuntu/home/davidcalle/Projects/Servinow/Frontend/src/utils/apiClient.js#L156-L161):
+Definidos en [apiClient.js (Líneas 156-161)](file:///Ubuntu/home/davidcalle/Projects/DonApp/Frontend/src/utils/apiClient.js#L156-L161):
 ```javascript
 export const socialClient = {
   listAccounts: () => apiClient.get('/social/accounts'),
@@ -179,9 +179,9 @@ Al auditar `config.py` y `.env.example`:
 
 | Componente | Estado real | Evidencia (archivo:línea) | Bloqueante para producción |
 |---|---|---|---|
-| OAuth Meta | **NO IMPLEMENTADO** (Sin credenciales ni endpoints de intercambio/callback) | [config.py:1](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/core/config.py) | **Sí** |
-| OAuth TikTok | **NO IMPLEMENTADO** (Sin credenciales ni endpoints de intercambio/callback) | [config.py:1](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/core/config.py) | **Sí** |
-| Modelo posts↔producto | **SOPORTADO** (Tablas mapeadas con FK hacia productos y servicios) | [models.py:59](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/models.py#L59) | **No** |
-| Publish real vs mock | **MOCK / SOLO PERSISTENCIA** (Guarda en BD pero no procesa ni llama a APIs externas) | [crud.py:39](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/modules/social/crud.py#L39) | **Sí** |
-| Imágenes públicas | **LOCAL ONLY** (Guardadas localmente, inaccesibles por Meta/TikTok) | [uploads.py:34](file:///Ubuntu/home/davidcalle/Projects/Servinow/Backend/app/api/uploads.py#L34) | **Sí** |
-| Frontend conectado a backend | **SIN CONECTAR** (El modal usa intents de enlaces directos o sharing nativo sin llamar a apiClient) | [ShareModal.jsx:102](file:///Ubuntu/home/davidcalle/Projects/Servinow/Frontend/src/components/ShareModal.jsx#L102) | **Sí** |
+| OAuth Meta | **NO IMPLEMENTADO** (Sin credenciales ni endpoints de intercambio/callback) | [config.py:1](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/core/config.py) | **Sí** |
+| OAuth TikTok | **NO IMPLEMENTADO** (Sin credenciales ni endpoints de intercambio/callback) | [config.py:1](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/core/config.py) | **Sí** |
+| Modelo posts↔producto | **SOPORTADO** (Tablas mapeadas con FK hacia productos y servicios) | [models.py:59](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/models.py#L59) | **No** |
+| Publish real vs mock | **MOCK / SOLO PERSISTENCIA** (Guarda en BD pero no procesa ni llama a APIs externas) | [crud.py:39](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/modules/social/crud.py#L39) | **Sí** |
+| Imágenes públicas | **LOCAL ONLY** (Guardadas localmente, inaccesibles por Meta/TikTok) | [uploads.py:34](file:///Ubuntu/home/davidcalle/Projects/DonApp/Backend/app/api/uploads.py#L34) | **Sí** |
+| Frontend conectado a backend | **SIN CONECTAR** (El modal usa intents de enlaces directos o sharing nativo sin llamar a apiClient) | [ShareModal.jsx:102](file:///Ubuntu/home/davidcalle/Projects/DonApp/Frontend/src/components/ShareModal.jsx#L102) | **Sí** |

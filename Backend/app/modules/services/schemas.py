@@ -1,5 +1,5 @@
 """
-Servinow API — Services Module: Schemas.
+DonApp API — Services Module: Schemas.
 
 Defines request/response validation models for services.
 """

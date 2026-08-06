@@ -1,7 +1,7 @@
 """
 Alembic environment configuration for async SQLAlchemy.
 
-Configured to use the Servinow async engine and Base metadata
+Configured to use the DonApp async engine and Base metadata
 for automatic migration generation.
 
 IMPORTANT: We import Base from ``app.db.base`` (NOT ``base_class``)

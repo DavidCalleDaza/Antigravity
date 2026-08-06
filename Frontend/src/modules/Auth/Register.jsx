@@ -4,7 +4,7 @@ import { Mail, Lock, Eye, EyeOff, Store, User, Shield } from 'lucide-react';
 import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
-import ServinowLogo from '../../components/ui/ServinowLogo';
+import DonAppLogo from '../../components/ui/DonAppLogo';
 import ParticleNetwork from '../../components/ui/ParticleNetwork';
 
 export default function Register() {
@@ -72,9 +72,9 @@ export default function Register() {
         <div className="auth-left-content">
           <div className="auth-left-card">
             <Link to="/" className="auth-left-icon-link">
-              <ServinowLogo width={58} height={58} variant="auto" className="auth-left-icon" />
+              <DonAppLogo width={58} height={58} variant="auto" className="auth-left-icon" />
             </Link>
-            <h2 className="auth-left-title">Únete a<br/>Servinow</h2>
+            <h2 className="auth-left-title">Únete a<br/>DonApp</h2>
             <p className="auth-left-text">Comienza a gestionar tu negocio y a impactar vidas hoy mismo.</p>
           </div>
           <div className="auth-left-quote auth-left-card">
@@ -98,7 +98,7 @@ export default function Register() {
               <p className="auth-subtitle">Completa tus datos para comenzar</p>
             </div>
             <Link to="/" className="auth-logo">
-              <ServinowLogo width={68} height={68} variant="gold" />
+              <DonAppLogo width={68} height={68} variant="gold" />
             </Link>
           </div>
 

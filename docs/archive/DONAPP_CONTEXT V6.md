@@ -1,4 +1,4 @@
-# SERVINOW CONTEXT V6
+# DONAPP CONTEXT V6
 
 > Última actualización: Mayo 2026
 > Estado del proyecto: MVP Temprano (~4.5/10)
@@ -22,7 +22,7 @@
 ## 1. VISIÓN GENERAL DEL PROYECTO
 
 ### Descripción
-**ServiNow** es una plataforma de gestión para SMEs colombianos con un componente social integrado. El tagline: *"Servir es el único negocio donde todos ganan"*.
+**DonApp** es una plataforma de gestión para SMEs colombianos con un componente social integrado. El tagline: *"Servir es el único negocio donde todos ganan"*.
 
 ### Stack Tecnológico
 
@@ -40,7 +40,7 @@
 ### Estructura de Directorios
 
 ```
-Servinow/
+DonApp/
 ├── Frontend/
 │   ├── src/
 │   │   ├── App.jsx                    # Router + ProtectedRoute
@@ -352,7 +352,7 @@ Plataforma de gestión para SMEs colombianos con componente social:
 - Sin publicidad
 - "Impacto social" no genera revenue
 
-**Pregunta abierta:** ¿Cómo ServiNow genera revenue para sostenerse?
+**Pregunta abierta:** ¿Cómo DonApp genera revenue para sostenerse?
 
 ### 6.4 Features
 

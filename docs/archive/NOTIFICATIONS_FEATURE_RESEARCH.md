@@ -1,7 +1,7 @@
 # Investigación Previa — Features: Citas Cliente, Email, Notificaciones In-App
 
 > **Fecha:** 15 Julio 2026
-> **Propósito:** Investigación del estado actual del proyecto ServiNow para preparar la implementación de:
+> **Propósito:** Investigación del estado actual del proyecto DonApp para preparar la implementación de:
 > 1. Vista de citas del cliente
 > 2. Notificaciones por email
 > 3. Notificaciones in-app (icono de campana)
@@ -22,11 +22,11 @@
 
 ### Archivo de configuración de Celery
 
-**`Backend/app/core/celery_app.py`** — App `servinow_worker` configurada con:
+**`Backend/app/core/celery_app.py`** — App `donapp_worker` configurada con:
 
 ```python
 celery_app = Celery(
-    "servinow_worker",
+    "donapp_worker",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
     include=["app.modules.social.tasks", "app.modules.ai.tasks", "app.modules.whatsapp.tasks"]
@@ -238,7 +238,7 @@ addNotification: (notification) => set((state) => ({
 |---|---|
 | **Local dev** | Docker Compose (PostgreSQL + Redis + Celery + Flower + FastAPI) |
 | **Frontend dev** | Vite dev server (puerto 5173) |
-| **Producción hint** | `Frontend/.env.example` menciona `https://servinow-api.onrender.com` |
+| **Producción hint** | `Frontend/.env.example` menciona `https://donapp-api.onrender.com` |
 | **Plataforma** | Posiblemente Render o Railway (no hay evidencia concluyente) |
 | **Worker en prod** | No documentado |
 

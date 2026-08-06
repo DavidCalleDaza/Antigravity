@@ -1,8 +1,8 @@
-# SERVINOW CONTEXT V4 - Estado Actual del Proyecto
+# DONAPP CONTEXT V4 - Estado Actual del Proyecto
 
 **Fecha de generación:** 12 de Mayo de 2026
-**Versión anterior:** SERVINOW_CONTEXT V3.md (11 de Mayo de 2026)
-**Proyecto:** Servinow - Plataforma de gestión empresarial con impacto social
+**Versión anterior:** DONAPP_CONTEXT V3.md (11 de Mayo de 2026)
+**Proyecto:** DonApp - Plataforma de gestión empresarial con impacto social
 **Slogan:** *"Servir es el único negocio donde todos ganan"*
 
 ---
@@ -23,7 +23,7 @@
 ## 2. ESTRUCTURA DE DIRECTORIOS
 
 ```
-Servinow/
+DonApp/
 ├── Backend/
 │   ├── app/
 │   │   ├── __init__.py
@@ -126,7 +126,7 @@ Servinow/
 │   │   │       ├── Modal.jsx
 │   │   │       ├── ProductCard.jsx
 │   │   │       ├── ServiceCard.jsx
-│   │   │       ├── ServinowLogo.jsx
+│   │   │       ├── DonAppLogo.jsx
 │   │   │       ├── Table.jsx
 │   │   │       └── Toast.jsx
 │   │   └── modules/
@@ -158,9 +158,9 @@ Servinow/
 │   ├── package-lock.json
 │   └── vite.config.js
 │
-├── SERVINOW_CONTEXT V1.md
-├── SERVINOW_CONTEXT V2.md
-├── SERVINOW_CONTEXT V3.md
+├── DONAPP_CONTEXT V1.md
+├── DONAPP_CONTEXT V2.md
+├── DONAPP_CONTEXT V3.md
 └── .gitignore
 ```
 
@@ -575,7 +575,7 @@ python-dotenv>=1.0.0,<2.0.0
 | `ItemCardSkeleton` | Skeleton de carga |
 | `CustomCursor` | Cursor personalizado |
 | `AstronautLogo` | Logo animado |
-| `ServinowLogo` | Logo de marca |
+| `DonAppLogo` | Logo de marca |
 | `Drawer` | Drawer básico |
 | `Modal` | Modal reutilizable |
 
@@ -602,7 +602,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
 
 # Application
-APP_NAME=Servinow API
+APP_NAME=DonApp API
 APP_VERSION=0.1.0
 DEBUG=True
 ```
@@ -914,7 +914,7 @@ Frontend/src/components/ui/Toast.jsx
 
 ## 16. RESUMEN EJECUTIVO
 
-**Servinow** es una plataforma de gestión empresarial full-stack con las siguientes características:
+**DonApp** es una plataforma de gestión empresarial full-stack con las siguientes características:
 
 - **Backend**: FastAPI + SQLAlchemy 2.0 (async) + PostgreSQL 15
 - **Frontend**: React 18 + Vite + Zustand + Plain CSS

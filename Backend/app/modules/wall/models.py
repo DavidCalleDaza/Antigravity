@@ -1,5 +1,5 @@
 """
-Servinow API — Wall Module: ORM Models.
+DonApp API — Wall Module: ORM Models.
 
 Defines the ``posts`` and ``comments`` tables using SQLAlchemy 2.0.
 """

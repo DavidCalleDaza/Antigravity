@@ -1,5 +1,5 @@
 """
-Servinow API — Social Module: Celery Tasks.
+DonApp API — Social Module: Celery Tasks.
 
 Background task for publishing content to social media platforms.
 Supports Facebook, Instagram, and TikTok.

@@ -1,6 +1,6 @@
 import React from 'react';
-import ServinowLogo from './ServinowLogo';
+import DonAppLogo from './DonAppLogo';
 
 export default function AstronautLogo(props) {
-  return <ServinowLogo {...props} />;
+  return <DonAppLogo {...props} />;
 }

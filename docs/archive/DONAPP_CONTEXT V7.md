@@ -1,4 +1,4 @@
-# SERVINOW CONTEXT V7
+# DONAPP CONTEXT V7
 
 > Última actualización: Junio 2026
 > Estado del proyecto: MVP Avanzado / Integración Completa de Facturación (~7.5/10)
@@ -23,7 +23,7 @@
 ## 1. VISIÓN GENERAL DEL PROYECTO
 
 ### Descripción
-**ServiNow** es una plataforma de gestión para SMEs (PyMEs) colombianos con un componente social integrado. El tagline: *"Servir es el único negocio donde todos ganan"*.
+**DonApp** es una plataforma de gestión para SMEs (PyMEs) colombianos con un componente social integrado. El tagline: *"Servir es el único negocio donde todos ganan"*.
 En su versión V7, el proyecto ha completado de forma integral el **Módulo de Facturación Electrónica**, adaptado a los lineamientos vigentes de la DIAN (Colombia).
 
 ### Stack Tecnológico
@@ -45,7 +45,7 @@ En su versión V7, el proyecto ha completado de forma integral el **Módulo de F
 ### Estructura de Directorios
 
 ```
-Servinow/
+DonApp/
 ├── Frontend/
 │   ├── src/
 │   │   ├── App.jsx                    # Router + ProtectedRoute

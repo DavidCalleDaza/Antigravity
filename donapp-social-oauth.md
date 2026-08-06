@@ -1,13 +1,13 @@
 ---
-name: servinow-social-oauth
-description: Flujo OAuth y publicación en redes sociales (Meta/Facebook/Instagram y TikTok) de ServiNow, incluyendo manejo de CSRF state, mapeo de plataformas y persistencia de tokens. Consulta esta skill SIEMPRE que trabajes en autenticación social, callbacks OAuth, el módulo `app/modules/social/`, o publicación de contenido en redes. Contiene bugs ya corregidos que NO debes reintroducir bajo ninguna circunstancia (separación Meta/Instagram, validación de CSRF state, normalización de nombres de plataforma).
+name: donapp-social-oauth
+description: Flujo OAuth y publicación en redes sociales (Meta/Facebook/Instagram y TikTok) de DonApp, incluyendo manejo de CSRF state, mapeo de plataformas y persistencia de tokens. Consulta esta skill SIEMPRE que trabajes en autenticación social, callbacks OAuth, el módulo `app/modules/social/`, o publicación de contenido en redes. Contiene bugs ya corregidos que NO debes reintroducir bajo ninguna circunstancia (separación Meta/Instagram, validación de CSRF state, normalización de nombres de plataforma).
 ---
 
-# OAuth y publicación social en ServiNow
+# OAuth y publicación social en DonApp
 
 ## Arquitectura general
 
-Modelo híbrido: ServiNow es la "App Developer" registrada (`settings.META_APP_ID`, etc.), pero cada negocio (`user_id`) autoriza individualmente el acceso a sus propias cuentas. Los tokens resultantes viven en `social_accounts` y `social_tokens` (`Backend/app/modules/social/models.py`), vinculados por `user_id` + plataforma.
+Modelo híbrido: DonApp es la "App Developer" registrada (`settings.META_APP_ID`, etc.), pero cada negocio (`user_id`) autoriza individualmente el acceso a sus propias cuentas. Los tokens resultantes viven en `social_accounts` y `social_tokens` (`Backend/app/modules/social/models.py`), vinculados por `user_id` + plataforma.
 
 ## Flujo OAuth por plataforma
 
@@ -33,7 +33,7 @@ Código de referencia: `Backend/app/modules/social/router.py`.
 
 - `POST /social/publish` encola una tarea de Celery (`publish_to_social_task.delay()`) — la publicación es asíncrona, no síncrona en el request.
 - **TikTok es exclusivamente video** — las APIs V2 de TikTok no aceptan imagen. Facebook/Instagram sí aceptan imagen o video. Si vas a agregar validación de payload, esta restricción debe aplicarse a nivel de request antes de encolar la tarea.
-- Se requiere `media_url` local de ServiNow (no URLs externas arbitrarias).
+- Se requiere `media_url` local de DonApp (no URLs externas arbitrarias).
 
 ## Persistencia de tokens
 

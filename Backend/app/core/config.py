@@ -1,5 +1,5 @@
 """
-Servinow API — Core Configuration Module.
+DonApp API — Core Configuration Module.
 
 Loads all application settings from environment variables using
 pydantic-settings. Values fallback to defaults defined here.
@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     )
 
     # --- Application ---
-    APP_NAME: str = "Servinow API"
-    PROJECT_NAME: str = "Servinow V9"
+    APP_NAME: str = "DonApp API"
+    PROJECT_NAME: str = "DonApp V9"
     APP_VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
     PORT: int = 8000
@@ -31,12 +31,12 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "production"  # "development" | "production"
 
     # --- Company Info (defaults de simulación; override vía .env en producción) ---
-    COMPANY_NAME: str = "ServiNow (Simulación)"
+    COMPANY_NAME: str = "DonApp (Simulación)"
     COMPANY_NIT: str = "900000000-0"
     COMPANY_ADDRESS: str = "Calle 123 #45-67"
     COMPANY_CITY: str = "Bogotá"
     COMPANY_PHONE: str = "3000000000"
-    COMPANY_EMAIL: str = "simulacion@servinow.com"
+    COMPANY_EMAIL: str = "simulacion@donapp.com"
     COMPANY_DEPARTMENT: str = "Cundinamarca"
 
     # --- Google OAuth (Opcionales con valor None por defecto) ---
@@ -130,7 +130,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = ""
-    SMTP_FROM_NAME: str = "ServiNow"
+    SMTP_FROM_NAME: str = "DonApp"
     SMTP_USE_TLS: bool = True
 
     # --- Cloudinary ---

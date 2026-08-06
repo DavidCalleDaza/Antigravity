@@ -77,11 +77,18 @@
 }
 
 .auth-left-card:not(.auth-left-quote) {
-  margin-bottom: var(--space-6);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0;
 }
 
 .auth-left-icon {
   margin-bottom: var(--space-6);
+}
+
+.auth-left-icon-link {
+  display: inline-block;
+  cursor: pointer;
 }
 
 .auth-left-title {
@@ -106,37 +113,42 @@
   font-style: italic;
   font-size: 1.25rem;
   color: var(--gold);
+  position: relative;
+  z-index: 2;
+  width: 75%;
+  margin-left: 35%;
+  margin-top: -55px;
 }
 
 .auth-left-orbit.model-visual {
   position: absolute;
-  bottom: -30px;
-  left: -30px;
-  width: 220px;
-  height: 220px;
+  bottom: -40px;
+  left: -40px;
+  width: 290px;
+  height: 290px;
   z-index: 1;
   pointer-events: none;
   opacity: 1;
 }
 
 .auth-left-orbit .model-ring:nth-child(1) {
-  width: 220px;
-  height: 220px;
+  width: 290px;
+  height: 290px;
 }
 
 .auth-left-orbit .model-ring:nth-child(2) {
-  width: 160px;
-  height: 160px;
+  width: 210px;
+  height: 210px;
 }
 
 .auth-left-orbit .model-ring:nth-child(3) {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
 }
 
 .auth-left-orbit .model-center {
-  width: 44px;
-  height: 44px;
+  width: 56px;
+  height: 56px;
 }
 
 .auth-left-orbit .orbit-dot {
@@ -172,8 +184,8 @@
   z-index: 2;
 }
 
-.auth-logo {
-  display: flex;
+.auth-header-row .auth-logo {
+  display: none;
   align-items: center;
   gap: var(--space-3);
   margin-bottom: 0;
@@ -490,6 +502,7 @@
 @media (max-width: 1100px) {
   .auth-left { display: none; }
   .auth-right { flex: 1; width: 100%; }
+  .auth-header-row .auth-logo { display: flex; }
 }
 
 @media (max-width: 480px) {

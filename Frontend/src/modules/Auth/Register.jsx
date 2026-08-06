@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Store, User, Shield, HeartHandshake } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Store, User, Shield } from 'lucide-react';
 import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
@@ -71,7 +71,9 @@ export default function Register() {
         <ParticleNetwork particleCount={60} connectionDistance={110} />
         <div className="auth-left-content">
           <div className="auth-left-card">
-            <ServinowLogo width={44} height={44} variant="auto" className="auth-left-icon" />
+            <Link to="/" className="auth-left-icon-link">
+              <ServinowLogo width={58} height={58} variant="auto" className="auth-left-icon" />
+            </Link>
             <h2 className="auth-left-title">Únete a<br/>Servinow</h2>
             <p className="auth-left-text">Comienza a gestionar tu negocio y a impactar vidas hoy mismo.</p>
           </div>
@@ -84,9 +86,7 @@ export default function Register() {
           <div className="model-ring"><div className="orbit-dot"></div></div>
           <div className="model-ring"><div className="orbit-dot"></div></div>
           <div className="model-ring"><div className="orbit-dot"></div></div>
-          <div className="model-center">
-            <HeartHandshake width="20" height="20" />
-          </div>
+          <div className="model-center"></div>
         </div>
       </div>
 

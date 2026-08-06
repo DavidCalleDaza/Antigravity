@@ -70,26 +70,36 @@ export default function Register() {
         <div className="auth-left-orb"></div>
         <ParticleNetwork particleCount={60} connectionDistance={110} />
         <div className="auth-left-content">
-          <div className="auth-left-icon">
-            <HeartHandshake width="28" height="28" />
+          <div className="auth-left-card">
+            <ServinowLogo width={44} height={44} variant="auto" className="auth-left-icon" />
+            <h2 className="auth-left-title">Únete a<br/>Servinow</h2>
+            <p className="auth-left-text">Comienza a gestionar tu negocio y a impactar vidas hoy mismo.</p>
           </div>
-          <h2 className="auth-left-title">Únete a<br/>Servinow</h2>
-          <p className="auth-left-text">Comienza a gestionar tu negocio y a impactar vidas hoy mismo.</p>
-          <div className="auth-left-quote">
+          <div className="auth-left-quote auth-left-card">
             "Cada negocio que se une es una semilla de cambio. Cada donación es un puente hacia la dignidad de alguien."
+          </div>
+        </div>
+
+        <div className="auth-left-orbit model-visual">
+          <div className="model-ring"><div className="orbit-dot"></div></div>
+          <div className="model-ring"><div className="orbit-dot"></div></div>
+          <div className="model-ring"><div className="orbit-dot"></div></div>
+          <div className="model-center">
+            <HeartHandshake width="20" height="20" />
           </div>
         </div>
       </div>
 
       <div className="auth-right">
         <div className="auth-form-container">
-          <Link to="/" className="auth-logo">
-            <ServinowLogo width={40} height={40} variant="gold" />
-          </Link>
-
-          <div className="auth-header">
-            <h1 className="auth-title">Crear Cuenta</h1>
-            <p className="auth-subtitle">Completa tus datos para comenzar</p>
+          <div className="auth-header-row">
+            <div className="auth-header">
+              <h1 className="auth-title">Crear Cuenta</h1>
+              <p className="auth-subtitle">Completa tus datos para comenzar</p>
+            </div>
+            <Link to="/" className="auth-logo">
+              <ServinowLogo width={68} height={68} variant="gold" />
+            </Link>
           </div>
 
           <form className="auth-form" onSubmit={handleRegister}>
@@ -130,15 +140,24 @@ export default function Register() {
               </div>
             </div>
 
-            {role === 'seller' && (
-              <div className="form-group form-group-animated">
-                <label htmlFor="business">Nombre del Negocio</label>
-                <div className="input-group">
-                  <span className="input-icon"><Store width="18" height="18" /></span>
-                  <input type="text" className="form-input" id="business" placeholder="Mi Tienda de Barrio" value={formData.business} onChange={handleChange} />
-                </div>
+            <div className="form-group">
+              <label htmlFor="business">Nombre del Negocio</label>
+              <div className="input-group">
+                <span className="input-icon"><Store width="18" height="18" /></span>
+                <input
+                  type="text"
+                  className="form-input"
+                  id="business"
+                  placeholder="Mi Tienda de Barrio"
+                  value={formData.business}
+                  onChange={handleChange}
+                  disabled={role !== 'seller'}
+                />
               </div>
-            )}
+              {role !== 'seller' && (
+                <p className="text-xs text-tertiary mt-1">Solo aplica para cuentas de tipo Vendedor.</p>
+              )}
+            </div>
 
             <div className="form-group">
               <label htmlFor="password">Contraseña</label>

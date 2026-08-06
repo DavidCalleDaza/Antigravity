@@ -52,26 +52,36 @@ export default function Login() {
         <div className="auth-left-orb"></div>
         <ParticleNetwork particleCount={60} connectionDistance={110} />
         <div className="auth-left-content">
-          <div className="auth-left-icon">
-            <HeartHandshake width="28" height="28" />
+          <div className="auth-left-card">
+            <ServinowLogo width={44} height={44} variant="auto" className="auth-left-icon" />
+            <h2 className="auth-left-title">Bienvenido<br/>de nuevo</h2>
+            <p className="auth-left-text">Gestiona tu negocio y transforma tu comunidad desde un solo lugar.</p>
           </div>
-          <h2 className="auth-left-title">Bienvenido<br/>de nuevo</h2>
-          <p className="auth-left-text">Gestiona tu negocio y transforma tu comunidad desde un solo lugar.</p>
-          <div className="auth-left-quote">
+          <div className="auth-left-quote auth-left-card">
             "No buscamos aplausos. Servinow existe porque servir es el único negocio donde todos ganan."
+          </div>
+        </div>
+
+        <div className="auth-left-orbit model-visual">
+          <div className="model-ring"><div className="orbit-dot"></div></div>
+          <div className="model-ring"><div className="orbit-dot"></div></div>
+          <div className="model-ring"><div className="orbit-dot"></div></div>
+          <div className="model-center">
+            <HeartHandshake width="20" height="20" />
           </div>
         </div>
       </div>
 
       <div className="auth-right">
         <div className="auth-form-container">
-          <Link to="/" className="auth-logo">
-            <ServinowLogo width={40} height={40} variant="gold" />
-          </Link>
-
-          <div className="auth-header">
-            <h1 className="auth-title">Iniciar Sesión</h1>
-            <p className="auth-subtitle">Ingresa tus datos para acceder a tu cuenta</p>
+          <div className="auth-header-row">
+            <div className="auth-header">
+              <h1 className="auth-title">Iniciar Sesión</h1>
+              <p className="auth-subtitle">Ingresa tus datos para acceder a tu cuenta</p>
+            </div>
+            <Link to="/" className="auth-logo">
+              <ServinowLogo width={68} height={68} variant="gold" />
+            </Link>
           </div>
 
           <form className="auth-form" onSubmit={handleLogin}>

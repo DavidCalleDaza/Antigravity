@@ -31,7 +31,7 @@ export default function LandingNav() {
   return (
     <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`} id="landing-nav">
       <div className="landing-logo" onClick={toggleTheme} style={{ cursor: "pointer" }}>
-        <ServinowLogo width={72} height={72} variant="auto" />
+        <ServinowLogo width={60} height={60} variant="auto" />
       </div>
 
       <div className="landing-links">

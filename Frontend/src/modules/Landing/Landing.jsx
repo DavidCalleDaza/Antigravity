@@ -1,27 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HeartHandshake, Rocket, Package, BarChart3, FileText, TrendingUp, Calendar, Users, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { HeartHandshake, Rocket, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import LandingNav from '../../components/layout/LandingNav';
 import LandingFooter from '../../components/layout/LandingFooter';
 import Helpers from '../../utils/helpers';
 import { useStore } from '../../store/useStore';
-import LiquidDrawer from '../../components/ui/LiquidDrawer';
-import { useDrawerPush } from '../../hooks/useDrawerPush';
-import { FEATURE_CARDS, FEATURE_DETAILS, BENEFIT_CARDS, BENEFIT_DETAILS } from './featureData';
+import { FEATURE_CARDS, BENEFIT_CARDS } from './featureData';
 import { contactClient, ApiError } from '../../utils/apiClient';
-
-const BENEFIT_ICONS = {
-  building: HeartHandshake,
-  dollar: Package,
-  chart: BarChart3,
-  users: Users
-};
 
 export default function Landing() {
   const canvasRef = useRef(null);
   const { theme } = useStore();
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [selectedBenefit, setSelectedBenefit] = useState(null);
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactSubject, setContactSubject] = useState('');
@@ -29,33 +18,6 @@ export default function Landing() {
   const [contactWebsite, setContactWebsite] = useState('');
   const [contactStatus, setContactStatus] = useState('idle');
   const [contactError, setContactError] = useState('');
-
-  const {
-    featureDrawer,
-    benefitDrawer,
-    isAnyDrawerOpen,
-    isDesktop,
-    pushOffset,
-    drawerWidth,
-    openFeatureDrawer,
-    closeFeatureDrawer,
-    openBenefitDrawer,
-    closeBenefitDrawer,
-    closeAllDrawers,
-  } = useDrawerPush();
-
-  const handleCardClick = (card) => {
-    setSelectedCard(card);
-    openFeatureDrawer();
-  };
-
-  const handleBenefitClick = (benefit) => {
-    setSelectedBenefit(benefit);
-    openBenefitDrawer();
-  };
-
-  const selectedFeature = selectedCard ? FEATURE_DETAILS[selectedCard.id] : null;
-  const selectedBenefitDetail = selectedBenefit ? BENEFIT_DETAILS[selectedBenefit.id] : null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -85,11 +47,6 @@ export default function Landing() {
         );
       });
   };
-
-  // Ensure drawers are closed on mount (fixes reload bug)
-  useEffect(() => {
-    closeAllDrawers();
-  }, [closeAllDrawers]);
 
   useEffect(() => {
     try {
@@ -295,29 +252,8 @@ export default function Landing() {
       <div className="grid-bg"></div>
       <LandingNav />
 
-      <div className={`landing-push-wrapper ${isAnyDrawerOpen ? 'drawers-active' : ''}`}>
-        {featureDrawer.isOpen && (
-          <LiquidDrawer
-            isOpen={featureDrawer.isOpen}
-            onClose={() => closeFeatureDrawer()}
-            position="left"
-            title={selectedFeature?.title}
-            icon={selectedFeature?.icon}
-            description={selectedFeature?.description}
-            items={selectedFeature?.functionalities || []}
-            ctaText="Explorar productos"
-            usePush={true}
-            drawerWidth={drawerWidth}
-          />
-        )}
-
-        <main
-          className="landing-main-content"
-          style={{
-            transition: 'margin 0.3s ease-in-out',
-          }}
-        >
-          <section className="hero" id="hero">
+      <main>
+        <section className="hero" id="hero">
             <div className="hero-bg"></div>
             <div className="hero-orb"></div>
             <div className="hero-orb-2"></div>
@@ -387,8 +323,6 @@ export default function Landing() {
                     <div
                       key={card.id}
                       className={`feature-card reveal ${delayClass}`}
-                      onClick={() => handleCardClick(card)}
-                      style={{ cursor: 'pointer' }}
                     >
                       <div className="feature-number">0{index + 1} — {card.title.split(' ')[0]}</div>
                       <div className="feature-icon">
@@ -476,8 +410,6 @@ export default function Landing() {
                     <div
                       key={benefit.id}
                       className={`benefit-card reveal ${delayClass}`}
-                      onClick={() => handleBenefitClick(benefit)}
-                      style={{ cursor: 'pointer' }}
                     >
                       <div className="benefit-icon">
                         {benefit.icon === 'building' && (
@@ -697,22 +629,6 @@ export default function Landing() {
 
           <LandingFooter />
         </main>
-
-        {benefitDrawer.isOpen && (
-          <LiquidDrawer
-            isOpen={benefitDrawer.isOpen}
-            onClose={() => useStore.getState().closeBenefitDrawer()}
-            position="right"
-            title={selectedBenefitDetail?.title}
-            icon={BENEFIT_ICONS[selectedBenefit?.icon] || HeartHandshake}
-            description={selectedBenefitDetail?.description}
-            items={selectedBenefitDetail?.functionalities || []}
-            ctaText="Unirme ahora"
-            usePush={true}
-            drawerWidth={drawerWidth}
-          />
-        )}
-      </div>
     </>
   );
 }

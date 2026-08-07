@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HeartHandshake, Rocket, Package, BarChart3, FileText, TrendingUp, Calendar, Users } from 'lucide-react';
+import { HeartHandshake, Rocket, Package, BarChart3, FileText, TrendingUp, Calendar, Users, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import LandingNav from '../../components/layout/LandingNav';
 import LandingFooter from '../../components/layout/LandingFooter';
 import Helpers from '../../utils/helpers';
@@ -8,6 +8,7 @@ import { useStore } from '../../store/useStore';
 import LiquidDrawer from '../../components/ui/LiquidDrawer';
 import { useDrawerPush } from '../../hooks/useDrawerPush';
 import { FEATURE_CARDS, FEATURE_DETAILS, BENEFIT_CARDS, BENEFIT_DETAILS } from './featureData';
+import { contactClient, ApiError } from '../../utils/apiClient';
 
 const BENEFIT_ICONS = {
   building: HeartHandshake,
@@ -21,6 +22,13 @@ export default function Landing() {
   const { theme } = useStore();
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedBenefit, setSelectedBenefit] = useState(null);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactWebsite, setContactWebsite] = useState('');
+  const [contactStatus, setContactStatus] = useState('idle');
+  const [contactError, setContactError] = useState('');
 
   const {
     featureDrawer,
@@ -51,7 +59,31 @@ export default function Landing() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Logic for form submission
+    if (contactStatus === 'sending') return;
+    setContactStatus('sending');
+    setContactError('');
+    contactClient
+      .send({
+        name: contactName,
+        email: contactEmail,
+        subject: contactSubject,
+        message: contactMessage,
+      })
+      .then(() => {
+        setContactStatus('success');
+        setContactName('');
+        setContactEmail('');
+        setContactSubject('');
+        setContactMessage('');
+      })
+      .catch((err) => {
+        setContactStatus('error');
+        setContactError(
+          err instanceof ApiError && err.data?.detail
+            ? err.data.detail
+            : 'No pudimos enviar tu mensaje. Intenta de nuevo más tarde.'
+        );
+      });
   };
 
   // Ensure drawers are closed on mount (fixes reload bug)
@@ -507,6 +539,38 @@ export default function Landing() {
             </div>
           </section>
 
+          <section className="section team-section" id="team">
+            <div className="container">
+              <div className="team-header">
+                <div className="section-label reveal">Colaboradores</div>
+                <h2 className="reveal reveal-delay-1">El equipo detrás<br/><em>de DonApp</em></h2>
+              </div>
+              <div className="team-grid">
+                <div className="team-card reveal reveal-delay-1">
+                  <div className="team-photo">
+                    <img src="/assets/foto_david.png" alt="David" loading="lazy" />
+                  </div>
+                  <h3 className="team-name">David</h3>
+                  <p className="team-role">Fullstack Developer &amp; Senior QA Automation</p>
+                </div>
+                <div className="team-card reveal reveal-delay-2">
+                  <div className="team-photo">
+                    <img src="/assets/foto_rodrigo.png" alt="Rodrigo" loading="lazy" />
+                  </div>
+                  <h3 className="team-name">Rodrigo</h3>
+                  <p className="team-role">Fullstack Developer — Estadísticas &amp; Facturación</p>
+                </div>
+                <div className="team-card reveal reveal-delay-3">
+                  <div className="team-photo">
+                    <img src="/assets/foto_pamela.png" alt="Pamela" loading="lazy" />
+                  </div>
+                  <h3 className="team-name">Pamela</h3>
+                  <p className="team-role">Scrum Master</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section className="section cta-section" id="cta">
             <div className="container">
               <div className="cta-box reveal">
@@ -538,14 +602,14 @@ export default function Landing() {
                     Estamos aquí para escucharte y ayudarte a transformar tu comunidad. Escríbenos y te responderemos lo antes posible.
                   </p>
                   <div className="contact-detail reveal reveal-delay-3">
-                    <a href="mailto:hola@donapp.com" className="contact-item">
+                    <div className="contact-item contact-item-disabled" aria-disabled="true" title="Próximamente">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" width="17" height="17"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                       <span>hola@donapp.com</span>
-                    </a>
-                    <a href="https://wa.me/573000000000" target="_blank" rel="noopener" className="contact-item">
+                    </div>
+                    <div className="contact-item contact-item-disabled" aria-disabled="true" title="Próximamente">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" width="17" height="17"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 12 19.79 19.79 0 0 1 1.27 3.18 2 2 0 0 1 3.24 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16z"/></svg>
                       <span>+57 300 000 0000</span>
-                    </a>
+                    </div>
                   </div>
                 </div>
                 <div className="reveal reveal-delay-2">
@@ -553,29 +617,78 @@ export default function Landing() {
                     <div className="form-row">
                       <div className="form-group">
                         <label>Nombre</label>
-                        <input type="text" placeholder="Tu nombre" required/>
+                        <input
+                          type="text"
+                          placeholder="Tu nombre"
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          required
+                        />
                       </div>
                       <div className="form-group">
                         <label>Correo electrónico</label>
-                        <input type="email" placeholder="tu@correo.com" required/>
+                        <input
+                          type="email"
+                          placeholder="tu@correo.com"
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                          required
+                        />
                       </div>
                     </div>
                     <div className="form-group">
                       <label>Asunto</label>
-                      <select>
+                      <select
+                        value={contactSubject}
+                        onChange={(e) => setContactSubject(e.target.value)}
+                        required
+                      >
                         <option value="">Selecciona una opción...</option>
-                        <option>Quiero usar DonApp</option>
-                        <option>Tengo un negocio y quiero integrarme</option>
-                        <option>Quiero hacer una donación</option>
-                        <option>Preguntas sobre el modelo de impacto</option>
-                        <option>Otro</option>
+                        <option value="usar_donapp">Quiero usar DonApp</option>
+                        <option value="integrar_negocio">Tengo un negocio y quiero integrarme</option>
+                        <option value="donacion">Quiero hacer una donación</option>
+                        <option value="modelo_impacto">Preguntas sobre el modelo de impacto</option>
+                        <option value="otro">Otro</option>
                       </select>
                     </div>
                     <div className="form-group">
                       <label>Cuéntanos más</label>
-                      <textarea placeholder="¿Cómo podemos ayudarte?"></textarea>
+                      <textarea
+                        placeholder="¿Cómo podemos ayudarte?"
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        required
+                      ></textarea>
                     </div>
-                    <button type="submit" className="submit-btn">Enviar mensaje →</button>
+                    <div className="form-group honeypot" aria-hidden="true">
+                      <label>Tu sitio web</label>
+                      <input
+                        type="text"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={contactWebsite}
+                        onChange={(e) => setContactWebsite(e.target.value)}
+                      />
+                    </div>
+                    <button type="submit" className="submit-btn" disabled={contactStatus === 'sending'}>
+                      {contactStatus === 'sending' ? (
+                        <>
+                          <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Enviando...
+                        </>
+                      ) : (
+                        'Enviar mensaje →'
+                      )}
+                    </button>
+                    {contactStatus === 'success' && (
+                      <p className="form-feedback form-feedback-success">
+                        <CheckCircle2 size={18} /> ¡Gracias! Recibimos tu mensaje y te responderemos pronto.
+                      </p>
+                    )}
+                    {contactStatus === 'error' && (
+                      <p className="form-feedback form-feedback-error">
+                        <AlertCircle size={18} /> {contactError}
+                      </p>
+                    )}
                   </form>
                 </div>
               </div>

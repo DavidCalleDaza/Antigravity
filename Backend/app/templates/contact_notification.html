@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Nuevo mensaje de contacto — DonApp</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #d4af37; margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px;">DonApp</h2>
+        <p style="color: #666; font-size: 14px; margin-top: 5px;">Nuevo mensaje desde el formulario de contacto</p>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e5e7eb; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <p><strong>Nombre:</strong> {{ name }}</p>
+        <p><strong>Correo:</strong> <a href="mailto:{{ email }}">{{ email }}</a></p>
+        <p><strong>Asunto:</strong> {{ subject_label }}</p>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+        <p style="white-space: pre-wrap;">{{ message }}</p>
+    </div>
+
+    <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 20px;">
+        Enviado automáticamente desde el formulario de contacto de la landing de DonApp.
+    </p>
+</body>
+</html>

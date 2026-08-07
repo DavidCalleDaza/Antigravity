@@ -27,6 +27,7 @@ from app.modules.whatsapp.router import router as whatsapp_router
 from app.modules.agenda.router import router as agenda_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.billing.public_verify_router import router as public_verify_router
+from app.modules.contact.router import router as contact_router
 from app.shared.schemas import HealthCheckResponse
 import os
 os.makedirs("uploads", exist_ok=True)
@@ -161,6 +162,11 @@ app.include_router(
     public_verify_router,
     prefix="/api/v1",
     tags=["Public Verification"],
+)
+app.include_router(
+    contact_router,
+    prefix="/api/v1",
+    tags=["Contact"],
 )
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
 app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")

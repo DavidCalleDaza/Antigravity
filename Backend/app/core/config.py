@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     COMPANY_EMAIL: str = "simulacion@donapp.com"
     COMPANY_DEPARTMENT: str = "Cundinamarca"
 
+    # --- Contact Form ---
+    CONTACT_NOTIFICATION_EMAIL: str = "servinowdpr@gmail.com"
+
     # --- Google OAuth (Opcionales con valor None por defecto) ---
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None

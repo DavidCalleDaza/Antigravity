@@ -392,3 +392,7 @@ export const whatsappClient = {
   getLinkStatus: () => apiClient.get('/whatsapp/link/status'),
   unlink: () => apiClient.delete('/whatsapp/link'),
 };
+
+export const contactClient = {
+  send: (payload) => apiClient.post('/contact', payload),
+};

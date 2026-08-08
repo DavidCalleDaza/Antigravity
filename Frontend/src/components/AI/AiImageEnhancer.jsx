@@ -59,7 +59,7 @@ export default function AiImageEnhancer({ imageBlob, onEnhanced }) {
 
   return (
     <div className="ai-video-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '10px' }}>
         <div>
           <h4 className="ai-video-title">
             <Sparkles width="16" height="16" className="ai-video-icon" />
@@ -88,7 +88,7 @@ export default function AiImageEnhancer({ imageBlob, onEnhanced }) {
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Instrucciones opcionales (ej: sube la nitidez)..."
         className="form-input"
-        style={{ marginTop: '12px', width: '100%' }}
+        style={{ marginTop: '12px', width: '100%', maxWidth: '320px', marginLeft: 'auto', marginRight: 'auto' }}
       />
 
       {loading && (

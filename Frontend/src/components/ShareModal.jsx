@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2 } from 'lucide-react';
+import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 import { generateShareImage } from '../utils/generateShareImage';
 import { socialClient } from '../utils/apiClient';
 import Helpers from '../utils/helpers';
@@ -54,6 +54,7 @@ export default function ShareModal({
   const [enhancedImageUrl, setEnhancedImageUrl] = useState(null);
   const [isAiGeneratedPost, setIsAiGeneratedPost] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [activeAiSection, setActiveAiSection] = useState(null); // null | 'copy' | 'image' | 'video'
 
   useEffect(() => {
     if (isOpen) {
@@ -85,6 +86,7 @@ export default function ShareModal({
       setAiVideoUrl(null);
       setEnhancedImageUrl(null);
       setIsAiGeneratedPost(false);
+      setActiveAiSection(null);
 
       generateShareImage({
         imageUrl: Helpers.resolveMediaUrl(item.imageUrl || item.image_url),
@@ -231,7 +233,9 @@ export default function ShareModal({
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2)' }}>
-          <div className="share-preview">
+        {activeAiSection === null ? (
+          <>
+            <div className="share-preview">
             <label className="form-label">Vista previa</label>
             <div className="share-preview-card">
               {loadingImage ? (
@@ -254,31 +258,31 @@ export default function ShareModal({
                 <span className="share-preview-price">$ {Number(item.price).toLocaleString('es-CO')}</span>
               </div>
             </div>
-            <AiVideoGenerator 
-              item={item} 
-              imageBlob={imageBlob} 
-              onVideoGenerated={(url) => {
-                setAiVideoUrl(url);
-                setIsAiGeneratedPost(true);
-              }} 
+          </div>
+
+          <div className="ai-accordion">
+            <AiAccordionEntry
+              icon={Sparkles}
+              label="Generar texto con IA"
+              onClick={() => setActiveAiSection('copy')}
             />
-            <AiImageEnhancer 
-              imageBlob={imageBlob} 
-              onEnhanced={handleEnhancedImage} 
+            <AiAccordionEntry
+              icon={Sparkles}
+              label="Mejorar imagen con IA"
+              onClick={() => setActiveAiSection('image')}
+              disabled={!imageBlob}
+              title="Necesitas una imagen para mejorarla"
+            />
+            <AiAccordionEntry
+              icon={Video}
+              label="Video con IA (Google Veo)"
+              onClick={() => setActiveAiSection('video')}
+              badge="Próximamente"
             />
           </div>
 
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>Texto para publicar</label>
-              <AiCopyGenerator 
-                item={item} 
-                onGenerated={(text) => {
-                  setShareText(text);
-                  setIsAiGeneratedPost(true);
-                }} 
-              />
-            </div>
+            <label className="form-label">Texto para publicar</label>
             <textarea
               className="form-textarea share-textarea"
               value={shareText}
@@ -356,6 +360,60 @@ export default function ShareModal({
               </div>
             </div>
           )}
+        </>
+      ) : (
+        <div className="ai-section-expanded">
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => setActiveAiSection(null)}
+            style={{ alignSelf: 'flex-start' }}
+          >
+            <ArrowLeft width="16" height="16" />
+            Volver
+          </button>
+          {activeAiSection !== 'video' && (
+            <div className="ai-context-ref">
+              <span className="ai-context-ref-label">Contenido actual</span>
+              <div className="ai-context-ref-body">
+                {previewUrl && (
+                  <img src={previewUrl} alt="Imagen actual" className="ai-context-ref-image" />
+                )}
+                <p className="ai-context-ref-text">{shareText}</p>
+              </div>
+            </div>
+          )}
+          {activeAiSection === 'copy' && (
+            <AiCopyGenerator
+              item={item}
+              onGenerated={(text) => {
+                setShareText(text);
+                setIsAiGeneratedPost(true);
+                setActiveAiSection(null);
+              }}
+            />
+          )}
+          {activeAiSection === 'image' && (
+            <AiImageEnhancer
+              imageBlob={imageBlob}
+              onEnhanced={(blob, mimeType) => {
+                handleEnhancedImage(blob, mimeType);
+                setActiveAiSection(null);
+              }}
+            />
+          )}
+          {activeAiSection === 'video' && (
+            <AiVideoGenerator
+              item={item}
+              imageBlob={imageBlob}
+              onVideoGenerated={(url) => {
+                setAiVideoUrl(url);
+                setIsAiGeneratedPost(true);
+              }}
+            />
+          )}
+        </div>
+      )}
         <div className="drawer-form-actions" style={{ borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
           <button
@@ -535,6 +593,122 @@ export default function ShareModal({
           color: #333333;
         }
 
+        /* AI Accordion */
+        .ai-accordion {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .ai-accordion-entry {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-2);
+          width: 100%;
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-md);
+          border: 1px solid var(--neutral-700);
+          background: var(--neutral-800);
+          color: var(--text-primary);
+          font-size: var(--text-sm);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        [data-theme="light"] .ai-accordion-entry {
+          background: var(--gold-dim);
+          border-color: var(--gold);
+          color: #121212;
+        }
+
+        .ai-accordion-entry:hover {
+          border-color: var(--gold);
+        }
+
+        .ai-accordion-entry:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .ai-accordion-entry-left {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+        }
+
+        .ai-accordion-entry-left svg {
+          color: var(--gold);
+        }
+
+        .ai-accordion-badge {
+          font-size: 0.65rem;
+          background: var(--gold);
+          color: #fff;
+          padding: 2px 8px;
+          border-radius: 999px;
+          font-weight: 600;
+          margin-left: 8px;
+          white-space: nowrap;
+        }
+
+        .ai-section-expanded {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
+          margin-top: var(--space-2);
+        }
+
+        /* AI Context Reference */
+        .ai-context-ref {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-md);
+          border: 1px solid var(--neutral-700);
+          background: var(--neutral-900);
+        }
+
+        [data-theme="light"] .ai-context-ref {
+          background: var(--surface);
+          border-color: var(--border-color);
+        }
+
+        .ai-context-ref-label {
+          font-size: var(--text-xs);
+          font-weight: var(--font-semibold);
+          text-transform: uppercase;
+          letter-spacing: var(--tracking-wide);
+          color: var(--text-tertiary);
+        }
+
+        .ai-context-ref-body {
+          display: flex;
+          align-items: flex-start;
+          gap: var(--space-3);
+        }
+
+        .ai-context-ref-image {
+          width: 80px;
+          height: 80px;
+          object-fit: cover;
+          border-radius: var(--radius-md);
+          flex-shrink: 0;
+          border: 1px solid var(--neutral-700);
+        }
+
+        .ai-context-ref-text {
+          margin: 0;
+          font-size: var(--text-xs);
+          color: var(--text-secondary);
+          line-height: var(--leading-relaxed);
+          white-space: pre-line;
+          max-height: 96px;
+          overflow-y: auto;
+        }
+
         .share-networks {
           display: flex;
           gap: var(--space-4);
@@ -600,5 +774,18 @@ export default function ShareModal({
         }
       `}</style>
     </Drawer>
+  );
+}
+
+function AiAccordionEntry({ icon: Icon, label, onClick, disabled, badge, title }) {
+  return (
+    <button type="button" className="ai-accordion-entry" onClick={onClick} disabled={disabled} title={title}>
+      <span className="ai-accordion-entry-left">
+        <Icon width="16" height="16" />
+        <span>{label}</span>
+      </span>
+      {badge && <span className="ai-accordion-badge">{badge}</span>}
+      <ChevronRight width="16" height="16" />
+    </button>
   );
 }

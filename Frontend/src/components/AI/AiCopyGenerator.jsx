@@ -27,7 +27,7 @@ export default function AiCopyGenerator({ item, onGenerated }) {
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
       <select 
         value={tone} 
         onChange={(e) => setTone(e.target.value)} 

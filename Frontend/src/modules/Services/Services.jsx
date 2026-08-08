@@ -1,23 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, List, Grid3X3, CalendarPlus, Power, Calendar, Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
-import Helpers from '../../utils/helpers';
-import Table from '../../components/ui/Table';
-import Modal from '../../components/ui/Modal';
-import Drawer from '../../components/ui/Drawer';
-import MediaCard from '../../components/ui/MediaCard';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
-import MediaUploader from '../../components/ui/MediaUploader';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
 import { serviceClient, categoryClient, agendaClient, socialClient, ApiError } from '../../utils/apiClient';
-import ShareModal from '../../components/ShareModal';
-import CategorySelect from '../../components/ui/CategorySelect';
-import Dropdown from '../../components/ui/Dropdown';
-import ConfirmModal from '../../components/ui/ConfirmModal';
-import ShareOnSaveSection from '../../components/ui/ShareOnSaveSection';
+import ServicesToolbar from './components/ServicesToolbar';
+import ServicesGrid from './components/ServicesGrid';
+import ServicesTable from './components/ServicesTable';
+import ServiceFormDrawer from './components/ServiceFormDrawer';
+import ServiceModals from './components/ServiceModals';
+import { filterServices } from './utils/serviceHelpers';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -143,16 +138,7 @@ export default function Services() {
   };
 
   const filteredServices = useMemo(() => {
-    return services
-      .filter(s => {
-        if (categoryFilter && s.category_id !== categoryFilter) return false;
-        if (statusFilter && s.status !== statusFilter) return false;
-        return true;
-      })
-      .map(s => ({
-        ...s,
-        category: s.category?.name || dbCategories.find(c => c.id === s.category_id)?.name || 'Sin categoría'
-      }));
+    return filterServices(services, categoryFilter, statusFilter, dbCategories);
   }, [services, categoryFilter, statusFilter, dbCategories]);
 
   const handleFileSelect = (e) => {
@@ -301,57 +287,16 @@ export default function Services() {
     setIsModalOpen(true);
   };
 
-  const columns = [
-    { key: 'name', label: 'Servicio', sortable: true, width: '180px' },
-    ...(isClient ? [
-      { key: 'seller_name', label: 'Vendedor', sortable: true, width: '150px' },
-      { key: 'seller_city', label: 'Ciudad', sortable: true, width: '120px' },
-      { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
-    ] : []),
-    { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
-    { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
-    { key: 'duration', label: 'Duración', sortable: true, width: '110px' },
-    { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
-  ].flat();
-
-  const statusBadge = (status) => {
-    switch (status) {
-      case 'active': return <span className="status-badge active">● Activo</span>;
-      case 'inactive': return <span className="status-badge inactive">● Inactivo</span>;
-      default: return <span className="status-badge">● {status}</span>;
-    }
+  const handleDeleteRequest = (item) => {
+    setDeletingId(item.id);
+    setIsConfirmOpen(true);
   };
 
-  const tableActions = (row) => (
-    <div className="d-flex gap-2">
-      {canManage && (
-        <>
-          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">
-            <PencilIcon />
-          </button>
-          <button 
-            className={`btn btn-ghost btn-sm btn-icon-only ${row.status === 'active' ? 'text-danger' : 'text-success'}`} 
-            onClick={() => setToggleTarget(row)}
-            title={row.status === 'active' ? 'Desactivar' : 'Activar'}
-          >
-            <Power width="14" height="14" />
-          </button>
-          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => setShareModal({ isOpen: true, item: row })} title="Compartir">
-            <ShareIcon />
-          </button>
-          <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => { setDeletingId(row.id); setIsConfirmOpen(true); }} title="Eliminar">
-            <TrashIcon />
-          </button>
-        </>
-      )}
-      {isClient && (
-        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/agenda?seller_id=${row.user_id}&service_id=${row.id}`)}>
-          <Calendar width="14" height="14" />
-          Agendar
-        </button>
-      )}
-    </div>
-  );
+  const handleOpenNew = () => {
+    setEditingService(null);
+    setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', store_location_id: '' });
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="page-content">
@@ -362,7 +307,7 @@ export default function Services() {
         </div>
         <div className="page-actions">
           {canManage && (
-            <button className="btn btn-primary" onClick={() => { setEditingService(null); setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', store_location_id: '' }); setIsModalOpen(true); }}>
+            <button className="btn btn-primary" onClick={handleOpenNew}>
               <Plus width="18" height="18" />
               Nuevo Servicio
             </button>
@@ -370,47 +315,20 @@ export default function Services() {
         </div>
       </div>
 
-      <div className="products-toolbar">
-        <div className="products-filters">
-          {isClient && (
-            <select
-              className="form-select"
-              value={sellerFilter}
-              onChange={(e) => setSellerFilter(e.target.value)}
-              style={{ width: 'auto', padding: 'var(--space-2) var(--space-4)' }}
-            >
-              <option value="">Todos los vendedores</option>
-              {sellers.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
-            </select>
-          )}
-          <Dropdown
-            options={categoryOptions}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-          />
-          <Dropdown
-            options={statusOptions}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          />
-        </div>
-        <div className="view-toggle">
-          <button
-            className={`view-toggle-btn ${view === 'table' ? 'active' : ''}`}
-            onClick={() => setView('table')}
-            title="Vista de tabla"
-          >
-            <List width="18" height="18" />
-          </button>
-          <button
-            className={`view-toggle-btn ${view === 'grid' ? 'active' : ''}`}
-            onClick={() => setView('grid')}
-            title="Vista de grid"
-          >
-            <Grid3X3 width="18" height="18" />
-          </button>
-        </div>
-      </div>
+      <ServicesToolbar
+        isClient={isClient}
+        sellerFilter={sellerFilter}
+        setSellerFilter={setSellerFilter}
+        sellers={sellers}
+        categoryOptions={categoryOptions}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        statusOptions={statusOptions}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        view={view}
+        setView={setView}
+      />
 
       {loading ? (
         <MediaCardSkeleton count={6} />
@@ -422,225 +340,62 @@ export default function Services() {
           <button className="btn btn-primary" onClick={loadServices}>Reintentar</button>
         </div>
       ) : view === 'grid' ? (
-        <div className="product-grid">
-          {filteredServices.map(s => {
-            return (
-              <MediaCard
-                key={s.id}
-                item={s}
-                variant="service"
-                canManage={canManage}
-                onEdit={openEditModal}
-                onDelete={(item) => { setDeletingId(item.id); setIsConfirmOpen(true); }}
-                onAction={(service) => navigate(`/agenda?seller_id=${service.user_id}&service_id=${service.id}`)}
-                onShare={(item) => setShareModal({ isOpen: true, item })}
-                actionLabel="Agendar"
-                actionIcon={CalendarPlus}
-              />
-            );
-          })}
-        </div>
+        <ServicesGrid
+          filteredServices={filteredServices}
+          canManage={canManage}
+          openEditModal={openEditModal}
+          onDeleteRequest={handleDeleteRequest}
+          onShare={(item) => setShareModal({ isOpen: true, item })}
+          navigate={navigate}
+        />
       ) : (
-         <div className="services-table-wrapper">
-          <Table
-            columns={columns}
-            data={filteredServices}
-            actions={tableActions}
-          />
-        </div>
+        <ServicesTable
+          filteredServices={filteredServices}
+          isClient={isClient}
+          canManage={canManage}
+          openEditModal={openEditModal}
+          onToggleRequest={setToggleTarget}
+          onShare={(item) => setShareModal({ isOpen: true, item })}
+          onDeleteRequest={handleDeleteRequest}
+          navigate={navigate}
+        />
       )}
 
-      <Drawer
+      <ServiceFormDrawer
         isOpen={isModalOpen}
         onClose={resetForm}
-        position="right"
-        title={editingService ? 'Editar Servicio' : 'Nuevo Servicio'}
-      >
-        <form className="d-flex flex-col gap-5" onSubmit={handleSaveService}>
-          <MediaUploader
-            preview={preview || Helpers.resolveMediaUrl(editingService?.image_url)}
-            uploading={uploading}
-            compressing={compressing}
-            progress={progress}
-            onSelect={handleFileSelect}
-            onClear={reset}
-            error={mediaError}
-          />
-
-          <div className="form-group">
-            <label className="form-label">Nombre <span className="required">*</span></label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', alignItems: 'end' }}>
-            <div className="form-group">
-              <label className="form-label">Categoría</label>
-              <CategorySelect
-                value={formData.category_id}
-                onChange={(val) => setFormData({ ...formData, category_id: val })}
-                entityType="service"
-                categories={dbCategories}
-                onCategoryCreated={loadCategories}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Precio <span className="required">*</span></label>
-              <input
-                type="number"
-                className="form-input"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                required
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-            <div className="form-group">
-              <label className="form-label">Duración (min)</label>
-              <input
-                type="number"
-                className="form-input"
-                value={formData.duration}
-                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                min="0"
-                placeholder="minutos"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Estado</label>
-              {/* Los servicios no manejan stock: por eso no existe el estado "Agotado".
-                  El backend valida solo los estados active/inactive. */}
-              <select
-                className="form-select"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Descripción</label>
-            <textarea
-              className="form-textarea"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows="2"
-              style={{ resize: 'vertical' }}
-            />
-          </div>
-
-          {storeLocations.length > 0 && (
-            <div className="form-group">
-              <label className="form-label">Ubicación</label>
-              <select
-                className="form-select"
-                value={formData.store_location_id}
-                onChange={(e) => setFormData({ ...formData, store_location_id: e.target.value })}
-              >
-                <option value="">Sin ubicación</option>
-                {storeLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-              </select>
-            </div>
-          )}
-
-          <ShareOnSaveSection
-            accounts={accounts}
-            selectedNetworks={shareOnSave}
-            onChange={setShareOnSave}
-          />
-
-          <div className="drawer-form-actions">
-            <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>
-            <button type="submit" className="btn btn-primary" disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Guardando...
-                </>
-              ) : (
-                editingService
-                  ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
-                  : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Servicio'
-              )}
-            </button>
-          </div>
-        </form>
-      </Drawer>
-
-      <Modal
-        isOpen={isConfirmOpen}
-        onClose={() => setIsConfirmOpen(false)}
-        title="Eliminar Servicio"
-        size="sm"
-        actions={[
-          { label: 'Cancelar', onClick: () => setIsConfirmOpen(false) },
-          { label: 'Confirmar', className: 'btn-danger', onClick: handleDelete }
-        ]}
-      >
-        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este servicio?</div>
-      </Modal>
-
-      <ShareModal
-        isOpen={shareModal.isOpen}
-        onClose={() => setShareModal({ isOpen: false, item: null })}
-        item={shareModal.item}
-        onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
+        editingService={editingService}
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSaveService}
+        isSaving={isSaving}
+        preview={preview}
+        uploading={uploading}
+        compressing={compressing}
+        progress={progress}
+        onFileSelect={handleFileSelect}
+        onMediaClear={reset}
+        mediaError={mediaError}
+        dbCategories={dbCategories}
+        onCategoryCreated={loadCategories}
+        storeLocations={storeLocations}
+        accounts={accounts}
+        shareOnSave={shareOnSave}
+        setShareOnSave={setShareOnSave}
       />
 
-      {/* MODAL DE CONFIRMACIÓN MODERNO (Toggle de Estado) */}
-        <ConfirmModal
-          isOpen={!!toggleTarget}
-          onClose={() => setToggleTarget(null)}
-          onConfirm={handleConfirmToggle}
-          title={toggleTarget?.status === 'active' ? '¿Desactivar este servicio?' : '¿Reactivar este servicio?'}
-          confirmText={toggleTarget?.status === 'active' ? 'Sí, Desactivar' : 'Sí, Reactivar'}
-          isDanger={toggleTarget?.status === 'active'}
-          loading={toggling}
-        >
-          {toggleTarget?.status === 'active' ? (
-            <>¿Está seguro de que desea desactivar <strong>{toggleTarget?.name}</strong>? Este servicio ya no aparecerá disponible para ser agendado.</>
-          ) : (
-            <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este servicio volverá a estar disponible.</>
-          )}
-        </ConfirmModal>
+      <ServiceModals
+        isConfirmOpen={isConfirmOpen}
+        setIsConfirmOpen={setIsConfirmOpen}
+        onDelete={handleDelete}
+        toggleTarget={toggleTarget}
+        setToggleTarget={setToggleTarget}
+        onConfirmToggle={handleConfirmToggle}
+        toggling={toggling}
+        shareModal={shareModal}
+        setShareModal={setShareModal}
+        onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
+      />
     </div>
-  );
-}
-
-function PencilIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    </svg>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="18" cy="5" r="3" />
-      <circle cx="6" cy="12" r="3" />
-      <circle cx="18" cy="19" r="3" />
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-    </svg>
   );
 }

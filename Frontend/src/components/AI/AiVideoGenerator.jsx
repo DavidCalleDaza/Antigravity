@@ -94,7 +94,7 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
 
   return (
     <div className="ai-video-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '10px' }}>
         <div>
           <h4 className="ai-video-title">
             <Video width="16" height="16" className="ai-video-icon" />
@@ -106,7 +106,7 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
         </div>
         
         {!loading && status !== 'success' && (
-          <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button 
             className="btn btn-outline btn-sm"
             onClick={handleDisabledClick}
@@ -120,9 +120,9 @@ export default function AiVideoGenerator({ item, imageBlob, onVideoGenerated }) 
           <span style={{
             fontSize: '0.65rem', background: 'var(--gold)', color: '#fff',
             padding: '2px 8px', borderRadius: '999px', fontWeight: 600,
-            marginLeft: '8px', whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap'
           }}>Próximamente</span>
-          </>
+          </div>
         )}
       </div>
 

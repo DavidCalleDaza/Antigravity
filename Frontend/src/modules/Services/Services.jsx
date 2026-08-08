@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { Plus, List, Grid3X3, CalendarPlus, Wrench, WrenchIcon, Power, Calendar } from 'lucide-react';
+import { Plus, List, Grid3X3, CalendarPlus, Power, Calendar, Loader2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
@@ -18,13 +17,9 @@ import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
 import Dropdown from '../../components/ui/Dropdown';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import ShareOnSaveSection from '../../components/ui/ShareOnSaveSection';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
-
-const SERVICE_STATUS_LABELS = {
-  active: 'Activo',
-  inactive: 'Inactivo',
-};
 
 export default function Services() {
   const { currentUser } = useStore();
@@ -67,6 +62,7 @@ export default function Services() {
   const [shareOnSave, setShareOnSave] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [shareModal, setShareModal] = useState({ isOpen: false, item: null });
+  const [isSaving, setIsSaving] = useState(false);
 
   const toast = useToast();
 
@@ -173,13 +169,16 @@ export default function Services() {
 
   const handleSaveService = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       const payload = {
         name: formData.name,
         price: formData.price,
         status: formData.status,
         description: String(formData.description || ''),
-        duration: String(formData.duration || ''),
+        // La duración se envía en minutos (Integer en el backend); null cuando no se define
+        duration: formData.duration === '' ? null : Number(formData.duration),
         category_id: formData.category_id === '' ? null : formData.category_id,
         store_location_id: formData.store_location_id || null,
       };
@@ -232,6 +231,8 @@ export default function Services() {
           toast.error('Error de conexión o fallo inesperado.');
         }
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -489,12 +490,13 @@ export default function Services() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Precio</label>
+              <label className="form-label">Precio <span className="required">*</span></label>
               <input
                 type="number"
                 className="form-input"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                required
                 min="0"
               />
             </div>
@@ -502,17 +504,20 @@ export default function Services() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
             <div className="form-group">
-              <label className="form-label">Duración</label>
+              <label className="form-label">Duración (min)</label>
               <input
-                type="text"
+                type="number"
                 className="form-input"
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                placeholder="30 min, 1 hora..."
+                min="0"
+                placeholder="minutos"
               />
             </div>
             <div className="form-group">
               <label className="form-label">Estado</label>
+              {/* Los servicios no manejan stock: por eso no existe el estado "Agotado".
+                  El backend valida solo los estados active/inactive. */}
               <select
                 className="form-select"
                 value={formData.status}
@@ -530,7 +535,7 @@ export default function Services() {
               className="form-textarea"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows="3"
+              rows="2"
               style={{ resize: 'vertical' }}
             />
           </div>
@@ -549,50 +554,24 @@ export default function Services() {
             </div>
           )}
 
-          <div className="share-on-save">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>Publicar al guardar (opcional)</label>
-              <label className="share-checkbox-label" style={{ margin: 0 }}>
-                <input
-                  type="checkbox"
-                  checked={accounts.length > 0 && shareOnSave.length === accounts.length}
-                  onChange={(e) => {
-                    if (e.target.checked) setShareOnSave(accounts.map(a => a.id));
-                    else setShareOnSave([]);
-                  }}
-                  disabled={accounts.length === 0}
-                  className="form-checkbox"
-                />
-                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
-              </label>
-            </div>
-            <div className="share-networks-inline">
-              {accounts.length === 0 && (
-                <div className="text-xs text-secondary mt-1">No hay cuentas activas. Conecta una en tu perfil.</div>
-              )}
-              {accounts.map(account => (
-                <label key={account.id} className="share-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={shareOnSave.includes(account.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) setShareOnSave([...shareOnSave, account.id]);
-                      else setShareOnSave(shareOnSave.filter(id => id !== account.id));
-                    }}
-                    className="form-checkbox"
-                  />
-                  <span>{account.display_label || account.platform_username || account.platform_user_id} ({account.platform})</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <ShareOnSaveSection
+            accounts={accounts}
+            selectedNetworks={shareOnSave}
+            onChange={setShareOnSave}
+          />
 
-          <div style={{ border: 'none', padding: 0, marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)' }}>
+          <div className="drawer-form-actions">
             <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>
-            <button type="submit" className="btn btn-primary">
-              {editingService
-                ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
-                : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Servicio'}
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Guardando...
+                </>
+              ) : (
+                editingService
+                  ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
+                  : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Servicio'
+              )}
             </button>
           </div>
         </form>
@@ -634,56 +613,6 @@ export default function Services() {
             <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este servicio volverá a estar disponible.</>
           )}
         </ConfirmModal>
-
-      <style>{`
-        .loading-state, .error-state {
-          text-align: center;
-          padding: var(--space-12);
-          color: var(--text-secondary);
-        }
-        .error-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-4);
-        }
-        .error-state-icon {
-          font-size: var(--text-4xl);
-        }
-        .error-state-title {
-          font-size: var(--text-xl);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-        }
-        .error-state-text {
-          max-width: 400px;
-          color: var(--text-secondary);
-        }
-
-        .share-on-save {
-          border-top: 1px solid var(--neutral-700);
-          padding-top: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-networks-inline {
-          display: flex;
-          gap: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          cursor: pointer;
-          font-size: var(--text-sm);
-        }
-
-        .share-checkbox-label input {
-          accent-color: var(--purple);
-        }
-      `}</style>
     </div>
   );
 }

@@ -909,7 +909,10 @@
 /* ── Drawer ── */
 .drawer-overlay {
   position: fixed;
-  inset: 0;
+  top: var(--navbar-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: var(--z-drawer-overlay, 9998);
@@ -933,13 +936,11 @@
 
 .drawer {
   position: fixed;
-  top: 0;
+  top: var(--navbar-height);
   bottom: 0;
   width: 100%;
   max-width: 420px;
-  background: var(--surface-overlay);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--card-bg);
   border-right: var(--border);
   z-index: var(--z-drawer, 9999);
   display: flex;
@@ -970,9 +971,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-6);
-  border-bottom: var(--border);
+  padding: var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  background: #000000 !important;
+}
+
+.drawer-header .drawer-close {
+  color: #ffffff !important;
+}
+
+.drawer-header .drawer-close:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
 }
 
 .drawer-title-row {
@@ -997,7 +1008,7 @@
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: var(--font-semibold);
-  color: var(--text-primary);
+  color: #ffffff !important;
 }
 
 .drawer-close {
@@ -1020,7 +1031,7 @@
 .drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-6);
+  padding: var(--space-4);
 }
 
 .drawer-section-title {
@@ -1093,6 +1104,488 @@
   font-size: var(--text-xs);
   color: var(--text-secondary);
   line-height: var(--leading-relaxed);
+}
+
+/* ── Drawer Form Controls (compartidos por Products, Services, Categories e InvoiceForm) ── */
+.drawer .form-input,
+.drawer .form-select,
+.drawer .form-textarea {
+  height: 42px;
+  box-sizing: border-box !important;
+  background-color: var(--surface-raised, #12101a) !important;
+  border: 1px solid var(--gold) !important;
+  border-radius: var(--radius-lg, 8px) !important;
+  color: var(--text-primary, #ffffff) !important;
+  font-size: var(--text-sm, 14px) !important;
+  transition: border-color var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s);
+}
+
+/* Fuerza el ancho al 100% únicamente en el Drawer (para el formulario) */
+.drawer .form-input,
+.drawer .form-select,
+.drawer .form-textarea {
+  width: 100% !important;
+}
+
+.drawer .form-input {
+  padding: 0 var(--space-4) !important;
+}
+
+.drawer .form-textarea {
+  height: auto !important;
+  padding: var(--space-2) var(--space-4) !important;
+}
+
+/* Formularios de drawer compactos: reduce el gap entre bloques (gap-5 → space-3) */
+.drawer form.gap-5 {
+  gap: var(--space-3) !important;
+}
+
+/* Estilo para los selectores nativos */
+.drawer .form-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0 var(--space-8) 0 var(--space-4) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23d4af37' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 14px;
+}
+
+.drawer .form-select::-ms-expand {
+  display: none;
+}
+
+/* Focus limitado */
+.drawer .form-input:focus,
+.drawer .form-select:focus,
+.drawer .form-textarea:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 1px var(--gold) !important;
+  outline: none !important;
+}
+
+/* --- 4. Ajustes del Selector de Categoría (CategorySelect) idénticos a los selects estándar ---
+   IMPORTANTE: excluimos .searchable-select-dropdown (y todo lo que hay adentro) porque ese
+   popover ya tiene su propio archivo CategorySelect.css. Si no lo excluimos, estas reglas
+   genéricas le pisan el estilo a los items/botones internos del dropdown (buscador, lista,
+   "Nueva Categoría"), que es justo el bug que rompía el formulario. Solo debe afectar al
+   botón "trigger" (el que se ve cerrado, con el texto "Seleccionar categoría"). */
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *),
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *),
+.modal .form-group button:not(.btn):not(.searchable-select-dropdown *),
+.modal .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) {
+  height: 48px !important;
+  box-sizing: border-box !important;
+  background-color: var(--surface-overlay, #1a1a1e) !important; /* Mismo fondo exacto */
+  border: 1px solid rgba(255, 255, 255, 0.1) !important; /* Misma opacidad de borde exacto (0.1) */
+  border-radius: var(--radius-lg, 8px) !important; /* Mismo redondeado exacto */
+  color: var(--text-primary, #ffffff) !important; /* Mismo color de fuente exacto */
+  padding: 0 var(--space-4) !important; /* Mismo padding lateral de 16px */
+  font-size: var(--text-sm, 14px) !important; /* Mismo tamaño de fuente exacto */
+  width: 100% !important;
+
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  transition: border-color var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s) !important;
+}
+
+/* Comportamiento al pasar el cursor (Hover) y al hacer Click (Focus) idéntico al de Estado */
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *):hover,
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *):hover,
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *):focus,
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *):focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 1px var(--gold) !important;
+  outline: none !important;
+}
+
+/* Fondo y borde del trigger de categoría alineados con los campos del formulario,
+   solo dentro del .drawer (la regla compartida de arriba también cubre .modal) */
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *),
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) {
+  background-color: var(--surface-raised, #12101a) !important;
+  border-color: var(--gold) !important;
+  height: 42px !important;
+}
+
+/* Barra de acciones del formulario: sticky al fondo del drawer-body (siempre visible) */
+.drawer-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  background: var(--card-bg);
+}
+
+/* Alineación y tamaño de la flecha/chevron dorada del selector */
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *) svg,
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) svg {
+  color: #d4af37 !important;
+  flex-shrink: 0 !important;
+  width: 14px !important;
+  height: 14px !important;
+  margin-left: auto !important;
+}
+
+/* Texto truncado en una línea sin saltos */
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *) span,
+.drawer .form-group button:not(.btn):not(.searchable-select-dropdown *) div,
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) span,
+.drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) div {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: inline-block !important;
+  max-width: 140px !important;
+  text-align: left !important;
+}
+
+/* --- 5. Menú Desplegable genérico (para otros dropdowns del proyecto que SÍ usan
+   [class*="dropdown"]/[class*="menu"] como único estilo, p. ej. selects nativos con
+   librerías de terceros). Se excluye explícitamente .searchable-select-dropdown porque
+   ese componente ya está 100% resuelto por CategorySelect.css y no debe tocarse acá. --- */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown),
+.drawer .form-group [class*="popover"],
+.drawer .form-group [class*="menu"],
+.drawer .form-group ul:not(.searchable-select-dropdown *) {
+  background-color: var(--surface-overlay, #15151a) !important; /* Toma el fondo según el tema */
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.08)) !important; /* Toma el borde según el tema */
+  border-radius: var(--radius-lg, 8px) !important;
+  box-shadow: var(--shadow-lg, 0 10px 30px rgba(0, 0, 0, 0.5)) !important;
+  padding: 6px !important;
+  margin-top: 4px !important;
+}
+
+/* Buscador interno adaptativo */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) input {
+  background-color: var(--surface, #0c0c0e) !important; /* Fondo según el tema */
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: var(--radius-md, 6px) !important;
+  color: var(--text-primary, #ffffff) !important; /* Texto principal del tema */
+  height: 38px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 12px 0 34px !important;
+  font-size: 13px !important;
+}
+
+/* Opciones de la lista adaptativas al color de texto secundario */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li,
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"],
+.drawer .form-group [class*="menu"] li,
+.drawer .form-group [class*="menu"] [class*="option"] {
+  color: var(--text-secondary, #d1d1d6) !important;
+}
+
+/* Hover adaptativo */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li:hover,
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"]:hover {
+  background-color: var(--surface-raised, rgba(255, 255, 255, 0.05)) !important; /* Fondo de selección adaptativo */
+  color: var(--text-primary, #ffffff) !important;
+}
+
+/* Botón inferior "+ Nueva Categoría" - Adaptativo al tema (SOLO para dropdowns genéricos, no CategorySelect) */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) button,
+.drawer .form-group [class*="menu"] button {
+  background-color: var(--surface-raised, rgba(255, 255, 255, 0.03)) !important; /* Fondo adaptativo */
+  border: var(--border, 1px solid rgba(255, 255, 255, 0.06)) !important;
+  border-radius: var(--radius-md, 6px) !important;
+  color: var(--text-primary, #ffffff) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  margin-top: 8px !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s !important;
+}
+
+/* Hover del botón con detalles dorados para mantener la identidad */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) button:hover,
+.drawer .form-group [class*="menu"] button:hover {
+  background-color: rgba(212, 175, 55, 0.08) !important;
+  border-color: rgba(212, 175, 55, 0.3) !important;
+  color: var(--gold, #d4af37) !important;
+}
+
+/* ELIMINAR RECUADROS AMARILLOS/DORADOS en dropdowns genéricos (no CategorySelect) */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li,
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li *,
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"],
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"] *,
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="item"],
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="item"] * {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Alineación a la izquierda en dropdowns genéricos (no CategorySelect) */
+.drawer .form-group ul:not(.searchable-select-dropdown *),
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown),
+.drawer .form-group [class*="menu"],
+[class*="dropdown"]:not(.searchable-select-dropdown) ul,
+[class*="menu"] ul {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+}
+
+.drawer .form-group li:not(.searchable-select-dropdown *),
+.drawer .form-group [class*="option"]:not(.searchable-select-dropdown *),
+[class*="dropdown"]:not(.searchable-select-dropdown) li,
+[class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"],
+[class*="dropdown"]:not(.searchable-select-dropdown) li *,
+[class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"] * {
+  display: flex !important;
+  justify-content: flex-start !important;
+  text-align: right !important;
+  align-items: center !important;
+  margin-left: 0 !important;
+  margin-right: 5px !important;
+  width: 100% !important;
+}
+
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li:hover,
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"]:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+/* Buscador interno (solo dropdowns genéricos, no CategorySelect) */
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) > div:first-child {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) > div:first-child svg {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+  color: #71717a !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: var(--space-12);
+  color: var(--text-secondary);
+}
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+.error-state-icon {
+  font-size: var(--text-4xl);
+}
+.error-state-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+.error-state-text {
+  max-width: 400px;
+  color: var(--text-secondary);
+}
+
+.share-on-save {
+  border-top: 1px solid var(--neutral-700);
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.share-networks-inline {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.share-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+
+.share-checkbox-label input {
+  accent-color: var(--gold);
+}
+
+/* --- Dropdown custom (reemplazo del <select> nativo en filtros) --- */
+.custom-dropdown {
+  position: relative;
+  min-width: 200px;
+}
+
+.custom-dropdown-trigger {
+  width: 100%;
+  height: 36px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 0.5rem);
+  border-radius: var(--radius-lg, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--surface-overlay, #1a1a1e);
+  padding: 0 var(--space-3, 0.75rem);
+  font-size: var(--text-xs, 0.85rem);
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+  transition: border-color var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s);
+}
+
+.custom-dropdown-trigger:hover,
+.custom-dropdown-trigger:focus,
+.custom-dropdown-trigger:focus-visible,
+.custom-dropdown-trigger.open {
+  border-color: var(--gold, #d4af37);
+  outline: none;
+}
+
+.custom-dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.custom-dropdown-chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.custom-dropdown-trigger.open .custom-dropdown-chevron {
+  transform: rotate(180deg);
+  color: var(--gold, #d4af37);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background-color: var(--surface-overlay, rgba(28, 25, 36, 0.35));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  padding: 4px;
+}
+
+.custom-dropdown-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+}
+
+.custom-dropdown-option span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary, #ffffff);
+  font-size: 12px;
+}
+
+.custom-dropdown-option:hover,
+.custom-dropdown-option:focus {
+  background-color: rgba(99, 102, 241, 0.15);
+}
+
+.custom-dropdown-option.selected {
+  background-color: rgba(212, 175, 55, 0.15);
+}
+
+.custom-dropdown-option.selected span {
+  font-weight: var(--font-semibold, 600);
+}
+
+[data-theme="light"] .custom-dropdown-trigger {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #18181b;
+}
+
+[data-theme="light"] .custom-dropdown-value {
+  color: #18181b;
+}
+
+[data-theme="light"] .custom-dropdown-chevron {
+  color: #71717a;
+}
+
+[data-theme="light"] .custom-dropdown-menu {
+  background-color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .custom-dropdown-option span {
+  color: #18181b;
+}
+
+[data-theme="light"] .custom-dropdown-option:hover,
+[data-theme="light"] .custom-dropdown-option:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ═══ Light Mode ═══ */
+[data-theme="light"] .drawer {
+  background: var(--page-bg);
+}
+
+[data-theme="light"] .drawer .form-input,
+[data-theme="light"] .drawer .form-select,
+[data-theme="light"] .drawer .form-textarea {
+  background-color: var(--form-input-bg, #f5f5f5) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="light"] .drawer .form-group button:not(.btn):not(.searchable-select-dropdown *),
+[data-theme="light"] .drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) {
+  background-color: var(--form-input-bg, #f5f5f5) !important;
+  border-color: #000000 !important;
+}
+
+[data-theme="light"] .drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li:hover,
+[data-theme="light"] .drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"]:hover {
+  color: var(--text-primary);
 }
 
 /* ── Global Main Icons ── */

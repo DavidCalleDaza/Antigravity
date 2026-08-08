@@ -16,7 +16,10 @@
   flex-direction: column;
   margin-left: var(--sidebar-width) !important;
   width: calc(100% - var(--sidebar-width)) !important;
-  transition: all var(--transition-slow);
+  transition: margin-left var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1),
+              margin-right var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1),
+              width var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1),
+              padding-top var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
   background: var(--surface);
 }
@@ -28,12 +31,26 @@
 
 @media (min-width: 1024px) {
   body.drawer-open-right .app-main {
-    margin-right: 420px !important;
-    width: calc(100% - var(--sidebar-width) - 420px) !important;
+    margin-right: var(--active-drawer-width, 420px) !important;
+    width: calc(100% - var(--sidebar-width) - var(--active-drawer-width, 420px)) !important;
+    padding-top: var(--navbar-height);
   }
   
   body.drawer-open-right .app.sidebar-collapsed .app-main {
-    width: calc(100% - var(--sidebar-collapsed) - 420px) !important;
+    width: calc(100% - var(--sidebar-collapsed) - var(--active-drawer-width, 420px)) !important;
+  }
+
+  body.drawer-open-right .navbar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    width: auto !important;
+    transition: left var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.drawer-open-right .app.sidebar-collapsed .navbar {
+    left: var(--sidebar-collapsed);
   }
 }
 

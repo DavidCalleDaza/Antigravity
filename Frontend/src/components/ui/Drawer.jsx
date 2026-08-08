@@ -27,6 +27,7 @@ const Drawer = ({
       document.body.style.overflow = 'hidden';
       if (position === 'right') {
         document.body.classList.add('drawer-open-right');
+        document.documentElement.style.setProperty('--active-drawer-width', width || '420px');
         if (!sidebarCollapsed) {
           setSidebarCollapsed(true);
         }
@@ -38,9 +39,10 @@ const Drawer = ({
       document.body.style.overflow = '';
       if (position === 'right') {
         document.body.classList.remove('drawer-open-right');
+        document.documentElement.style.removeProperty('--active-drawer-width');
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, position, width]);
 
   if (!isOpen) return null;
 

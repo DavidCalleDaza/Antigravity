@@ -36,6 +36,7 @@ async def generate_social_copy(product_name: str, description: str, tone: str = 
 
 
 import asyncio
+import base64
 import os
 
 async def generate_video_from_image(local_image_path: str, prompt: str) -> str:
@@ -93,3 +94,54 @@ async def generate_video_from_image(local_image_path: str, prompt: str) -> str:
         else:
             # Fallback to returning the URI directly if download fails
             return video_uri
+
+
+DEFAULT_ENHANCE_PROMPT = (
+    "Mejora la calidad de esta imagen: aumenta la nitidez, corrige la iluminación y el balance "
+    "de color, y reduce el ruido. Mantén la composición, los sujetos y el contenido originales "
+    "sin alteraciones significativas. Devuelve únicamente la imagen mejorada."
+)
+
+
+async def enhance_image(image_bytes: bytes, mime_type: str, prompt: str | None = None) -> tuple[bytes, str]:
+    """
+    Mejora una imagen con gemini-2.5-flash-image (edición de imagen).
+
+    NOTA (pendiente): este endpoint NO tiene límite diario ni control de costo en el ciclo
+    actual (a diferencia de /ai/generate-video, que usa AI_VIDEO_DAILY_LIMIT). Gemini cobra
+    por request de imagen; antes de producción revisar:
+    - contador diario por usuario (como crud.count_video_tasks_today),
+    - o reutilizar ai_generation_tasks añadiendo una columna `type`.
+
+    Shape real de la respuesta (verificado contra docs del SDK google-genai 0.8+):
+    la imagen generada viene en candidates[0].content.parts[] como part.inline_data
+    (base64), NO en response.generated_images (ese shape es solo de generate_images/Imagen
+    y de generate_videos). Se deja igualmente un fallback defensivo por si el shape cambia.
+    """
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+    from google.genai import types
+    image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+
+    response = await client.aio.models.generate_content(
+        model="gemini-2.5-flash-image",
+        contents=[image_part, prompt or DEFAULT_ENHANCE_PROMPT],
+        config=types.GenerateContentConfig(
+            response_modalities=["IMAGE"],
+        ),
+    )
+
+    if response.candidates and response.candidates[0].finish_reason != types.FinishReason.STOP:
+        raise RuntimeError(f"Gemini finalizó sin generar la imagen: {response.candidates[0].finish_reason}")
+
+    if response.candidates:
+        for part in response.candidates[0].content.parts:
+            if part.inline_data and part.inline_data.data:
+                enhanced = base64.b64decode(part.inline_data.data)
+                return enhanced, part.inline_data.mime_type or "image/png"
+
+    if getattr(response, "generated_images", None) and response.generated_images:
+        image = response.generated_images[0].image
+        return image.image_bytes, image.mime_type or "image/png"
+
+    raise RuntimeError("Gemini no devolvió una imagen mejorada")

@@ -53,16 +53,16 @@ export default function MediaUploader({
             </span>
           </div>
         ) : (
-          <label className="media-uploader-placeholder">
+          <label className="media-uploader-placeholder" title="Imagen (máx. 10MB, se optimiza automáticamente) o Video (20MB)">
             <input
               type="file"
               accept="image/*,video/*"
               onChange={onSelect}
               className="media-uploader-input"
             />
-            <Upload width={32} height={32} />
+            <Upload width={24} height={24} />
             <span>Click para seleccionar</span>
-            <span className="media-uploader-hint">Imagen (máx. 10MB, se optimiza automáticamente) o Video (20MB)</span>
+            <span className="media-uploader-hint">Imagen máx. 10MB · Video 20MB</span>
           </label>
         )}
       </div>
@@ -100,8 +100,8 @@ export default function MediaUploader({
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: var(--space-2);
-          padding: var(--space-8);
+          gap: var(--space-1);
+          padding: var(--space-4);
           color: var(--text-tertiary);
           cursor: pointer;
           transition: color var(--transition-fast);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart, Power, Calendar } from 'lucide-react';
+import { Plus, List, Grid3X3, PackageX, Package, ShoppingCart, Power, Calendar, Loader2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 import Table from '../../components/ui/Table';
@@ -18,6 +17,7 @@ import ShareModal from '../../components/ShareModal';
 import CategorySelect from '../../components/ui/CategorySelect';
 import Dropdown from '../../components/ui/Dropdown';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import ShareOnSaveSection from '../../components/ui/ShareOnSaveSection';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -64,6 +64,7 @@ export default function Products() {
   const [shareOnSave, setShareOnSave] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [shareModal, setShareModal] = useState({ isOpen: false, item: null });
+  const [isSaving, setIsSaving] = useState(false);
 
   const categoryOptions = [
     { value: '', label: 'Todas las categorías' },
@@ -199,6 +200,8 @@ export default function Products() {
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
     try {
       const payload = { 
         ...formData,
@@ -224,6 +227,8 @@ export default function Products() {
       }
     } catch (err) {
       toast.error(editingProduct ? 'Error al actualizar' : 'Error al crear');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -531,48 +536,16 @@ export default function Products() {
               className="form-textarea"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows="3"
+              rows="2"
               style={{ resize: 'vertical' }}
             />
           </div>
 
-          <div className="share-on-save">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>Publicar al guardar (opcional)</label>
-              <label className="share-checkbox-label" style={{ margin: 0 }}>
-                <input
-                  type="checkbox"
-                  checked={accounts.length > 0 && shareOnSave.length === accounts.length}
-                  onChange={(e) => {
-                    if (e.target.checked) setShareOnSave(accounts.map(a => a.id));
-                    else setShareOnSave([]);
-                  }}
-                  disabled={accounts.length === 0}
-                  className="form-checkbox"
-                />
-                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
-              </label>
-            </div>
-            <div className="share-networks-inline">
-              {accounts.length === 0 && (
-                <div className="text-xs text-secondary mt-1">No hay cuentas activas. Conecta una en tu perfil.</div>
-              )}
-              {accounts.map(account => (
-                <label key={account.id} className="share-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={shareOnSave.includes(account.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) setShareOnSave([...shareOnSave, account.id]);
-                      else setShareOnSave(shareOnSave.filter(id => id !== account.id));
-                    }}
-                    className="form-checkbox"
-                  />
-                  <span>{account.display_label || account.platform_username || account.platform_user_id} ({account.platform})</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <ShareOnSaveSection
+            accounts={accounts}
+            selectedNetworks={shareOnSave}
+            onChange={setShareOnSave}
+          />
 
           {storeLocations.length > 0 && (
             <div className="form-group">
@@ -588,12 +561,18 @@ export default function Products() {
             </div>
           )}
 
-          <div style={{ border: 'none', padding: 0, marginTop: 'var(--space-4)', display: 'flex', gap: 'var(--space-3)' }}>
+          <div className="drawer-form-actions">
             <button type="button" className="btn btn-outline" onClick={resetForm}>Cancelar</button>
-            <button type="submit" className="btn btn-primary">
-              {editingProduct
-                ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
-                : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Producto'}
+            <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Guardando...
+                </>
+              ) : (
+                editingProduct
+                  ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
+                  : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Producto'
+              )}
             </button>
           </div>
         </form>
@@ -634,56 +613,6 @@ export default function Products() {
         item={shareModal.item}
         onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
       />
-
-      <style>{`
-        .loading-state, .error-state {
-          text-align: center;
-          padding: var(--space-12);
-          color: var(--text-secondary);
-        }
-        .error-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-4);
-        }
-        .error-state-icon {
-          font-size: var(--text-4xl);
-        }
-        .error-state-title {
-          font-size: var(--text-xl);
-          font-weight: var(--font-semibold);
-          color: var(--text-primary);
-        }
-        .error-state-text {
-          max-width: 400px;
-          color: var(--text-secondary);
-        }
-
-        .share-on-save {
-          border-top: 1px solid var(--neutral-700);
-          padding-top: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-networks-inline {
-          display: flex;
-          gap: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .share-checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          cursor: pointer;
-          font-size: var(--text-sm);
-        }
-
-        .share-checkbox-label input {
-          accent-color: var(--gold);
-        }
-      `}</style>
     </div>
   );
 }

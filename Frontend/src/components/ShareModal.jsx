@@ -6,6 +6,8 @@ import { socialClient } from '../utils/apiClient';
 import Helpers from '../utils/helpers';
 import AiCopyGenerator from './AI/AiCopyGenerator';
 import AiVideoGenerator from './AI/AiVideoGenerator';
+import AiImageEnhancer from './AI/AiImageEnhancer';
+import { useStore } from '../store/useStore';
 import Drawer from './ui/Drawer';
 import Modal from './ui/Modal';
 
@@ -49,6 +51,7 @@ export default function ShareModal({
   const [publishing, setPublishing] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [aiVideoUrl, setAiVideoUrl] = useState(null);
+  const [enhancedImageUrl, setEnhancedImageUrl] = useState(null);
   const [isAiGeneratedPost, setIsAiGeneratedPost] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
 
@@ -80,6 +83,7 @@ export default function ShareModal({
       setPreviewUrl(null);
       setLoadingImage(true);
       setAiVideoUrl(null);
+      setEnhancedImageUrl(null);
       setIsAiGeneratedPost(false);
 
       generateShareImage({
@@ -142,6 +146,31 @@ export default function ShareModal({
     a.click();
   };
 
+  const handleEnhancedImage = (blob, mimeType) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(URL.createObjectURL(blob));
+    setImageBlob(blob);
+    setIsAiGeneratedPost(true);
+
+    const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+    const formData = new FormData();
+    const ext = mimeType === 'image/jpeg' ? 'jpg' : 'png';
+    formData.append('file', blob, `enhanced_${Date.now()}.${ext}`);
+
+    const token = useStore.getState().currentUser?.token;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: formData })
+      .then(async res => {
+        const data = await res.json();
+        if (res.ok && data.url) {
+          setEnhancedImageUrl(data.url);
+        }
+        return data;
+      })
+      .catch(err => console.error('Error subiendo imagen mejorada:', err));
+  };
+
   const handlePublishClick = async () => {
     setPublishing(true);
     
@@ -151,7 +180,7 @@ export default function ShareModal({
         account_id: accountId,
         platform: acc ? acc.platform : undefined, // Fallback support
         caption: shareText,
-        media_url: aiVideoUrl || item?.imageUrl || item?.image_url || '',
+        media_url: aiVideoUrl || enhancedImageUrl || item?.imageUrl || item?.image_url || '',
         product_id: item?.stock !== undefined ? item?.id : null,
         service_id: item?.duration !== undefined ? item?.id : null,
         is_ai_generated: isAiGeneratedPost,
@@ -232,6 +261,10 @@ export default function ShareModal({
                 setAiVideoUrl(url);
                 setIsAiGeneratedPost(true);
               }} 
+            />
+            <AiImageEnhancer 
+              imageBlob={imageBlob} 
+              onEnhanced={handleEnhancedImage} 
             />
           </div>
 
@@ -323,7 +356,7 @@ export default function ShareModal({
               </div>
             </div>
           )}
-        <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'flex-end', marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border)' }}>
+        <div className="drawer-form-actions" style={{ borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
           <button
             className="btn btn-primary"

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from google.cloud import storage
+import base64
 import uuid
 from app.db.session import get_db
 from app.modules.auth.deps import get_current_user
@@ -74,5 +75,37 @@ async def get_task_status(
         "status": task.status,
         "video_url": task.video_url,
         "error_message": task.error_message
+    }
+
+@router.post("/enhance-image")
+async def enhance_image(
+    file: UploadFile = File(...),
+    prompt: str | None = Form(None),
+    current_user = Depends(get_current_user),
+):
+    # NOTA (pendiente): sin límite diario ni control de costo en este ciclo (a diferencia de
+    # /generate-video). Gemini cobra por request de imagen — revisar antes de producción:
+    # contador diario por usuario o columna `type` en ai_generation_tasks (ver service.enhance_image).
+    if file.content_type not in {"image/jpeg", "image/png", "image/webp"}:
+        raise HTTPException(status_code=400, detail="Formato de imagen no soportado (jpeg, png, webp).")
+
+    try:
+        image_bytes = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error leyendo la imagen: {e}")
+
+    if len(image_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Imagen demasiado grande (máx 5MB).")
+
+    try:
+        enhanced_bytes, mime_type = await service.enhance_image(
+            image_bytes, file.content_type or "image/jpeg", prompt
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error mejorando la imagen con IA: {e}")
+
+    return {
+        "image_base64": base64.b64encode(enhanced_bytes).decode("ascii"),
+        "mime_type": mime_type,
     }
 

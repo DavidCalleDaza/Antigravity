@@ -30,7 +30,7 @@ export default function LandingFooter() {
         <div>
           <h4 className="footer-section-title">Comunidad</h4>
           <div className="footer-links">
-            <Link to="/wall" className="footer-link">Muro Social</Link>
+            <Link to="/wall" className="footer-link">Muro de Impacto</Link>
             <a href="#" className="footer-link">Historias de Impacto</a>
             <a href="#" className="footer-link">Contacto</a>
           </div>
@@ -38,6 +38,11 @@ export default function LandingFooter() {
       </div>
       <div className="footer-bottom">
         <p>&copy; {new Date().getFullYear()} DonApp. Hecho con propósito desde Colombia.</p>
+        <p>
+          <Link to="/wall" style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer' }}>
+            La historia se hizo y se hará en las calles mi viej@.
+          </Link>
+        </p>
       </div>
     </footer>
   );

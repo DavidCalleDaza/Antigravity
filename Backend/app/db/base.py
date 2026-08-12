@@ -15,7 +15,7 @@ from app.db.base_class import Base  # noqa: F401
 
 # ── ORM Models (import order does not matter) ────────────────────────────────
 from app.modules.auth.models import User  # noqa: F401
-from app.modules.wall.models import Comment, Post  # noqa: F401
+from app.modules.wall.models import Comment, Post, PostCustomerMention, PostMedia  # noqa: F401
 from app.modules.products.models import Product  # noqa: F401
 from app.modules.categories.models import Category  # noqa: F401
 from app.modules.services.models import Service  # noqa: F401
@@ -33,3 +33,4 @@ from app.modules.billing.models import (
 from app.modules.ai.models import AiGenerationTask  # noqa: F401
 from app.modules.agenda.models import Appointment, AvailabilityOverride, AvailabilityTemplate  # noqa: F401
 from app.modules.notifications.models import Notification  # noqa: F401
+from app.modules.tokens.models import ExchangeRate, TokenUsage  # noqa: F401

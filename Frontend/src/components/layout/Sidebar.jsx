@@ -15,7 +15,7 @@ const NAV_ITEMS = [
     section: 'Principal',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', page: '/dashboard', allowedRoles: [ADMIN, SELLER, CLIENT] },
-      { id: 'wall', label: 'Muro Social', icon: 'HeartHandshake', page: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
+      { id: 'wall', label: 'Muro de Impacto', icon: 'HeartHandshake', page: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
       { id: 'profile', label: 'Mi Perfil', icon: 'UserCircle', page: '/profile', allowedRoles: [ADMIN, SELLER, CLIENT] },
     ],
   },
@@ -40,6 +40,13 @@ const NAV_ITEMS = [
     section: 'Planificación',
     items: [
       { id: 'agenda', label: 'Agenda', icon: 'Calendar', page: '/agenda', allowedRoles: [ADMIN, SELLER, CLIENT] },
+    ],
+  },
+  {
+    section: 'Administración',
+    items: [
+      { id: 'tokens', label: 'Tokens de IA', icon: 'Sparkles', page: '/admin/tokens', allowedRoles: [ADMIN] },
+      { id: 'social', label: 'Redes Sociales', icon: 'Share2', page: '/admin/social', allowedRoles: [ADMIN] },
     ],
   },
 ];

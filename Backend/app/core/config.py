@@ -158,6 +158,10 @@ class Settings(BaseSettings):
     GCS_VIDEO_BUCKET: str = "servinow-ai-video-dev"
     AI_VIDEO_DAILY_LIMIT: int = 50
 
+    # --- AI Cost Control (Tokens Module) ---
+    # Máximo consumo USD por usuario en una ventana de 1 hora.
+    AI_HOURLY_COST_LIMIT_USD: float = 0.50
+
     # --- WhatsApp Cloud API ---
     WHATSAPP_ACCESS_TOKEN: str = ""
     WHATSAPP_PHONE_ID: str = ""

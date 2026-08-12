@@ -27,6 +27,8 @@ from app.modules.whatsapp.router import router as whatsapp_router
 from app.modules.agenda.router import router as agenda_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.billing.public_verify_router import router as public_verify_router
+from app.modules.wall.public_mention_router import router as public_mention_router
+from app.modules.tokens.router import router as tokens_router
 from app.modules.contact.router import router as contact_router
 from app.shared.schemas import HealthCheckResponse
 import os
@@ -167,6 +169,16 @@ app.include_router(
     contact_router,
     prefix="/api/v1",
     tags=["Contact"],
+)
+app.include_router(
+    public_mention_router,
+    prefix="/api/v1",
+    tags=["Public Wall Mentions"],
+)
+app.include_router(
+    tokens_router,
+    prefix="/api/v1/tokens",
+    tags=["Tokens"],
 )
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
 app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")

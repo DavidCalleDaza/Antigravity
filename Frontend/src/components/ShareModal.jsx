@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 import { generateShareImage } from '../utils/generateShareImage';
-import { socialClient } from '../utils/apiClient';
+import { socialClient, tokensClient } from '../utils/apiClient';
 import Helpers from '../utils/helpers';
 import AiCopyGenerator from './AI/AiCopyGenerator';
 import AiVideoGenerator from './AI/AiVideoGenerator';
@@ -27,7 +27,10 @@ function isMobile() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-function buildShareText(item) {
+function buildShareText(item, mode) {
+  if (mode === 'wallPost') {
+    return (item && item.description) || '';
+  }
   const desc = item.description
     ? (item.description.length > 100 ? item.description.slice(0, 97) + '...' : item.description)
     : '';
@@ -41,7 +44,9 @@ export default function ShareModal({
   onClose,
   item,
   onPublish,
+  mode = 'item', // 'item' | 'wallPost'
 }) {
+  const isWallPost = mode === 'wallPost';
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [shareText, setShareText] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -55,12 +60,16 @@ export default function ShareModal({
   const [isAiGeneratedPost, setIsAiGeneratedPost] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   const [activeAiSection, setActiveAiSection] = useState(null); // null | 'copy' | 'image' | 'video'
+  const [hourlyLimitReached, setHourlyLimitReached] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       socialClient.listAccounts()
         .then(res => setAccounts(res || []))
         .catch(err => console.error("Failed to load accounts", err));
+      tokensClient.getHourlyUsage()
+        .then(res => setHourlyLimitReached(Boolean(res && res.used_usd >= res.limit_usd)))
+        .catch(() => setHourlyLimitReached(false));
     }
   }, [isOpen]);
 
@@ -77,7 +86,7 @@ export default function ShareModal({
 
   useEffect(() => {
     if (isOpen && item) {
-      setShareText(buildShareText(item));
+      setShareText(buildShareText(item, mode));
       setSelectedAccounts([]);
       setShowInstagramPanel(false);
       setImageBlob(null);
@@ -87,6 +96,22 @@ export default function ShareModal({
       setEnhancedImageUrl(null);
       setIsAiGeneratedPost(false);
       setActiveAiSection(null);
+
+      if (mode === 'wallPost') {
+        const mediaUrl = Helpers.resolveMediaUrl(item.imageUrl || item.image_url);
+        setPreviewUrl(mediaUrl || null);
+        setLoadingImage(false);
+        if (mediaUrl) {
+          fetch(mediaUrl)
+            .then(res => {
+              if (!res.ok) throw new Error('No se pudo cargar la imagen');
+              return res.blob();
+            })
+            .then(blob => setImageBlob(blob))
+            .catch(() => setImageBlob(null));
+        }
+        return;
+      }
 
       generateShareImage({
         imageUrl: Helpers.resolveMediaUrl(item.imageUrl || item.image_url),
@@ -104,7 +129,7 @@ export default function ShareModal({
         })
         .finally(() => setLoadingImage(false));
     }
-  }, [isOpen, item]);
+  }, [isOpen, item, mode]);
 
   useEffect(() => {
     return () => {
@@ -144,7 +169,7 @@ export default function ShareModal({
     if (!imageBlob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(imageBlob);
-    a.download = `${item.name.replace(/\s+/g, '_')}_share.png`;
+    a.download = `${(item.name || 'post').replace(/\s+/g, '_')}_share.png`;
     a.click();
   };
 
@@ -175,7 +200,9 @@ export default function ShareModal({
 
   const handlePublishClick = async () => {
     setPublishing(true);
-    
+
+    const linked = item?.linkedItem;
+
     const publishPromises = selectedAccounts.map(accountId => {
       const acc = accounts.find(a => a.id === accountId);
       return socialClient.publish({
@@ -183,8 +210,12 @@ export default function ShareModal({
         platform: acc ? acc.platform : undefined, // Fallback support
         caption: shareText,
         media_url: aiVideoUrl || enhancedImageUrl || item?.imageUrl || item?.image_url || '',
-        product_id: item?.stock !== undefined ? item?.id : null,
-        service_id: item?.duration !== undefined ? item?.id : null,
+        product_id: isWallPost
+          ? (linked?.kind === 'product' ? linked.id : null)
+          : (item?.stock !== undefined ? item?.id : null),
+        service_id: isWallPost
+          ? (linked?.kind === 'service' ? linked.id : null)
+          : (item?.duration !== undefined ? item?.id : null),
         is_ai_generated: isAiGeneratedPost,
       });
     });
@@ -237,7 +268,7 @@ export default function ShareModal({
           <>
             <div className="share-preview">
             <label className="form-label">Vista previa</label>
-            <div className="share-preview-card">
+            <div className={isWallPost ? 'share-preview-card share-preview-card--wallpost' : 'share-preview-card'}>
               {loadingImage ? (
                 <div className="share-preview-loading">
                   <Loader2 width={32} height={32} className="spin" />
@@ -253,32 +284,38 @@ export default function ShareModal({
                   <Share2 width={48} height={48} />
                 </div>
               )}
-              <div className="share-preview-info">
-                <span className="share-preview-name">{item.name}</span>
-                <span className="share-preview-price">$ {Number(item.price).toLocaleString('es-CO')}</span>
-              </div>
+              {!isWallPost && (
+                <div className="share-preview-info">
+                  <span className="share-preview-name">{item.name}</span>
+                  <span className="share-preview-price">$ {Number(item.price).toLocaleString('es-CO')}</span>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="ai-accordion">
-            <AiAccordionEntry
-              icon={Sparkles}
-              label="Generar texto con IA"
-              onClick={() => setActiveAiSection('copy')}
-            />
+            {!isWallPost && (
+              <AiAccordionEntry
+                icon={Sparkles}
+                label="Generar texto con IA"
+                onClick={() => setActiveAiSection('copy')}
+              />
+            )}
             <AiAccordionEntry
               icon={Sparkles}
               label="Mejorar imagen con IA"
               onClick={() => setActiveAiSection('image')}
-              disabled={!imageBlob}
-              title="Necesitas una imagen para mejorarla"
+              disabled={!imageBlob || hourlyLimitReached}
+              title={hourlyLimitReached ? 'Límite horario de IA alcanzado' : 'Necesitas una imagen para mejorarla'}
             />
-            <AiAccordionEntry
-              icon={Video}
-              label="Video con IA (Google Veo)"
-              onClick={() => setActiveAiSection('video')}
-              badge="Próximamente"
-            />
+            {!isWallPost && (
+              <AiAccordionEntry
+                icon={Video}
+                label="Video con IA (Google Veo)"
+                onClick={() => setActiveAiSection('video')}
+                badge="Próximamente"
+              />
+            )}
           </div>
 
           <div className="form-group">
@@ -445,7 +482,9 @@ export default function ShareModal({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', gridColumn: '1 / -1', width: '100%' }}>
           <img src={previewUrl} alt="Vista previa detallada" style={{ maxWidth: '100%', maxHeight: '65vh', objectFit: 'contain', borderRadius: '8px' }} />
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textAlign: 'center', margin: 0, textWrap: 'wrap' }}>
-            Esta imagen incluye el texto incrustado que se publicará en las redes.
+            {isWallPost
+              ? 'Esta es la imagen que acompañará la publicación.'
+              : 'Esta imagen incluye el texto incrustado que se publicará en las redes.'}
           </p>
         </div>
       </Modal>
@@ -504,6 +543,24 @@ export default function ShareModal({
         [data-theme="light"] .share-preview-card {
           background: var(--gold-dim);
           border-color: var(--gold);
+        }
+
+        .share-preview-card--wallpost {
+          height: auto;
+          flex-direction: column;
+        }
+
+        .share-preview-card--wallpost .share-preview-image {
+          width: 100%;
+          height: auto;
+          max-height: 300px;
+          object-fit: cover;
+        }
+
+        .share-preview-card--wallpost .share-preview-loading,
+        .share-preview-card--wallpost .share-preview-placeholder {
+          width: 100%;
+          height: 140px;
         }
 
         .share-preview-image {

@@ -22,6 +22,8 @@ import Market from './modules/Market/Market';
 import Profile from './modules/Profile/Profile';
 import SocialAccountsAdmin from './modules/Admin/SocialAccountsAdmin';
 import VerifyPublic from './Pages/VerifyPublic';
+import ConfirmMention from './Pages/ConfirmMention';
+import TokensAdmin from './modules/Admin/TokensAdmin';
 
 import CustomCursor from './components/common/CustomCursor';
 import Customers from './modules/Billing/Customers';
@@ -49,6 +51,7 @@ function App() {
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/auth/callback" element={<GoogleCallback />} />
         <Route path="/verify/:cufe" element={<VerifyPublic />} />
+        <Route path="/confirmar-mencion/:token" element={<ConfirmMention />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
@@ -69,6 +72,7 @@ function App() {
         <Route element={<ProtectedRoute isStaffRequired={true} />}>
           <Route element={<MainLayout />}>
             <Route path="/admin/social" element={<SocialAccountsAdmin />} />
+            <Route path="/admin/tokens" element={<TokensAdmin />} />
           </Route>
         </Route>
 

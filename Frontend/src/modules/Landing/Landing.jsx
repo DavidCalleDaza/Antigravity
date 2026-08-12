@@ -381,6 +381,9 @@ export default function Landing() {
                       </div>
                     </div>
                   </div>
+                  <p className="section-intro" style={{marginTop: '24px'}}>
+                    Cree en lo que quieras, pero aprende a dar las gracias y a pedir permiso siempre.
+                  </p>
                 </div>
                 <div className="model-visual reveal reveal-delay-3">
                   <div className="model-ring"><div className="orbit-dot"></div></div>
@@ -457,6 +460,28 @@ export default function Landing() {
                   <div className="impact-card-label">Productos donados a comunidades</div>
                 </div>
               </div>
+              <p className="section-intro" style={{textAlign: 'center', maxWidth: '580px', margin: 'clamp(24px,4vw,40px) auto 0'}}>
+                No todo lo que se da, se ve.
+              </p>
+            </div>
+          </section>
+
+          <section className="section manifesto-section" id="manifesto">
+            <div className="container">
+              <div className="section-label reveal">Nuestra filosofía</div>
+              <h2 className="reveal reveal-delay-1">La alquimia<br/><em>del trueque</em></h2>
+              <p className="section-intro reveal reveal-delay-2" style={{maxWidth: '680px', margin: '0 auto'}}>
+                Hay un intercambio antiguo que el mercado moderno olvidó: dar no es perder, es transformar. Cada producto, servicio o minuto donado sin esperar nada a cambio es un trueque sincero — y ese es el puente que construimos entre un negocio y su comunidad, entre un estilo de vida y otro.
+              </p>
+              <p className="section-intro reveal reveal-delay-3" style={{maxWidth: '680px', margin: '16px auto 0'}}>
+                Por eso las herramientas de gestión de DonApp son gratuitas, siempre, para microempresas, negocios pequeños y emprendimientos — con especial atención a quienes hacen arte y deporte, porque ahí también se construye comunidad. A cambio pedimos una sola cosa: donar lo que puedan, cuando puedan, a quien más lo necesita — personas en situación de calle, sin preguntar por qué llegaron ahí, solo para devolverles dignidad y reconocimiento.
+              </p>
+              <p className="section-intro reveal reveal-delay-4" style={{maxWidth: '680px', margin: '16px auto 0'}}>
+                Negocios padrinos, personas ahijadas, vínculos que no caducan en una sola donación. No es caridad de un solo golpe: es una red sostenible donde crecer y servir son la misma cosa.
+              </p>
+              <p className="section-intro reveal reveal-delay-5" style={{maxWidth: '680px', margin: '16px auto 0'}}>
+                Cada historia que se publica en el Muro de Impacto tiene el consentimiento de quien la protagoniza. Nadie es fotografiado, nombrado o expuesto sin su autorización — ayudar no debería costarle a nadie su privacidad.
+              </p>
             </div>
           </section>
 
@@ -611,6 +636,7 @@ export default function Landing() {
                         'Enviar mensaje →'
                       )}
                     </button>
+                    <p className="form-hint mt-2">Gracias no es un botón.</p>
                     {contactStatus === 'success' && (
                       <p className="form-feedback form-feedback-success">
                         <CheckCircle2 size={18} /> ¡Gracias! Recibimos tu mensaje y te responderemos pronto.

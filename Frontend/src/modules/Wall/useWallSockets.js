@@ -3,7 +3,7 @@ import { useEffect, useRef, useCallback } from 'react';
 const WS_RECONNECT_DELAY = 3000;
 const WS_MAX_RETRIES = 5;
 
-export function useWallSockets({ onNewPost, onNewComment }) {
+export function useWallSockets({ onNewPost, onNewComment, onPostUpdated }) {
   const wsRef = useRef(null);
   const retriesRef = useRef(0);
   const isUnmountedRef = useRef(false);
@@ -25,6 +25,8 @@ export function useWallSockets({ onNewPost, onNewComment }) {
         const message = JSON.parse(event.data);
         if (message.event === 'new_post' && onNewPost) {
           onNewPost(message.data);
+        } else if (message.event === 'post_updated' && onPostUpdated) {
+          onPostUpdated(message.data);
         } else if (message.event === 'new_comment' && onNewComment) {
           onNewComment(message.data);
         }
@@ -43,7 +45,7 @@ export function useWallSockets({ onNewPost, onNewComment }) {
         setTimeout(connect, WS_RECONNECT_DELAY);
       }
     };
-  }, [onNewPost, onNewComment]);
+  }, [onNewPost, onNewComment, onPostUpdated]);
 
   useEffect(() => {
     isUnmountedRef.current = false;

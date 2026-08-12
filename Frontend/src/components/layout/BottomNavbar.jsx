@@ -10,7 +10,7 @@ const MAIN_NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', allowedRoles: [ADMIN, SELLER, CLIENT] },
   { id: 'products', label: 'Productos', icon: Package, path: '/products', allowedRoles: [ADMIN, SELLER, CLIENT] },
   { id: 'services', label: 'Servicios', icon: Wrench, path: '/services', allowedRoles: [ADMIN, SELLER, CLIENT] },
-  { id: 'wall', label: 'Muro Social', icon: HeartHandshake, path: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
+  { id: 'wall', label: 'Muro de Impacto', icon: HeartHandshake, path: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
   { id: 'profile', label: 'Mi Perfil', icon: UserCircle, path: '/profile', allowedRoles: [ADMIN, SELLER, CLIENT] },
 ];
 

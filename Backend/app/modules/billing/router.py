@@ -25,6 +25,7 @@ from app.modules.billing.crud import (
     get_customers,
     get_customer,
     get_customer_by_id_number,
+    get_mentionable_customers,
     create_customer,
     update_customer,
     get_invoices,
@@ -107,6 +108,18 @@ async def list_billing_customers(
 ) -> list[CustomerResponse]:
     """List billing customers with search and pagination."""
     customers = await get_customers(db, skip=skip, limit=limit, search=search, active_only=active_only)
+    return [CustomerResponse.model_validate(c) for c in customers]
+
+
+@router.get("/customers/mentionable", response_model=list[CustomerResponse])
+async def list_mentionable_customers(
+    search: Annotated[str | None, Query(description="Filtrar por nombre o NIT.")] = None,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[CustomerResponse]:
+    """List customers the current user has invoiced (eligible for wall mentions)."""
+    customers = await get_mentionable_customers(db, user_id=current_user.id, search=search, limit=limit)
     return [CustomerResponse.model_validate(c) for c in customers]
 
 

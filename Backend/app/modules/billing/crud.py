@@ -11,7 +11,7 @@ import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import func, select, update
+from sqlalchemy import exists, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -70,6 +70,43 @@ async def get_customer(db: AsyncSession, customer_id: uuid.UUID) -> Customer | N
     """Retrieve a single customer by ID."""
     result = await db.execute(select(Customer).options(selectinload(Customer.location)).where(Customer.id == customer_id))
     return result.scalar_one_or_none()
+
+
+async def get_mentionable_customers(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    search: str | None = None,
+    limit: int = 20,
+) -> list[Customer]:
+    """
+    Retrieve customers the given user can mention on wall posts.
+
+    Ownership is validated via ``EXISTS`` on invoices
+    (``Invoice.customer_id = customer.id AND Invoice.user_id = user_id``);
+    no ``Customer.owner_user_id`` column exists yet (known technical debt).
+    """
+    from app.modules.billing.models import Invoice
+
+    stmt = (
+        select(Customer)
+        .options(selectinload(Customer.location))
+        .where(
+            Customer.is_active == True,  # noqa: E712
+            exists().where(
+                Invoice.customer_id == Customer.id,
+                Invoice.user_id == user_id,
+            ),
+        )
+        .order_by(Customer.business_name)
+        .limit(limit)
+    )
+    if search:
+        pattern = f"%{search}%"
+        stmt = stmt.where(
+            Customer.business_name.ilike(pattern) | Customer.trade_name.ilike(pattern) | Customer.id_number.ilike(pattern)
+        )
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
 
 
 async def get_customer_by_id_number(db: AsyncSession, id_number: str) -> Customer | None:

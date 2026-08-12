@@ -299,6 +299,11 @@ export const billingClient = {
   createCustomer: (data) => apiClient.post('/billing/customers', data),
   updateCustomer: (id, data) => apiClient.patch(`/billing/customers/${id}`, data),
   getCustomerTaxRate: (id) => apiClient.get(`/billing/customers/${id}/tax-rate`),
+  listMentionableCustomers: (search, limit = 20) => {
+    const query = new URLSearchParams({ limit: String(limit) });
+    if (search) query.set('search', search);
+    return apiClient.get(`/billing/customers/mentionable?${query.toString()}`);
+  },
   getCountrySettings: (countryCode) => apiClient.get(`/billing/country-settings/${countryCode}`),
   upsertCountrySettings: (countryCode, payload) => apiClient.put(`/billing/country-settings/${countryCode}`, payload),
 
@@ -385,6 +390,23 @@ export const aiClient = {
   generateCopy: (data) => apiClient.post('/ai/generate-copy', data),
   generateVideo: (data) => apiClient.post('/ai/generate-video', data),
   getTaskStatus: (taskId) => apiClient.get(`/ai/task/${taskId}`),
+  enhanceImage: (file, prompt) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (prompt) formData.append('prompt', prompt);
+    return apiClient.requestFormData('/ai/enhance-image', formData);
+  },
+  improvePostCopy: (data) => apiClient.post('/ai/improve-post-copy', data),
+};
+
+export const tokensClient = {
+  getUsage: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient.get(`/tokens/usage${query ? `?${query}` : ''}`);
+  },
+  getHourlyUsage: () => apiClient.get('/tokens/usage/hourly'),
+  getExchangeRate: () => apiClient.get('/tokens/exchange-rate'),
+  updateExchangeRate: (usdToCop) => apiClient.put('/tokens/exchange-rate', { usd_to_cop: usdToCop }),
 };
 
 export const whatsappClient = {

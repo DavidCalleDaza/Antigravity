@@ -19,12 +19,16 @@ from app.db.session import get_db
 from app.modules.auth.deps import get_current_user
 from app.modules.auth.models import User
 from app.modules.wall.crud import (
+    CustomerMentionError,
+    add_post_media,
     create_comment,
     create_post,
     delete_comment,
     delete_post,
+    delete_post_media,
     get_comment,
     get_post,
+    get_post_media,
     get_posts,
     update_comment,
     update_post,
@@ -34,6 +38,7 @@ from app.modules.wall.schemas import (
     CommentResponse,
     CommentUpdate,
     PostCreate,
+    PostMediaResponse,
     PostResponse,
     PostUpdate,
 )
@@ -120,8 +125,23 @@ async def create_wall_post(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> PostResponse:
-    post = await create_post(db, post_in, current_user)
+    try:
+        post = await create_post(db, post_in, current_user)
+    except CustomerMentionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     response = PostResponse.model_validate(post)
+
+    # Fire-and-forget: email each mentioned customer their consent link.
+    for mention in post.customer_mentions:
+        if mention.confirm_token:
+            try:
+                from app.modules.wall.tasks import send_customer_mention_notification
+                send_customer_mention_notification.delay(str(mention.id))
+            except Exception:
+                pass  # Celery may be unavailable; mention still works.
+
     await manager.broadcast({"event": "new_post", "data": response.model_dump(mode="json")})
     return response
 
@@ -265,3 +285,75 @@ async def upload_media(
         shutil.copyfileobj(file.file, buffer)
     
     return {"url": f"/uploads/wall/{file_name}", "type": file.content_type}
+
+
+@router.post(
+    "/{post_id}/media",
+    response_model=PostMediaResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Agregar media a un post",
+)
+async def add_media_to_post(
+    post_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> PostMediaResponse:
+    db_post = await get_post(db, post_id)
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if db_post.author_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    upload_dir = Path("uploads/wall")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_extension = Path(file.filename).suffix
+    file_name = f"{uuid.uuid4()}{file_extension}"
+    file_path = upload_dir / file_name
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    db_media = await add_post_media(
+        db,
+        post_id,
+        media_url=f"/uploads/wall/{file_name}",
+        media_type=file.content_type,
+    )
+    updated = await get_post(db, post_id)
+    if updated:
+        await manager.broadcast({
+            "event": "post_updated",
+            "data": PostResponse.model_validate(updated).model_dump(mode="json"),
+        })
+    return PostMediaResponse.model_validate(db_media)
+
+
+@router.delete(
+    "/{post_id}/media/{media_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar media de un post",
+)
+async def delete_media_from_post(
+    post_id: uuid.UUID,
+    media_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_post = await get_post(db, post_id)
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if db_post.author_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    db_media = await get_post_media(db, media_id)
+    if not db_media or db_media.post_id != post_id:
+        raise HTTPException(status_code=404, detail="Media not found")
+
+    await delete_post_media(db, db_media)
+    updated = await get_post(db, post_id)
+    if updated:
+        await manager.broadcast({
+            "event": "post_updated",
+            "data": PostResponse.model_validate(updated).model_dump(mode="json"),
+        })
+    return None

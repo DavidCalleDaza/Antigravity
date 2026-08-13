@@ -56,7 +56,7 @@ export default function Register() {
         is_staff: response.user.is_staff,
       });
       toast.success('¡Cuenta creada con éxito!', 'Bienvenido');
-      navigate('/dashboard');
+      navigate('/wall');
     } catch (error) {
       toast.error(error.message || 'No se pudo crear la cuenta.', 'Error');
     } finally {

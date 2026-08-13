@@ -174,7 +174,7 @@ export default function Profile() {
       });
       if (currentUser?.needsOnboarding && !response.needs_onboarding) {
         toast.success('¡Perfil completado! Bienvenido a DonApp.', 'Éxito');
-        navigate('/dashboard');
+        navigate('/wall');
       } else {
         toast.success('Perfil actualizado correctamente.', 'Éxito');
       }

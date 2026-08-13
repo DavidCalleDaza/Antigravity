@@ -6,7 +6,7 @@ import AstronautLogo from '../../components/ui/AstronautLogo';
 export default function Unauthorized() {
   const { currentUser } = useStore();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/wall';
 
   return (
     <div className="auth-page">
@@ -40,7 +40,7 @@ export default function Unauthorized() {
 
           <div className="auth-form" style={{ gap: 'var(--space-4)' }}>
             <Link to={from} className="btn btn-primary btn-lg w-full">
-              Volver al Dashboard
+              Volver al Muro
             </Link>
             <Link to="/" className="btn btn-outline btn-lg w-full">
               Ir al Inicio

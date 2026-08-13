@@ -55,7 +55,7 @@ export default function GoogleCallback() {
           navigate('/profile');
         } else {
           toast.success('Sesión iniciada con Google', 'Bienvenido');
-          navigate('/dashboard');
+          navigate('/wall');
         }
       } catch (err) {
         setError(err.message || 'Error al validar credenciales con Google.');

@@ -82,7 +82,6 @@ export const APP_CONFIG = {
     {
       section: 'Principal',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', page: '/dashboard' },
         { id: 'wall', label: 'Muro de Impacto', icon: 'HeartHandshake', page: '/wall', badge: null }
       ]
     },

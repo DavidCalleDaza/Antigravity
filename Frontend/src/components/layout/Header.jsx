@@ -8,8 +8,16 @@ import { connectNotifications, disconnectNotifications } from '../../utils/notif
 export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) {
   const { theme, toggleTheme, isAuthenticated, notifications, unreadCount, setNotifications, markAsRead } = useStore();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -58,13 +66,13 @@ export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) 
   };
 
   return (
-    <header className="navbar" id="navbar">
+    <header className={`navbar${scrolled ? ' navbar--scrolled' : ''}`} id="navbar">
       <div className="navbar-left">
         <div>
           <h1 className="navbar-title">{title}</h1>
           {breadcrumb.length > 0 && (
             <div className="navbar-breadcrumb">
-              <a href="/dashboard">Inicio</a>
+              <a href="/wall">Inicio</a>
               {breadcrumb.map((item, i) => (
                 <span key={i}>
                   <span className="separator">/</span>

@@ -10,7 +10,6 @@ import ForgotPassword from './modules/Auth/ForgotPassword';
 import Unauthorized from './modules/Auth/Unauthorized';
 import GoogleCallback from './modules/Auth/GoogleCallback';
 import MainLayout from './components/layout/MainLayout';
-import Dashboard from './modules/Dashboard/Dashboard';
 import Products from './modules/Products/Products';
 import Services from './modules/Services/Services';
 import Categories from './modules/Categories/Categories';
@@ -55,7 +54,6 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/products" element={<Products />} />
             <Route path="/services" element={<Services />} />
@@ -76,7 +74,7 @@ function App() {
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/wall" replace />} />
       </Routes>
       <ToastContainer />
     </Router>

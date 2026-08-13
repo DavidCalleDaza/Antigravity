@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HeartHandshake, MessageCircle, Sparkles, Image as ImageIcon, 
-  FilePlus, Users, Package, Send, MoreVertical, Trash2, Edit2, X, Paperclip, Share2, Loader2 
+  FilePlus, Users, Package, Send, MoreVertical, Trash2, Edit2, X, Paperclip, Share2, Loader2,
+  TrendingUp, Activity, ArrowRight, Wrench 
 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 import { useStore } from '../../store/useStore';
@@ -12,6 +13,19 @@ import { useWallSockets } from './useWallSockets';
 import Modal from '../../components/ui/Modal';
 import ShareModal from '../../components/ShareModal';
 import AiImageEnhancer from '../../components/AI/AiImageEnhancer';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Filler,
+  Legend
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler, Legend);
 
 export default function Wall() {
   const [posts, setPosts] = useState([]);
@@ -527,33 +541,90 @@ export default function Wall() {
     return Helpers.getInitials(name);
   };
 
-  const typeIcons = { donation: HeartHandshake, testimony: MessageCircle, impact: Sparkles };
-  const typeLabels = { donation: 'Donación', testimony: 'Testimonio', impact: 'Impacto' };
+  const weekActivity = useMemo(() => {
+    const days = [];
+    const counts = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days.push(d.toLocaleDateString('es-ES', { weekday: 'short' }));
+      counts.push(posts.filter(p => p.created_at && p.created_at.slice(0, 10) === key).length);
+    }
+    return { days, counts };
+  }, [posts]);
+
+  const postsThisWeek = useMemo(() => weekActivity.counts.reduce((acc, n) => acc + n, 0), [weekActivity]);
+
+  const recentActivity = useMemo(() => posts.slice(0, 5), [posts]);
+
+  const sidebarKpis = useMemo(() => [
+    { label: 'Publicaciones esta semana', value: postsThisWeek, icon: Sparkles },
+    { label: 'Familias alcanzadas', value: '340', icon: HeartHandshake },
+    { label: 'Productos donados', value: '2,150', icon: Package },
+    { label: 'Negocios que dan', value: '127', icon: Users }
+  ], [postsThisWeek]);
+
+  const weekChartData = useMemo(() => ({
+    labels: weekActivity.days,
+    datasets: [{
+      label: 'Publicaciones',
+      data: weekActivity.counts,
+      borderColor: '#3EB489',
+      backgroundColor: 'rgba(62, 180, 137, 0.12)',
+      borderWidth: 2,
+      pointBackgroundColor: '#3EB489',
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: 'origin'
+    }]
+  }), [weekActivity]);
+
+  const weekChartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'var(--card-bg)',
+        titleColor: 'var(--text-primary)',
+        bodyColor: 'var(--text-secondary)',
+        borderColor: 'var(--border-color)',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 8
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: 'var(--border-color)', lineWidth: 0.5 },
+        border: { display: false },
+        ticks: { color: 'var(--text-tertiary)', font: { size: 11 } }
+      },
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: 'var(--text-tertiary)', font: { size: 11 } }
+      }
+    }
+  }), []);
+
+  const typeIcons = { donation: HeartHandshake, testimony: MessageCircle, impact: Sparkles, service: Wrench };
+  const typeLabels = { donation: 'Donación', testimony: 'Testimonio', impact: 'Impacto', service: 'Servicio' };
 
   return (
-    <div className="page-content" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="wall-header reveal">
-        <div className="wall-quote">
-          <span className="wall-quote-mark">“</span>
-          No buscamos aplausos. No buscamos vitrinas. DonApp existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
-        </div>
-        <div className="wall-subtitle">Evidencia de impacto real</div>
-        
-        <div className="wall-counters">
-          <div className="wall-counter">
-            <div className="wall-counter-value">340</div>
-            <div className="wall-counter-label">Familias alcanzadas</div>
+    <div className="page-content">
+      <div className="wall-layout">
+        <div className="wall-main">
+          <div className="wall-header reveal">
+            <div className="wall-quote">
+              <span className="wall-quote-mark">“</span>
+              No buscamos aplausos. No buscamos vitrinas. DonApp existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
+            </div>
+            <div className="wall-subtitle">Evidencia de impacto real</div>
           </div>
-          <div className="wall-counter">
-            <div className="wall-counter-value">2,150</div>
-            <div className="wall-counter-label">Productos donados</div>
-          </div>
-          <div className="wall-counter">
-            <div className="wall-counter-value">127</div>
-            <div className="wall-counter-label">Negocios que dan</div>
-          </div>
-        </div>
-      </div>
 
       {/* Post Composer */}
       <div className="post-composer reveal">
@@ -687,10 +758,11 @@ export default function Wall() {
                   <X width="20" height="20" />
                 </button>
               )}
-              <select name="type" className="form-select" style={{ width: 'auto', padding: '4px 12px', fontSize: '12px', borderRadius: '20px', border: 'none', background: 'var(--primary-50)', color: 'var(--primary)' }}>
-                <option value="impact">✨ Impacto</option>
-                <option value="donation">🤝 Donación</option>
-                <option value="testimony">💬 Testimonio</option>
+              <select name="type" className="form-select" style={{ width: 'auto', padding: '4px 12px', fontSize: '12px', borderRadius: '20px', border: 'none', background: 'var(--primary-50)', color: 'var(--primary)' }} title="Categoría de la publicación">
+                <option value="impact" title="Una historia o momento de impacto social">✨ Impacto</option>
+                <option value="donation" title="Una donación realizada o recibida">🤝 Donación</option>
+                <option value="testimony" title="El testimonio de alguien beneficiado">💬 Testimonio</option>
+                <option value="service" title="Un servicio prestado o disponible">🛠️ Servicio</option>
               </select>
             </div>
             <button type="submit" className="btn btn-primary btn-sm" disabled={uploading}>
@@ -1031,6 +1103,82 @@ export default function Wall() {
             );
           })
         )}
+      </div>
+        </div>
+
+        <aside className="wall-sidebar">
+          <div className="wall-sidebar-kpis reveal">
+            {sidebarKpis.map((kpi, i) => {
+              const Icon = kpi.icon;
+              return (
+                <div className="wall-kpi-card" key={i}>
+                  <div className="wall-kpi-top">
+                    <span className="wall-kpi-label">{kpi.label}</span>
+                  </div>
+                  <div className="wall-kpi-value">{kpi.value}</div>
+                  <div className="wall-kpi-icon-wrapper">
+                    <Icon size={18} strokeWidth={1.5} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="wall-chart-card reveal">
+            <div className="wall-chart-header">
+              <div>
+                <h2 className="wall-chart-title">Actividad del Muro</h2>
+                <span className="wall-chart-period">Últimos 7 días</span>
+              </div>
+            </div>
+            <div className="wall-chart-wrapper">
+              <Line data={weekChartData} options={weekChartOptions} />
+            </div>
+          </div>
+
+          <div className="wall-activity-section reveal">
+            <div className="wall-section-header">
+              <h2 className="wall-section-title">Actividad Reciente</h2>
+            </div>
+            <div className="wall-activity-list">
+              {recentActivity.length === 0 ? (
+                <p className="text-xs text-tertiary">Aún no hay publicaciones.</p>
+              ) : recentActivity.map(post => (
+                <div className="wall-activity-item" key={post.id}>
+                  <div className={`wall-activity-dot ${post.type === 'donation' ? 'donation' : post.type === 'testimony' ? 'appointment' : post.type === 'service' ? 'service' : 'invoice'}`}></div>
+                  <div className="wall-activity-content">
+                    <span className="wall-activity-text">
+                      {(post.author?.full_name || post.author || 'Alguien')} · {typeLabels[post.type] || post.type}
+                    </span>
+                    <span className="wall-activity-time">{Helpers.formatDate(post.created_at, 'relative')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="wall-quick-section reveal">
+            <h2 className="wall-section-title" style={{ marginBottom: 'var(--space-3)' }}>Accesos Rápidos</h2>
+            <div className="wall-quick-grid">
+              <Link to="/profile" className="wall-quick-card">
+                <span className="wall-quick-name">Mi Perfil</span>
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/products" className="wall-quick-card">
+                <span className="wall-quick-name">Productos</span>
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/services" className="wall-quick-card">
+                <span className="wall-quick-name">Servicios</span>
+                <ArrowRight size={14} />
+              </Link>
+              <Link to="/agenda" className="wall-quick-card">
+                <span className="wall-quick-name">Agenda</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </aside>
       </div>
 
       {/* Global Confirmation Modal */}

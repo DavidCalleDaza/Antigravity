@@ -38,7 +38,7 @@ export default function Login() {
         is_staff: response.user.is_staff,
       });
       toast.success('Sesión iniciada', 'Bienvenido');
-      navigate('/dashboard');
+      navigate('/wall');
     } catch (error) {
       toast.error(error.message || 'Credenciales inválidas.', 'Error');
     } finally {

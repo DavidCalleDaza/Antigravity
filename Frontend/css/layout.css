@@ -339,11 +339,18 @@
   align-items: center;
   padding: 0 var(--space-6);
   z-index: var(--z-sticky);
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
 }
 
 [data-theme="light"] .navbar {
   background: rgba(250, 248, 252, 0.9);
   border-bottom-color: var(--border-color);
+}
+
+.navbar.navbar--scrolled {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 [data-theme="light"] .navbar-toggle:hover {

@@ -185,17 +185,23 @@ export default function Wall() {
   }, [posts]);
 
   useEffect(() => {
+    const FADE_DISTANCE = 160; // px de scroll para completar la transicion
+    const MIN_OPACITY = 0.2;
     let rafId = null;
     const updatePostsBehindState = () => {
       rafId = null;
       const composerEl = composerRef.current;
       if (!composerEl) return;
       const composerBottom = composerEl.getBoundingClientRect().bottom;
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const baseOpacity = isDark ? 0.85 : 1;
       postRefsMap.current.forEach((el) => {
         if (!el) return;
         const top = el.getBoundingClientRect().top;
-        const isBehind = top < composerBottom;
-        el.classList.toggle('wall-post--behind', isBehind);
+        const hidden = composerBottom - top;
+        const progress = Math.min(Math.max(hidden / FADE_DISTANCE, 0), 1);
+        const opacity = baseOpacity - progress * (baseOpacity - MIN_OPACITY);
+        el.style.filter = `opacity(${opacity.toFixed(3)})`;
       });
     };
     const handleScroll = () => {

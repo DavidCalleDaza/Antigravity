@@ -13,10 +13,17 @@ export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 20;
+      setScrolled(isScrolled);
+      document.body.classList.toggle('page-scrolled', isScrolled);
+    };
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.body.classList.remove('page-scrolled');
+    };
   }, []);
 
   useEffect(() => {

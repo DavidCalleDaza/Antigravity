@@ -82,9 +82,6 @@ export default function Sidebar({ isOpen, closeMobile }) {
     <>
       <aside className={`sidebar`} id="sidebar">
         <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <div className="sidebar-logo">
-            <DonAppLogo width={56} height={56} variant="auto" />
-          </div>
           <button className="btn btn-ghost btn-icon-only sidebar-toggle-btn" onClick={toggleSidebar} title="Alternar menú">
             <LucideIcons.Menu width="20" height="20" />
           </button>

@@ -7,7 +7,7 @@
 .app {
   display: flex;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .app-main {
@@ -835,4 +835,105 @@
 [data-theme="light"] .bottom-navbar-popover-item.active {
   color: var(--gold);
   background: var(--gold-dim);
+}
+
+/* ── Drawer (panel lateral deslizante) ── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-drawer-overlay);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+}
+
+.drawer-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface-raised);
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-xl);
+  transition: transform var(--transition-base);
+}
+
+.drawer-right {
+  right: 0;
+  transform: translateX(100%);
+}
+
+.drawer-right.open {
+  transform: translateX(0);
+}
+
+.drawer-left {
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.drawer-left.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: var(--border);
+  flex-shrink: 0;
+}
+
+.drawer-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.drawer-close {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.drawer-close:hover {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+/* === Ajuste: drawer respeta el header + X visible en tema claro === */
+.drawer {
+  top: var(--navbar-height, 64px);
+  height: calc(100vh - var(--navbar-height, 64px));
+}
+
+[data-theme="light"] .drawer-close {
+  color: #ffffff;
+}
+
+[data-theme="light"] .drawer-close svg {
+  stroke: #ffffff;
 }

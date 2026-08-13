@@ -668,7 +668,7 @@
 
 .wall-sidebar {
   position: sticky;
-  top: var(--space-8);
+  top: calc(var(--navbar-height, 64px) + var(--space-4, 16px));
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
@@ -894,3 +894,232 @@
   .wall-sidebar { position: static; }
 }
 
+/* Fondo fotográfico exclusivo de la vista /wall */
+.wall-bg-photo {
+  position: relative;
+}
+
+.wall-bg-photo::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/assets/wall-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+
+[data-theme="dark"] .wall-bg-photo::before {
+  background-image: url('/assets/wall-bg-dark.jpg');
+  opacity: 0.12;
+}
+
+/* Selector de vista por publicación */
+.wall-view-mode {
+  position: relative;
+}
+
+.wall-view-mode-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.wall-view-mode-option {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.wall-view-mode-option:hover {
+  background: var(--primary-subtle);
+}
+
+.wall-view-mode-option.active {
+  color: var(--primary);
+  font-weight: var(--font-medium);
+}
+
+/* ============================================
+   Modos de vista por publicación (solo afecta la media adjunta)
+   ============================================ */
+
+/* --- Lista: oculta la media, deja solo texto/enlace --- */
+.wall-post--list .wall-post-media-grid,
+.wall-post--list .wall-post-media {
+  display: none;
+}
+
+/* --- Lista con detalle: es el modo por defecto, sin overrides --- */
+
+/* --- Ícono pequeño --- */
+.wall-post--icon-sm .wall-post-media-grid {
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+}
+
+.wall-post--icon-sm .wall-post-media-grid img,
+.wall-post--icon-sm .wall-post-media-grid video,
+.wall-post--icon-sm .wall-post-media-thumb {
+  height: 56px;
+}
+
+.wall-post--icon-sm .wall-post-media img,
+.wall-post--icon-sm .wall-post-media video {
+  max-height: 160px;
+}
+
+/* --- Ícono mediano --- */
+.wall-post--icon-md .wall-post-media-grid {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+}
+
+.wall-post--icon-md .wall-post-media-grid img,
+.wall-post--icon-md .wall-post-media-grid video,
+.wall-post--icon-md .wall-post-media-thumb {
+  height: 96px;
+}
+
+.wall-post--icon-md .wall-post-media img,
+.wall-post--icon-md .wall-post-media video {
+  max-height: 300px;
+}
+
+/* --- Ícono grande --- */
+.wall-post--icon-lg .wall-post-media-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.wall-post--icon-lg .wall-post-media-grid img,
+.wall-post--icon-lg .wall-post-media-grid video,
+.wall-post--icon-lg .wall-post-media-thumb {
+  height: 180px;
+}
+
+.wall-post--icon-lg .wall-post-media img,
+.wall-post--icon-lg .wall-post-media video {
+  max-height: 500px;
+}
+
+
+/* En /wall: header y sidebar sólidos por defecto, translúcidos al hacer scroll */
+.app:has(.wall-bg-photo) .navbar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
+}
+
+.app:has(.wall-bg-photo) .sidebar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
+}
+
+body.page-scrolled .app:has(.wall-bg-photo) .navbar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+}
+
+body.page-scrolled .app:has(.wall-bg-photo) .sidebar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+}
+
+
+
+/* La tarjeta de la cita no debe moverse al hacer scroll (mantiene su fondo glass original) */
+/* Fila compacta que abre el panel derecho de actividad */
+.wall-activity-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.wall-activity-teaser:hover {
+  border-color: var(--primary);
+}
+
+.wall-activity-teaser .wall-section-title {
+  margin: 0;
+}
+
+/* La card de crear publicación se "engancha" justo debajo de la card de la cita al hacer scroll */
+.post-composer {
+  position: sticky;
+  top: var(--navbar-height, 64px);
+  z-index: 14;
+}
+
+/* === Ajuste: efecto transparente en wall-post y post-composer === */
+.wall-post,
+.post-composer {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* === Ajuste: wall-post vuelve a fondo sólido (no transparente) === */
+.wall-post {
+  background: var(--surface-raised) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* === Ajuste: separacion entre header y post-composer === */
+.post-composer {
+  margin-top: var(--space-6, 24px);
+  top: calc(var(--navbar-height, 64px) + var(--space-4, 16px));
+}
+
+/* === Ajuste: wall-post y post-composer blancos con borde negro === */
+.wall-post,
+.post-composer {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* === Ajuste: publicaciones transparentes al pasar detras del composer === */
+.wall-post {
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.wall-post.wall-post--behind {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border) !important;
+}

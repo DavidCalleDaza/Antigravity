@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   HeartHandshake, MessageCircle, Sparkles, Image as ImageIcon, 
   FilePlus, Users, Package, Send, MoreVertical, Trash2, Edit2, X, Paperclip, Share2, Loader2,
-  TrendingUp, Activity, ArrowRight, Wrench 
+  TrendingUp, Activity, ArrowRight, Wrench, LayoutGrid 
 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 import { useStore } from '../../store/useStore';
@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast';
 import { apiClient, productClient, serviceClient, billingClient, aiClient, tokensClient } from '../../utils/apiClient';
 import { useWallSockets } from './useWallSockets';
 import Modal from '../../components/ui/Modal';
+import Drawer from '../../components/ui/Drawer';
 import ShareModal from '../../components/ShareModal';
 import AiImageEnhancer from '../../components/AI/AiImageEnhancer';
 import {
@@ -53,6 +54,12 @@ export default function Wall() {
   const [sharePost, setSharePost] = useState(null);
   const [editTargetPostId, setEditTargetPostId] = useState(null);
   const editFileInputRef = useRef(null);
+  const wallHeaderRef = useRef(null);
+  const composerRef = useRef(null);
+  const postRefsMap = useRef(new Map());
+  const [postViewModes, setPostViewModes] = useState({});
+  const [viewModeMenuOpen, setViewModeMenuOpen] = useState(null);
+  const [activityDrawer, setActivityDrawer] = useState(null); // null | 'chart' | 'recent'
   
   // Custom Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -172,8 +179,38 @@ export default function Wall() {
     fetchPosts();
   }, [fetchPosts]);
 
+
   useEffect(() => {
     Helpers.initRevealAnimations();
+  }, [posts]);
+
+  useEffect(() => {
+    let rafId = null;
+    const updatePostsBehindState = () => {
+      rafId = null;
+      const composerEl = composerRef.current;
+      if (!composerEl) return;
+      const composerBottom = composerEl.getBoundingClientRect().bottom;
+      postRefsMap.current.forEach((el) => {
+        if (!el) return;
+        const top = el.getBoundingClientRect().top;
+        const isBehind = top < composerBottom;
+        el.classList.toggle('wall-post--behind', isBehind);
+      });
+    };
+    const handleScroll = () => {
+      if (rafId == null) {
+        rafId = requestAnimationFrame(updatePostsBehindState);
+      }
+    };
+    updatePostsBehindState();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      if (rafId != null) cancelAnimationFrame(rafId);
+    };
   }, [posts]);
 
   const handleFileUpload = async (e) => {
@@ -614,11 +651,20 @@ export default function Wall() {
   const typeIcons = { donation: HeartHandshake, testimony: MessageCircle, impact: Sparkles, service: Wrench };
   const typeLabels = { donation: 'Donación', testimony: 'Testimonio', impact: 'Impacto', service: 'Servicio' };
 
+  const VIEW_MODE_OPTIONS = [
+    { id: 'list', label: 'Lista' },
+    { id: 'detail', label: 'Lista con detalle' },
+    { id: 'icon-sm', label: 'Ícono pequeño' },
+    { id: 'icon-md', label: 'Ícono mediano' },
+    { id: 'icon-lg', label: 'Ícono grande' },
+  ];
+  const getPostViewMode = (postId) => postViewModes[postId] || 'detail';
+
   return (
-    <div className="page-content">
+    <div className="page-content wall-bg-photo">
       <div className="wall-layout">
         <div className="wall-main">
-          <div className="wall-header reveal">
+          <div className="wall-header reveal" ref={wallHeaderRef}>
             <div className="wall-quote">
               <span className="wall-quote-mark">“</span>
               No buscamos aplausos. No buscamos vitrinas. DonApp existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
@@ -627,7 +673,7 @@ export default function Wall() {
           </div>
 
       {/* Post Composer */}
-      <div className="post-composer reveal">
+      <div className="post-composer reveal" ref={composerRef}>
         <div className="avatar">
           {renderAvatarContent(currentUser)}
         </div>
@@ -681,7 +727,7 @@ export default function Wall() {
               {tempMedia.type.startsWith('image/') ? (
                 <img src={Helpers.resolveMediaUrl(tempMedia.url)} alt="Preview" />
               ) : tempMedia.type.startsWith('video/') ? (
-                <video src={Helpers.resolveMediaUrl(tempMedia.url)} controls style={{ width: '100%', maxHeight: '500px' }} />
+                <video src={Helpers.resolveMediaUrl(tempMedia.url)} controls disablePictureInPicture style={{ width: '100%', maxHeight: '500px' }} />
               ) : (
                 <div style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface)' }}>
                   <Paperclip size={20} className="text-primary" />
@@ -884,7 +930,14 @@ export default function Wall() {
             const isAuthor = currentUser?.id === post.author_id || currentUser?.role === 'admin';
 
             return (
-              <div className="wall-post reveal" key={post.id}>
+              <div
+                className={`wall-post reveal wall-post--${getPostViewMode(post.id)}`}
+                key={post.id}
+                ref={(el) => {
+                  if (el) postRefsMap.current.set(post.id, el);
+                  else postRefsMap.current.delete(post.id);
+                }}
+              >
                 <div className="wall-post-header">
                   <div className="avatar">
                     {renderAvatarContent(post.author)}
@@ -913,6 +966,33 @@ export default function Wall() {
                       </button>
                     </div>
                   )}
+                  <div className="wall-view-mode">
+                    <button
+                      type="button"
+                      className="btn-icon-only text-tertiary hover:text-primary"
+                      onClick={() => setViewModeMenuOpen(viewModeMenuOpen === post.id ? null : post.id)}
+                      title="Cambiar vista"
+                    >
+                      <LayoutGrid size={14} />
+                    </button>
+                    {viewModeMenuOpen === post.id && (
+                      <div className="wall-view-mode-menu">
+                        {VIEW_MODE_OPTIONS.map(opt => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className={`wall-view-mode-option ${getPostViewMode(post.id) === opt.id ? 'active' : ''}`}
+                            onClick={() => {
+                              setPostViewModes(prev => ({ ...prev, [post.id]: opt.id }));
+                              setViewModeMenuOpen(null);
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="wall-post-body">
@@ -931,7 +1011,7 @@ export default function Wall() {
                               {m.media_type?.startsWith('image/') ? (
                                 <img src={Helpers.resolveMediaUrl(m.media_url)} alt="" />
                               ) : m.media_type?.startsWith('video/') ? (
-                                <video src={Helpers.resolveMediaUrl(m.media_url)} muted />
+                                <video src={Helpers.resolveMediaUrl(m.media_url)} muted disablePictureInPicture />
                               ) : (
                                 <Paperclip size="18" />
                               )}
@@ -1002,7 +1082,7 @@ export default function Wall() {
                             m.media_type?.startsWith('image/') ? (
                               <img key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} alt="Media" />
                             ) : m.media_type?.startsWith('video/') ? (
-                              <video key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} controls />
+                              <video key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} controls disablePictureInPicture />
                             ) : (
                               <a key={m.id} href={Helpers.resolveMediaUrl(m.media_url)} target="_blank" rel="noreferrer" className="wall-post-media-attach">
                                 <Paperclip size="20" />
@@ -1016,7 +1096,7 @@ export default function Wall() {
                           {post.media_type?.startsWith('image/') ? (
                             <img src={Helpers.resolveMediaUrl(post.media_url)} alt="Impact" />
                           ) : post.media_type?.startsWith('video/') ? (
-                            <video src={Helpers.resolveMediaUrl(post.media_url)} controls style={{ width: '100%', maxHeight: '500px' }} />
+                            <video src={Helpers.resolveMediaUrl(post.media_url)} controls disablePictureInPicture style={{ width: '100%', maxHeight: '500px' }} />
                           ) : (
                             <a href={Helpers.resolveMediaUrl(post.media_url)} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-surface rounded-xl text-primary no-underline border border-dashed border-primary/20">
                               <Paperclip size={20} />
@@ -1124,60 +1204,26 @@ export default function Wall() {
             })}
           </div>
 
-          <div className="wall-chart-card reveal">
-            <div className="wall-chart-header">
-              <div>
-                <h2 className="wall-chart-title">Actividad del Muro</h2>
-                <span className="wall-chart-period">Últimos 7 días</span>
-              </div>
-            </div>
-            <div className="wall-chart-wrapper">
-              <Line data={weekChartData} options={weekChartOptions} />
-            </div>
+          <div
+            className="wall-activity-teaser reveal"
+            onClick={() => setActivityDrawer('chart')}
+            role="button"
+            tabIndex={0}
+          >
+            <span className="wall-section-title">Actividad del Muro</span>
+            <ArrowRight size={16} />
           </div>
 
-          <div className="wall-activity-section reveal">
-            <div className="wall-section-header">
-              <h2 className="wall-section-title">Actividad Reciente</h2>
-            </div>
-            <div className="wall-activity-list">
-              {recentActivity.length === 0 ? (
-                <p className="text-xs text-tertiary">Aún no hay publicaciones.</p>
-              ) : recentActivity.map(post => (
-                <div className="wall-activity-item" key={post.id}>
-                  <div className={`wall-activity-dot ${post.type === 'donation' ? 'donation' : post.type === 'testimony' ? 'appointment' : post.type === 'service' ? 'service' : 'invoice'}`}></div>
-                  <div className="wall-activity-content">
-                    <span className="wall-activity-text">
-                      {(post.author?.full_name || post.author || 'Alguien')} · {typeLabels[post.type] || post.type}
-                    </span>
-                    <span className="wall-activity-time">{Helpers.formatDate(post.created_at, 'relative')}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div
+            className="wall-activity-teaser reveal"
+            onClick={() => setActivityDrawer('recent')}
+            role="button"
+            tabIndex={0}
+          >
+            <span className="wall-section-title">Actividad Reciente</span>
+            <ArrowRight size={16} />
           </div>
 
-          <div className="wall-quick-section reveal">
-            <h2 className="wall-section-title" style={{ marginBottom: 'var(--space-3)' }}>Accesos Rápidos</h2>
-            <div className="wall-quick-grid">
-              <Link to="/profile" className="wall-quick-card">
-                <span className="wall-quick-name">Mi Perfil</span>
-                <ArrowRight size={14} />
-              </Link>
-              <Link to="/products" className="wall-quick-card">
-                <span className="wall-quick-name">Productos</span>
-                <ArrowRight size={14} />
-              </Link>
-              <Link to="/services" className="wall-quick-card">
-                <span className="wall-quick-name">Servicios</span>
-                <ArrowRight size={14} />
-              </Link>
-              <Link to="/agenda" className="wall-quick-card">
-                <span className="wall-quick-name">Agenda</span>
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
         </aside>
       </div>
 
@@ -1218,6 +1264,63 @@ export default function Wall() {
           )}
         </div>
       </Modal>
+
+      <Drawer
+        isOpen={activityDrawer === 'chart'}
+        onClose={() => setActivityDrawer(null)}
+        position="right"
+        title="Actividad del Muro"
+        width="420px"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-secondary leading-relaxed">
+            Publicaciones de los últimos 7 días.
+          </p>
+          <div className="wall-chart-wrapper">
+            <Line data={weekChartData} options={weekChartOptions} />
+          </div>
+          <div className="wall-sidebar-kpis">
+            {sidebarKpis.map((kpi, i) => {
+              const Icon = kpi.icon;
+              return (
+                <div className="wall-kpi-card" key={i}>
+                  <div className="wall-kpi-top">
+                    <span className="wall-kpi-label">{kpi.label}</span>
+                  </div>
+                  <div className="wall-kpi-value">{kpi.value}</div>
+                  <div className="wall-kpi-icon-wrapper">
+                    <Icon size={18} strokeWidth={1.5} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Drawer>
+
+      <Drawer
+        isOpen={activityDrawer === 'recent'}
+        onClose={() => setActivityDrawer(null)}
+        position="right"
+        title="Actividad Reciente"
+        width="420px"
+      >
+        <div className="wall-activity-list">
+          {posts.length === 0 ? (
+            <p className="text-xs text-tertiary">Aún no hay publicaciones.</p>
+          ) : posts.map(post => (
+            <div className="wall-activity-item" key={post.id}>
+              <div className={`wall-activity-dot ${post.type === 'donation' ? 'donation' : post.type === 'testimony' ? 'appointment' : post.type === 'service' ? 'service' : 'invoice'}`}></div>
+              <div className="wall-activity-content">
+                <span className="wall-activity-text">
+                  {(post.author?.full_name || post.author || 'Alguien')} · {typeLabels[post.type] || post.type}
+                </span>
+                <span className="wall-activity-time">{Helpers.formatDate(post.created_at, 'relative')}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Drawer>
 
       <ShareModal
         isOpen={Boolean(sharePost)}

@@ -9,38 +9,34 @@ export default function DonAppLogo({
   return (
     <span
       className={`donapp-logo ${className} variant-${variant}`}
-      style={{ width, height, display: 'inline-block' }}
+      style={{ width, height, display: 'inline-block', position: 'relative' }}
     >
       <style>{`
-        .donapp-logo {
-          -webkit-mask-image: url(/assets/logo-astronauta-mask-detail.png);
-          mask-image: url(/assets/logo-astronauta-mask-detail.png);
-          -webkit-mask-size: contain;
-          mask-size: contain;
-          -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-          -webkit-mask-position: center;
-          mask-position: center;
-          background: linear-gradient(135deg, var(--primary-light) 0%, var(--gold) 50%, var(--primary-dark) 100%);
+        .donapp-logo img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .donapp-logo .logo-black { display: block; }
+        .donapp-logo .logo-gold {
+          display: none;
           filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
         }
 
-        .donapp-logo.variant-gold {
-          background: linear-gradient(135deg, var(--primary-light) 0%, var(--gold) 50%, var(--primary-dark) 100%);
-          filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
-        }
+        .donapp-logo.variant-gold .logo-black { display: none; }
+        .donapp-logo.variant-gold .logo-gold { display: block; }
 
-        [data-theme="light"] .donapp-logo.variant-auto,
-        .donapp-logo.variant-dark {
-          background: #000000;
-          filter: none;
-        }
+        .donapp-logo.variant-dark .logo-black { display: block; }
+        .donapp-logo.variant-dark .logo-gold { display: none; }
 
-        [data-theme="dark"] .donapp-logo.variant-auto {
-          background: linear-gradient(135deg, var(--primary-light) 0%, var(--gold) 50%, var(--primary-dark) 100%);
-          filter: drop-shadow(0 10px 8px rgba(0,0,0,0.3));
-        }
+        [data-theme="dark"] .donapp-logo.variant-auto .logo-black { display: none; }
+        [data-theme="dark"] .donapp-logo.variant-auto .logo-gold { display: block; }
       `}</style>
+      <img src="/assets/logo_astronauta_transparent.png" alt="DonApp" className="logo-black" />
+      <img src="/assets/logo_astronauta_transparent_gold.png" alt="DonApp" className="logo-gold" />
     </span>
   );
 }

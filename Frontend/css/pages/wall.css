@@ -1118,14 +1118,20 @@ body.page-scrolled .app:has(.wall-bg-photo) .sidebar {
 }
 
 [data-theme="dark"] .wall-post {
-  background: #000000 !important;
-  border: 1px solid var(--gold) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: none;
 }
 
 /* === Ajuste: publicaciones con fundido progresivo detras del composer (ver JS) === */
 
 /* === Ajuste: post-composer en tema oscuro === */
 [data-theme="dark"] .post-composer {
-  background: rgba(0, 0, 0, 0.7) !important;
-  border: 1px solid var(--gold) !important;
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(212, 175, 55, 0.4) !important;
+  box-shadow: none;
 }

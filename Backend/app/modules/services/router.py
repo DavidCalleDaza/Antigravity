@@ -113,6 +113,8 @@ async def update_existing_service(
     db_service = await get_service(db, service_id)
     if not db_service:
         raise HTTPException(status_code=404, detail="Service not found")
+    if db_service.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este servicio")
     service = await update_service(db, db_service, service_in)
     return _build_service_response(service)
 
@@ -127,6 +129,8 @@ async def delete_existing_service(
     db_service = await get_service(db, service_id)
     if not db_service:
         raise HTTPException(status_code=404, detail="Service not found")
+    if db_service.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este servicio")
 
     image_url = db_service.image_url
     video_url = db_service.video_url

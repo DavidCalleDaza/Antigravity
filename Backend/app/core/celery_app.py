@@ -47,10 +47,21 @@ def init_worker(**kwargs):
 # there is NO Celery worker deployed, only Redis. We rely on lazy refresh 
 # at publish time (in tasks.py). If we add a worker in the future, uncomment this.
 #
+# ── TikTok "processing" reconciliation (OPTIONAL — COMMENTED, KEEP INACTIVE) ──
+#
+# Same constraint: no Celery beat in production. The on-demand trigger
+# POST /social/posts/reconcile-tiktok (fired from the SocialSettings screen)
+# works without beat. If a beat worker is ever deployed, this can reconcile
+# every 10 minutes without waiting for the seller to open the screen.
+#
 # from celery.schedules import crontab
 # celery_app.conf.beat_schedule = {
 #     "refresh-expiring-tokens-daily": {
 #         "task": "social.refresh_expiring_tokens",
 #         "schedule": crontab(hour=2, minute=0),  # Run daily at 2:00 AM UTC
+#     },
+#     "reconcile-tiktok-processing": {
+#         "task": "social.reconcile_tiktok_processing",
+#         "schedule": crontab(minute="*/10"),  # cada 10 minutos
 #     },
 # }

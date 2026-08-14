@@ -5,6 +5,7 @@ Handles OAuth token exchange and content publishing for
 Facebook, Instagram, and TikTok platforms.
 """
 
+import asyncio
 import os
 import logging
 
@@ -220,6 +221,60 @@ async def publish_to_instagram(access_token: str, image_url: str, caption: str, 
         return publish_data
 
 
+async def fetch_tiktok_publish_status(access_token: str, publish_id: str) -> dict:
+    """Poll TikTok's publish status for an already-accepted publish_id.
+
+    TikTok processes the publication asynchronously (it may still have to
+    download the media from our public URL), so a 200 OK from the init call
+    only means the request was accepted. This endpoint reports the real status.
+
+    Documented statuses include: PROCESSING_DOWNLOAD, PROCESSING_UPLOAD,
+    SEND_TO_USER_INBOX, PUBLISH_COMPLETE, FAILED (with fail_reason).
+
+    Returns the `data` of the response. If the API itself reports an error
+    (error.code != "ok"), the error info is propagated in the returned dict
+    instead of raising, so the caller can decide whether to keep polling.
+    """
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(
+            "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json; charset=UTF-8",
+            },
+            json={"publish_id": publish_id},
+        )
+        payload = resp.json()
+        error_info = payload.get("error", {})
+        if error_info.get("code", "ok") != "ok":
+            return {"status": "API_ERROR", "error": error_info, "data": payload.get("data", {})}
+        return payload.get("data", {})
+
+
+async def _poll_tiktok_publish(access_token: str, publish_id: str, max_attempts: int = 5, sleep_seconds: float = 3.0) -> dict:
+    """Poll TikTok until the publication resolves, or return 'processing'.
+
+    - PUBLISH_COMPLETE -> {"status": "success", "platform_post_id": publish_id}
+    - FAILED           -> raises HTTPException(400) with the fail_reason
+    - Timeout          -> {"status": "processing", "platform_post_id": publish_id}
+      (TikTok may still be processing after our polling window)
+    """
+    for attempt in range(max_attempts):
+        status_data = await fetch_tiktok_publish_status(access_token, publish_id)
+        status = status_data.get("status")
+        if status == "PUBLISH_COMPLETE":
+            return {"status": "success", "platform_post_id": publish_id}
+        if status == "FAILED":
+            fail_reason = status_data.get("fail_reason") or status_data
+            raise HTTPException(
+                status_code=400,
+                detail=f"TikTok no completó la publicación: {fail_reason}",
+            )
+        if attempt < max_attempts - 1:
+            await asyncio.sleep(sleep_seconds)
+    return {"status": "processing", "platform_post_id": publish_id}
+
+
 async def publish_to_tiktok(access_token: str, local_image_path: str, caption: str, public_image_url: str = None, is_ai_generated: bool = False) -> dict:
     """
     Publish a photo or video to TikTok using the Content Posting API.
@@ -284,7 +339,8 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
                     detail=f"TikTok API error (video upload): {upload_resp.text}",
                 )
 
-            return {"status": "success", "platform_post_id": init_data["data"].get("publish_id")}
+            publish_id = init_data["data"].get("publish_id")
+            return await _poll_tiktok_publish(access_token, publish_id)
 
         else:
             # Photo upload flow — TikTok Content Posting API for photos
@@ -318,7 +374,8 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
                     detail=f"TikTok API error (photo init): {error_info.get('message', init_data)}",
                 )
 
-            return {"status": "success", "platform_post_id": init_data.get("data", {}).get("publish_id")}
+            publish_id = init_data.get("data", {}).get("publish_id")
+            return await _poll_tiktok_publish(access_token, publish_id)
 
 
 async def refresh_tiktok_token(

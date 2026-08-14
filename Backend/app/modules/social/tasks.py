@@ -261,12 +261,18 @@ async def _publish_async(
             else:
                 raise ValueError(f"Invalid platform: {platform}")
 
-            # ── 4. Update post status to success ────────────────────────────
+            # ── 4. Update post status ───────────────────────────────────────
             from datetime import datetime, timezone
             account_with_tokens.last_verified_at = datetime.now(timezone.utc)
-            await crud.update_social_post_status(
-                db, post_id, status="success", platform_post_id=platform_post_id
-            )
+            if platform == "tiktok" and publish_result.get("status") == "processing":
+                await crud.update_social_post_status(
+                    db, post_id, status="processing", platform_post_id=platform_post_id,
+                    error_message="TikTok sigue procesando la publicación; verificar manualmente si no se confirma en unos minutos."
+                )
+            else:
+                await crud.update_social_post_status(
+                    db, post_id, status="success", platform_post_id=platform_post_id
+                )
 
             return {"status": "success", "platform_post_id": platform_post_id}
 
@@ -340,6 +346,106 @@ def publish_to_social_task(
         return
     except Exception as exc:
         raise self.retry(exc=exc, countdown=10)
+    finally:
+        loop.run_until_complete(engine.dispose())
+
+
+# ── TikTok "processing" reconciliation ──────────────────────────────────────
+#
+# After the bounded polling window expires, posts stay in 'processing' while
+# TikTok may still be completing the publication. This task asks TikTok
+# status/fetch once per pending post; if the post is older than max_age_hours
+# and still unresolved, it is marked 'failed' so it never stays orphaned.
+#
+# Fire-and-forget on demand via POST /social/posts/reconcile-tiktok (works in
+# production without Celery beat). The beat_schedule entry in celery_app.py is
+# documented but COMMENTED — keep it that way while no worker is deployed.
+
+async def _reconcile_tiktok_async(engine, max_age_hours: int = 24) -> dict:
+    """Revisa cada SocialPost de TikTok en 'processing' contra TikTok status/fetch/
+    y actualiza su estado real: success, failed (con fail_reason), o lo deja igual
+    si sigue procesando."""
+    from datetime import datetime, timezone, timedelta
+    from sqlalchemy.future import select
+    from sqlalchemy.orm import selectinload
+    from app.modules.social.models import SocialAccount
+
+    local_session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    checked = 0
+    updated = 0
+
+    async with local_session_factory() as db:
+        posts = await crud.get_processing_tiktok_posts(db, max_age_hours=max_age_hours)
+        checked = len(posts)
+
+        for post in posts:
+            try:
+                # ── Stale guard: older than max_age_hours → failed, no API call ──
+                created_at = post.created_at
+                if created_at is not None and created_at.tzinfo is None:
+                    created_at = created_at.replace(tzinfo=timezone.utc)
+                if created_at is None or datetime.now(timezone.utc) - created_at > timedelta(hours=max_age_hours):
+                    await crud.update_social_post_status(
+                        db, post.id, status="failed",
+                        error_message="TikTok no confirmó la publicación tras 24 horas; verificar manualmente.",
+                    )
+                    updated += 1
+                    continue
+
+                # ── Resolve the account (by PK, eager-loaded tokens) ───────────
+                if not post.account_id:
+                    logger.warning(f"TikTok reconcile: post {post.id} has no account_id; skipping")
+                    continue
+                result = await db.execute(
+                    select(SocialAccount)
+                    .options(
+                        selectinload(SocialAccount.tokens),
+                        selectinload(SocialAccount.app_credential),
+                    )
+                    .where(SocialAccount.id == post.account_id)
+                )
+                account = result.scalar_one_or_none()
+                if not account or not account.tokens:
+                    logger.warning(f"TikTok reconcile: post {post.id} has no resolvable account/token; skipping")
+                    continue
+                if not post.platform_post_id:
+                    logger.warning(f"TikTok reconcile: post {post.id} has no platform_post_id; skipping")
+                    continue
+
+                # ── One status check per run (each run is itself one attempt) ──
+                status_data = await service.fetch_tiktok_publish_status(
+                    account.tokens[0].access_token, post.platform_post_id
+                )
+                status = status_data.get("status")
+
+                if status == "PUBLISH_COMPLETE":
+                    await crud.update_social_post_status(db, post.id, status="success")
+                    updated += 1
+                elif status == "FAILED":
+                    fail_reason = status_data.get("fail_reason") or status_data
+                    await crud.update_social_post_status(
+                        db, post.id, status="failed",
+                        error_message=f"TikTok no completó la publicación: {fail_reason}",
+                    )
+                    updated += 1
+                else:
+                    # Still processing, or the API itself errored (API_ERROR):
+                    # leave as 'processing' for the next pass.
+                    logger.info(f"TikTok reconcile: post {post.id} still {status or 'unknown'}")
+            except Exception as e:
+                # Never abort the batch because of a single post
+                logger.warning(f"TikTok reconcile: failed to process post {post.id}: {e}")
+
+    logger.info("TikTok reconcile done: checked=%d updated=%d", checked, updated)
+    return {"checked": checked, "updated": updated}
+
+
+@celery_app.task(name="social.reconcile_tiktok_processing")
+def reconcile_tiktok_processing_task():
+    loop = celery_app._worker_loop
+    engine = create_async_engine(settings.DATABASE_URL, connect_args=get_connect_args(settings.DATABASE_URL))
+    try:
+        return loop.run_until_complete(_reconcile_tiktok_async(engine))
     finally:
         loop.run_until_complete(engine.dispose())
 

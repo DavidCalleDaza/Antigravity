@@ -25,7 +25,19 @@ async def generate_whatsapp_otp(current_user: User = Depends(get_current_user)):
     """
     otp = ''.join(random.choices(string.digits, k=6))
     redis_key = f"wa_otp:{otp}"
-    
+
+    # Guard anti-colisión: si otro usuario generó el mismo OTP dentro de la
+    # ventana de validez, regeneramos (máximo 5 intentos). Sin esto, el
+    # `wa_otp:{otp}` global podría quedar apuntando a la cuenta equivocada.
+    for _ in range(5):
+        if await redis_client.exists(redis_key):
+            otp = ''.join(random.choices(string.digits, k=6))
+            redis_key = f"wa_otp:{otp}"
+        else:
+            break
+    else:
+        raise HTTPException(status_code=500, detail="No se pudo generar un código único, intenta de nuevo")
+
     # Check if this user already has a pending OTP and delete it to prevent spam
     user_otp_key = f"wa_otp_user:{current_user.id}"
     existing_otp = await redis_client.get(user_otp_key)

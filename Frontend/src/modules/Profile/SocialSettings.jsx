@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Facebook, Instagram, Share2, Plus, Trash2, CheckCircle2, AlertCircle, Info, Loader2, Star, AlertTriangle, XCircle, Eye, EyeOff, Lock, RefreshCw, Sparkles } from 'lucide-react';
+import { Facebook, Instagram, Share2, Plus, Trash2, CheckCircle2, AlertCircle, Info, Loader2, Star, AlertTriangle, XCircle, Eye, EyeOff, Lock, RefreshCw, Sparkles, Pencil } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 import { socialClient } from '../../utils/apiClient';
 import { useStore } from '../../store/useStore';
@@ -38,8 +38,17 @@ export default function SocialSettings() {
   const [revealedSecret, setRevealedSecret] = useState(null);
   const [secretVisible, setSecretVisible] = useState(false);
 
+  // ── Per-account edit / detail state ─────────────────────────────────────
+  const [editingAccountId, setEditingAccountId] = useState(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [editType, setEditType] = useState('personal');
+  const [editToken, setEditToken] = useState('');
+  const [showEditToken, setShowEditToken] = useState(false);
+  const [expandedAccountId, setExpandedAccountId] = useState(null);
+
   useEffect(() => {
     fetchAccounts();
+    socialClient.reconcileTikTokPosts?.().catch(() => {}); // best-effort, no bloquea la UI
   }, []);
 
   useEffect(() => {
@@ -81,6 +90,50 @@ export default function SocialSettings() {
       toast.error('Error al actualizar cuenta predeterminada.');
     }
   };
+
+  const startEditAccount = (account) => {
+    setEditingAccountId(account.id);
+    setEditLabel(account.display_label || account.platform_username || account.platform_user_id || '');
+    setEditType(account.account_type || 'personal');
+    setEditToken('');
+    setShowEditToken(false);
+  };
+
+  const cancelEditAccount = () => {
+    setEditingAccountId(null);
+  };
+
+  const handleSaveEdit = async (accountId) => {
+    const account = accounts.find(a => a.id === accountId);
+    try {
+      if (account && (editLabel !== account.display_label || editType !== account.account_type)) {
+        await socialClient.updateAccount(accountId, { display_label: editLabel, account_type: editType });
+      }
+      if (editToken.trim()) {
+        await socialClient.renewAccountToken(accountId, editToken.trim());
+      }
+      toast.success('Cuenta actualizada correctamente.');
+      setEditingAccountId(null);
+      fetchAccounts();
+    } catch (error) {
+      toast.error(error.message || 'Error al actualizar la cuenta.', 'Error');
+    }
+  };
+
+  const toggleDetail = (accountId) => {
+    setExpandedAccountId(prev => (prev === accountId ? null : accountId));
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return null;
+    try {
+      return new Date(value).toLocaleString();
+    } catch {
+      return null;
+    }
+  };
+
+  const maskPlatformId = (id) => (id ? `••••••${id.slice(-6)}` : '—');
 
   const startConnect = async (platformId) => {
     setActiveForm(platformId);
@@ -155,6 +208,18 @@ export default function SocialSettings() {
       setAvailableAccounts(res.accounts || []);
       if (activeForm === 'tiktok' && res.accounts?.length > 0) {
         setSelectedAccountId(res.accounts[0].id);
+      } else if (activeForm === 'meta') {
+        const fetchedAccounts = res.accounts || [];
+        const alreadyConnectedPage = fetchedAccounts.find(a =>
+          accounts.some(existing => existing.platform === 'facebook' && existing.platform_user_id === a.id)
+        );
+        if (alreadyConnectedPage) {
+          setSelectedAccountId(alreadyConnectedPage.id);
+          const igBiz = alreadyConnectedPage.instagram_business_account;
+          if (igBiz && accounts.some(existing => existing.platform === 'instagram' && existing.platform_user_id === igBiz.id)) {
+            setSelectedInstagramId(igBiz.id);
+          }
+        }
       }
       setStep(2);
       toast.success('Credenciales validadas correctamente');
@@ -227,7 +292,23 @@ export default function SocialSettings() {
               </div>
               <div className="sns-account-info">
                 <div className="sns-account-name-row">
-                  <span className="sns-account-name">{account.display_label || account.platform_username || account.platform_user_id}</span>
+                  {editingAccountId === account.id ? (
+                    <>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder={account.display_label || account.platform_username || account.platform_user_id || 'Nombre'}
+                        value={editLabel}
+                        onChange={e => setEditLabel(e.target.value)}
+                      />
+                      <select className="form-input" value={editType} onChange={e => setEditType(e.target.value)}>
+                        <option value="personal">Personal</option>
+                        <option value="business">Business</option>
+                      </select>
+                    </>
+                  ) : (
+                    <span className="sns-account-name">{account.display_label || account.platform_username || account.platform_user_id}</span>
+                  )}
                   <span className={`sns-badge ${account.account_type === 'business' ? 'business' : 'personal'}`}>
                     {account.account_type === 'business' ? 'Business' : 'Personal'}
                   </span>
@@ -237,6 +318,40 @@ export default function SocialSettings() {
                 </div>
                 {renderStatusRow(account)}
                 {account.last_error && <div className="sns-error-text">{account.last_error}</div>}
+                {editingAccountId === account.id && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', maxWidth: '420px' }}>
+                    <div>
+                      <label className="sns-field-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Access Token (opcional)</span>
+                        {(account.platform === 'facebook' || account.platform === 'instagram') && (
+                          <a href={REGEN_LINKS[account.platform]} target="_blank" rel="noopener noreferrer" className="sns-regen-btn">
+                            <RefreshCw width={11} /> Generar token en Graph API Explorer
+                          </a>
+                        )}
+                      </label>
+                      <div className="sns-input-wrapper">
+                        <input
+                          type={showEditToken ? 'text' : 'password'}
+                          className="form-input"
+                          placeholder="Dejar en blanco para no cambiar"
+                          value={editToken}
+                          onChange={e => setEditToken(e.target.value)}
+                        />
+                        <button type="button" className="sns-input-eye" onClick={() => setShowEditToken(v => !v)}>
+                          {showEditToken ? <EyeOff width={16} /> : <Eye width={16} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn btn-primary btn-sm" onClick={() => handleSaveEdit(account.id)}>
+                        Guardar
+                      </button>
+                      <button className="btn btn-ghost btn-sm" onClick={cancelEditAccount}>
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="sns-account-actions">
@@ -245,6 +360,12 @@ export default function SocialSettings() {
                   <RefreshCw width={11} /> Regenerar token
                 </a>
               )}
+              <button className="sns-icon-btn" onClick={() => toggleDetail(account.id)} title="Ver detalles">
+                <Info width={15} height={15} />
+              </button>
+              <button className="sns-icon-btn" onClick={() => startEditAccount(account)} title="Editar cuenta">
+                <Pencil width={15} height={15} />
+              </button>
               {!account.is_default && (
                 <button className="sns-icon-btn" onClick={() => handleMakeDefault(account.id)} title="Hacer predeterminada">
                   <Star width={15} height={15} />
@@ -254,6 +375,15 @@ export default function SocialSettings() {
                 <Trash2 width={16} height={16} />
               </button>
             </div>
+            {expandedAccountId === account.id && (
+              <div className="sns-account-detail" style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border, #e5e7eb)', fontSize: '13px', display: 'grid', gap: '4px' }}>
+                <div><strong>Método de conexión:</strong> {account.connection_method === 'manual' ? 'Manual' : 'OAuth'}</div>
+                <div><strong>ID de plataforma:</strong> {maskPlatformId(account.platform_user_id)}</div>
+                <div><strong>Última verificación:</strong> {formatDateTime(account.last_verified_at) || 'Nunca'}</div>
+                <div><strong>Token expira:</strong> {formatDateTime(account.token_expires_at) || 'No disponible'}</div>
+                <div><strong>Conectada el:</strong> {formatDateTime(account.created_at)}</div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -316,7 +446,14 @@ export default function SocialSettings() {
         )}
 
         <div>
-          <label className="sns-field-label">{labels.accessToken}</label>
+          <label className="sns-field-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>{labels.accessToken}</span>
+            {activeForm === 'meta' && (
+              <a href={REGEN_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="sns-regen-btn">
+                <RefreshCw width={11} /> Generar token en Graph API Explorer
+              </a>
+            )}
+          </label>
           <div className="sns-input-wrapper">
             <input
               required

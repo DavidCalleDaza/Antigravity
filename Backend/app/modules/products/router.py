@@ -111,6 +111,8 @@ async def update_existing_product(
     db_product = await get_product(db, product_id)
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
+    if db_product.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este producto")
     product = await update_product(db, db_product, product_in)
     return _build_product_response(product)
 
@@ -125,6 +127,8 @@ async def delete_existing_product(
     db_product = await get_product(db, product_id)
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
+    if db_product.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar este producto")
 
     image_url = db_product.image_url
     video_url = db_product.video_url

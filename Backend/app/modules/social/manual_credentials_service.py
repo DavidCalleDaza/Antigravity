@@ -9,6 +9,64 @@ from sqlalchemy.future import select
 from app.modules.social.models import SocialAppCredential, SocialAccount, SocialToken
 from app.core.config import settings
 
+
+async def validate_meta_token(access_token: str, app_id: str | None = None, app_secret: str | None = None) -> Dict[str, Any]:
+    """Valida un token de Meta vía debug_token y devuelve su info.
+
+    Usa las credenciales de app provistas (cuentas de conexión manual) o los
+    ajustes globales si no se pasan (mismo patrón que extend_meta_token).
+    Lanza HTTPException(400) si el token es inválido.
+    """
+    app_id = app_id or settings.META_APP_ID
+    app_secret = app_secret or settings.META_APP_SECRET
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        debug_resp = await client.get(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/debug_token",
+            params={
+                "input_token": access_token,
+                "access_token": f"{app_id}|{app_secret}"
+            }
+        )
+        debug_data = debug_resp.json()
+        if "error" in debug_data:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Meta Token Validation Error: {debug_data['error'].get('message', 'Invalid App ID or Secret')}"
+            )
+
+        token_info = debug_data.get("data", {})
+        if not token_info.get("is_valid"):
+            err_msg = token_info.get("error", {}).get("message", "Invalid access token")
+            raise HTTPException(status_code=400, detail=f"Invalid Meta Token: {err_msg}")
+        return token_info
+
+
+async def validate_tiktok_token(access_token: str) -> Dict[str, Any]:
+    """Valida un token de TikTok vía /v2/user/info/ y devuelve el user dict.
+
+    Lanza HTTPException(400) si el token es inválido.
+    """
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        user_resp = await client.get(
+            "https://open.tiktokapis.com/v2/user/info/",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+            },
+            params={
+                "fields": "open_id,display_name"
+            }
+        )
+        user_data = user_resp.json()
+        error_info = user_data.get("error", {})
+        if error_info.get("code", "ok") != "ok":
+            raise HTTPException(
+                status_code=400,
+                detail=f"TikTok Token Validation Error: {error_info.get('message', 'Invalid access token')}"
+            )
+        return user_data.get("data", {}).get("user", {})
+
+
 async def save_manual_credentials(
     db: AsyncSession,
     target_user_id: uuid.UUID,
@@ -45,29 +103,12 @@ async def save_manual_credentials(
 
     accounts_data = []
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        if platform_group == "meta":
-            # 1. Validate with debug_token
-            debug_resp = await client.get(
-                f"https://graph.facebook.com/{settings.META_API_VERSION}/debug_token",
-                params={
-                    "input_token": access_token,
-                    "access_token": f"{app_id}|{app_secret}"
-                }
-            )
-            debug_data = debug_resp.json()
-            if "error" in debug_data:
-                raise HTTPException(
-                    status_code=400, 
-                    detail=f"Meta Token Validation Error: {debug_data['error'].get('message', 'Invalid App ID or Secret')}"
-                )
-                
-            token_info = debug_data.get("data", {})
-            if not token_info.get("is_valid"):
-                err_msg = token_info.get("error", {}).get("message", "Invalid access token")
-                raise HTTPException(status_code=400, detail=f"Invalid Meta Token: {err_msg}")
-                
-            # 2. Get pages/accounts
+    if platform_group == "meta":
+        # 1. Validate with debug_token (shared helper)
+        await validate_meta_token(access_token, app_id, app_secret)
+
+        # 2. Get pages/accounts
+        async with httpx.AsyncClient(timeout=60.0) as client:
             me_resp = await client.get(
                 f"https://graph.facebook.com/{settings.META_API_VERSION}/me/accounts",
                 params={
@@ -76,47 +117,30 @@ async def save_manual_credentials(
                 }
             )
             me_data = me_resp.json()
-            if "error" in me_data:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Meta Accounts Fetch Error: {me_data['error'].get('message')}"
-                )
-                
-            for page in me_data.get("data", []):
-                accounts_data.append({
-                    "id": page["id"],
-                    "name": page.get("name"),
-                    "platform": "facebook",
-                    "type": "page",
-                    "instagram_business_account": page.get("instagram_business_account")
-                })
-                
-        elif platform_group == "tiktok":
-            # TikTok validation via /user/info/
-            user_resp = await client.get(
-                "https://open.tiktokapis.com/v2/user/info/",
-                headers={
-                    "Authorization": f"Bearer {access_token}",
-                },
-                params={
-                    "fields": "open_id,display_name"
-                }
+        if "error" in me_data:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Meta Accounts Fetch Error: {me_data['error'].get('message')}"
             )
-            user_data = user_resp.json()
-            error_info = user_data.get("error", {})
-            if error_info.get("code", "ok") != "ok":
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"TikTok Token Validation Error: {error_info.get('message', 'Invalid access token')}"
-                )
             
-            tiktok_user = user_data.get("data", {}).get("user", {})
+        for page in me_data.get("data", []):
             accounts_data.append({
-                "id": tiktok_user.get("open_id"),
-                "name": tiktok_user.get("display_name"),
-                "platform": "tiktok",
-                "type": "account"
+                "id": page["id"],
+                "name": page.get("name"),
+                "platform": "facebook",
+                "type": "page",
+                "instagram_business_account": page.get("instagram_business_account")
             })
+            
+    elif platform_group == "tiktok":
+        # TikTok validation via /user/info/ (shared helper)
+        tiktok_user = await validate_tiktok_token(access_token)
+        accounts_data.append({
+            "id": tiktok_user.get("open_id"),
+            "name": tiktok_user.get("display_name"),
+            "platform": "tiktok",
+            "type": "account"
+        })
 
     # Save/Update SocialAppCredential
     result = await db.execute(

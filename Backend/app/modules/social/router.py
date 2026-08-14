@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
 import httpx
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -24,10 +25,16 @@ from app.core.config import settings
 from app.core.security import verify_password
 
 from . import crud, schemas, service
-from .models import SocialAppCredential
+from .models import SocialAppCredential, SocialToken
 
 router = APIRouter(tags=["social"])
 logger = logging.getLogger(__name__)
+
+# ── Rate limiting para reveal de credenciales ───────────────────────────────
+# Mismo patrón que el lockout de OTP de WhatsApp: Redis, 5 intentos / 10 min.
+redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+REVEAL_MAX_ATTEMPTS = 5
+REVEAL_LOCKOUT_SECONDS = 600
 
 # ── State signer for OAuth ──────────────────────────────────────────────────
 # Salt namespaces the social state so it can never be replayed against other
@@ -264,7 +271,11 @@ async def callback_platform(
 
 # ── Account management ──────────────────────────────────────────────────────
 
-from app.modules.social.manual_credentials_service import save_manual_credentials
+from app.modules.social.manual_credentials_service import (
+    save_manual_credentials,
+    validate_meta_token,
+    validate_tiktok_token,
+)
 
 
 @router.post("/accounts/manual/validate")
@@ -381,8 +392,18 @@ async def reveal_app_credentials(
     db: AsyncSession = Depends(get_db),
 ):
     """Re-autentica con la contraseña de la cuenta y devuelve App ID/Secret en claro."""
+    lockout_key = f"social_reveal_lockout:{current_user.id}:{platform_group}"
+    attempts = await redis_client.get(lockout_key)
+    if attempts and int(attempts) >= REVEAL_MAX_ATTEMPTS:
+        raise HTTPException(status_code=429, detail="Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo.")
+
     if not current_user.hashed_password or not verify_password(req.password, current_user.hashed_password):
+        new_count = await redis_client.incr(lockout_key)
+        if new_count == 1:
+            await redis_client.expire(lockout_key, REVEAL_LOCKOUT_SECONDS)
         raise HTTPException(status_code=401, detail="Contraseña incorrecta.")
+
+    await redis_client.delete(lockout_key)
 
     result = await db.execute(
         select(SocialAppCredential).where(
@@ -421,6 +442,62 @@ async def patch_account(
     account = await crud.update_account(db, account_id, current_user.id, **fields)
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
+    return account
+
+
+@router.patch("/accounts/{account_id}/token", response_model=schemas.SocialAccountResponse)
+async def renew_account_token(
+    account_id: uuid.UUID,
+    req: schemas.TokenRenewRequest,
+    current_user=Depends(require_seller),
+    db: AsyncSession = Depends(get_db),
+):
+    """Renueva SOLO el access token de una cuenta conectada.
+
+    Valida el token nuevo contra la plataforma antes de guardarlo; si la
+    validación falla, responde 400 y NO toca el registro existente.
+    """
+    account = await crud.get_account_by_id(db, account_id, current_user.id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    platform = account.platform
+
+    # ── 1. Validate the new token against the platform ──────────────────────
+    expires_at = None
+    try:
+        if platform in ("facebook", "instagram"):
+            app_id = account.app_credential.app_id if account.app_credential else None
+            app_secret = account.app_credential.app_secret if account.app_credential else None
+            token_info = await validate_meta_token(req.access_token, app_id, app_secret)
+            raw_expires = token_info.get("expires_at")
+            if raw_expires and int(raw_expires) > 0:
+                expires_at = datetime.fromtimestamp(int(raw_expires), tz=timezone.utc)
+        elif platform == "tiktok":
+            await validate_tiktok_token(req.access_token)
+        else:
+            raise HTTPException(status_code=400, detail=f"Plataforma no soportada: {platform}")
+    except HTTPException:
+        raise  # validation failed → do NOT touch the existing record
+
+    # ── 2. Update the token (same lookup as create_or_update_social_account) ──
+    result = await db.execute(
+        select(SocialToken).where(SocialToken.account_id == account.id)
+    )
+    token_obj = result.scalar_one_or_none()
+    if not token_obj:
+        raise HTTPException(status_code=404, detail="No token found for this account")
+
+    token_obj.access_token = req.access_token
+    if expires_at:
+        token_obj.expires_at = expires_at
+
+    account.status = "active"
+    account.last_error = None
+    account.last_verified_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(account)
     return account
 
 
@@ -528,6 +605,22 @@ async def publish_content(
     )
 
     return db_post
+
+
+@router.post("/posts/reconcile-tiktok", status_code=status.HTTP_202_ACCEPTED)
+async def reconcile_tiktok_processing(
+    current_user=Depends(require_seller),
+):
+    """Fire-and-forget: enqueues the TikTok 'processing' reconciliation task.
+
+    TikTok may take far longer than the bounded publish polling window, so
+    posts left in 'processing' are re-checked on demand via this endpoint
+    (works in production without Celery beat). Responds 202 immediately.
+    """
+    from app.modules.social.tasks import reconcile_tiktok_processing_task
+
+    reconcile_tiktok_processing_task.delay()
+    return {"status": "queued"}
 
 
 # ── Post status polling ─────────────────────────────────────────────────────

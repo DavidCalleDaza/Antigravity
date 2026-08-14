@@ -37,6 +37,11 @@ class SocialAccountUpdate(BaseModel):
     is_default: Optional[bool] = None
 
 
+class TokenRenewRequest(BaseModel):
+    """PATCH /accounts/{account_id}/token — renew only the access token."""
+    access_token: str
+
+
 class SocialAccountResponse(SocialAccountBase):
     id: uuid.UUID
     platform_user_id: Optional[str] = None
@@ -50,6 +55,8 @@ class SocialAccountResponse(SocialAccountBase):
     created_at: datetime
     last_modified_by: Optional[uuid.UUID] = None
     last_modified_at: Optional[datetime] = None
+    # Expiration of the account's token (never expose the token itself)
+    token_expires_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -68,7 +75,7 @@ class ManualConfirmRequest(BaseModel):
     the frozen admin screen (decision #4)."""
     platform_group: str
     app_id: str
-    app_secret: str
+    app_secret: Optional[str] = None  # omitido => reusa el guardado
     access_token: str
     selected_account_id: str
     selected_account_name: Optional[str] = None

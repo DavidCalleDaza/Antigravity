@@ -8,6 +8,7 @@ Each (user_id, platform) group has exactly one is_default account.
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import asc
+from sqlalchemy.orm import selectinload
 import uuid
 from typing import List, Optional
 
@@ -40,7 +41,12 @@ async def get_account_by_id(
 ) -> Optional[SocialAccount]:
     """Fetch a single account by PK, scoped to the owning user."""
     result = await db.execute(
-        select(SocialAccount).where(
+        select(SocialAccount)
+        .options(
+            selectinload(SocialAccount.tokens),
+            selectinload(SocialAccount.app_credential),
+        )
+        .where(
             SocialAccount.id == account_id,
             SocialAccount.user_id == user_id,
         )
@@ -52,7 +58,7 @@ async def list_accounts(
     db: AsyncSession, user_id: uuid.UUID, platform: Optional[str] = None,
 ) -> List[SocialAccount]:
     """List all social accounts for a user, optionally filtered by platform."""
-    stmt = select(SocialAccount).where(SocialAccount.user_id == user_id)
+    stmt = select(SocialAccount).options(selectinload(SocialAccount.tokens)).where(SocialAccount.user_id == user_id)
     if platform:
         stmt = stmt.where(SocialAccount.platform == platform)
     stmt = stmt.order_by(SocialAccount.platform, asc(SocialAccount.created_at))
@@ -291,6 +297,28 @@ async def update_social_post_status(
         await db.commit()
         await db.refresh(post)
     return post
+
+
+async def get_processing_tiktok_posts(
+    db: AsyncSession, max_age_hours: int = 24,
+) -> List[SocialPost]:
+    """Posts de TikTok en estado 'processing' pendientes de reconciliar.
+
+    Returns ALL processing TikTok posts (up to 20, oldest first — they are the
+    most likely to have already resolved on TikTok's side). The 24h rule is
+    applied per-post by the caller (_reconcile_tiktok_async): posts older than
+    max_age_hours get marked 'failed' directly so they never stay orphaned.
+    """
+    result = await db.execute(
+        select(SocialPost)
+        .where(
+            SocialPost.platform == "tiktok",
+            SocialPost.status == "processing",
+        )
+        .order_by(asc(SocialPost.created_at))
+        .limit(20)
+    )
+    return list(result.scalars().all())
 
 
 async def get_social_post(

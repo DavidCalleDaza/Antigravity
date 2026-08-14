@@ -62,6 +62,13 @@ class SocialAccount(Base):
     user = relationship("User", foreign_keys=[user_id], back_populates="social_accounts")
     modifier = relationship("User", foreign_keys=[last_modified_by])
 
+    @property
+    def token_expires_at(self) -> Optional[datetime]:
+        """Expose only the token expiration date (never the token itself)."""
+        if self.tokens:
+            return self.tokens[0].expires_at
+        return None
+
 
 class SocialToken(Base):
     __tablename__ = "social_tokens"

@@ -1,0 +1,13 @@
+# TC-SOCIAL-PERSIST-001 — Persistencia de conexiones sociales entre sesiones
+
+Formato tabular estándar según `donapp-qa-conventions`. Ejecutor: David, en el navegador contra el entorno de prueba.
+
+| ID | Descripción | Precondición | Pasos | Resultado Esperado | Tipo | Prioridad |
+|---|---|---|---|---|---|---|
+| TC-SOCIAL-PERSIST-001 | Verificar que las cuentas de redes sociales conectadas (Meta/TikTok) en "Mi Perfil → Redes Sociales" persisten entre sesiones: se ven iguales después de un logout real y un nuevo login, sin necesidad de reconectar. | 1. Usuario vendedor con una cuenta social conectada (ej. página de Facebook o cuenta de TikTok) mediante el flujo manual u OAuth, con estado "Activa". 2. App web desplegada/accesible y base de datos persistente (Postgres). 3. Credenciales del usuario a mano para volver a iniciar sesión. | 1. Iniciar sesión como el vendedor. 2. Navegar a "Mi Perfil → Redes Sociales" y anotar las cuentas visibles: plataforma, nombre/etiqueta, estado (Activa/Default) y App ID guardado (si aplica). 3. Cerrar sesión completamente (logout real desde la UI, no solo cerrar la pestaña). 4. Esperar unos segundos y verificar que la URL ya no tiene sesión (redirige a login). 5. Iniciar sesión de nuevo con el mismo usuario. 6. Navegar a "Mi Perfil → Redes Sociales". 7. Comparar la lista con lo anotado en el paso 2. | 1. Las mismas cuentas aparecen en el listado, con la misma plataforma, etiqueta y estado (ej. "Activa", "DEFAULT"). 2. No se solicita reconectar ninguna cuenta ni reingresar App ID/Secret. 3. El App ID guardado (campo precargado al agregar cuenta) sigue presente. 4. No aparecen cuentas duplicadas ni de otros usuarios. 5. Sin errores 500 ni mensajes de "token inválido" al cargar el perfil. | Regression | Alta |
+
+## Notas de ejecución
+
+- Si el estado de una cuenta aparece como "Expirada" tras el relogin, eso es comportamiento esperado solo si el token de la plataforma realmente expiró (distinto de un problema de persistencia de la conexión): el registro sigue existiendo y la UI lo muestra con su estado real.
+- Si las cuentas NO aparecen tras el relogin (listado vacío), marcar como **Fail**, capturar evidencia (screenshots del antes/después + timestamp) y reportarlo como hallazgo separado — no intentar arreglar sin revisión.
+- Complementa la verificación automatizada en `Backend/tests/test_social_persistence.py` (dos tokens de sesión independientes para el mismo usuario).

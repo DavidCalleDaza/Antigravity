@@ -322,7 +322,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="page-content">
+    <div className="page-content profile-bg-photo">
       <div className="page-header">
         <div>
           <h2 className="page-title">Configuración de Cuenta</h2>

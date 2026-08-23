@@ -35,8 +35,8 @@ export default function DonAppLogo({
         [data-theme="dark"] .donapp-logo.variant-auto .logo-black { display: none; }
         [data-theme="dark"] .donapp-logo.variant-auto .logo-gold { display: block; }
       `}</style>
-      <img src="/assets/logo_astronauta_transparent.png" alt="DonApp" className="logo-black" />
-      <img src="/assets/logo_astronauta_transparent_gold.png" alt="DonApp" className="logo-gold" />
+      <img src="/assets/logo-mark-black.png" alt="DonApp" className="logo-black" />
+      <img src="/assets/logo-mark-white.png" alt="DonApp" className="logo-gold" />
     </span>
   );
 }

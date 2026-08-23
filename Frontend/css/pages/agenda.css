@@ -1825,3 +1825,51 @@
     padding: var(--space-2) var(--space-3);
   }
 }
+
+.agenda-bg-photo {
+  position: relative;
+}
+
+.agenda-bg-photo::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/assets/agenda-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .agenda-bg-photo::before {
+  background-image: url('/assets/agenda-bg-dark.jpg');
+  opacity: 0.12;
+}
+
+.app:has(.agenda-bg-photo) .navbar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
+}
+
+.app:has(.agenda-bg-photo) .sidebar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
+}
+
+body.page-scrolled .app:has(.agenda-bg-photo) .navbar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+}
+
+body.page-scrolled .app:has(.agenda-bg-photo) .sidebar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+}

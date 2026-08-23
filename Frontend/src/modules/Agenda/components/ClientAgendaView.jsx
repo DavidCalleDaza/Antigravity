@@ -6,7 +6,7 @@ export default function ClientAgendaView() {
   const [tab, setTab] = useState('book');
 
   return (
-    <div className="page-content">
+    <div className="page-content agenda-bg-photo">
       <div className="page-header">
         <div>
           <h2 className="page-title">Citas</h2>

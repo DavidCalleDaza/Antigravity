@@ -877,3 +877,51 @@
   --sns-accent: var(--accent);
   --sns-accent-soft: var(--accent-50);
 }
+
+.profile-bg-photo {
+  position: relative;
+}
+
+.profile-bg-photo::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/assets/profile-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .profile-bg-photo::before {
+  background-image: url('/assets/profile-bg-dark.jpg');
+  opacity: 0.12;
+}
+
+.app:has(.profile-bg-photo) .navbar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
+}
+
+.app:has(.profile-bg-photo) .sidebar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition: background var(--transition-base), backdrop-filter var(--transition-base);
+}
+
+body.page-scrolled .app:has(.profile-bg-photo) .navbar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+}
+
+body.page-scrolled .app:has(.profile-bg-photo) .sidebar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+}

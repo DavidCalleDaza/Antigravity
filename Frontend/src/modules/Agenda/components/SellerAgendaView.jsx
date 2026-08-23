@@ -7,7 +7,7 @@ export default function SellerAgendaView() {
   const [tab, setTab] = useState('templates');
 
   return (
-    <div className="page-content">
+    <div className="page-content agenda-bg-photo">
       <div className="page-header">
         <div>
           <h2 className="page-title">Mi Agenda</h2>

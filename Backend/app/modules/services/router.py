@@ -87,6 +87,12 @@ async def create_new_service(
 ) -> ServiceResponse:
     if current_user.role not in ("admin", "seller"):
         raise HTTPException(status_code=403, detail="Solo vendedores pueden crear servicios")
+    
+    # Infer image_url from media_urls if not provided
+    if service_in.media_urls and len(service_in.media_urls) > 0:
+        if not service_in.image_url:
+            service_in.image_url = service_in.media_urls[0]
+
     service = await create_service(db, service_in, current_user.id)
     return _build_service_response(service)
 
@@ -115,6 +121,12 @@ async def update_existing_service(
         raise HTTPException(status_code=404, detail="Service not found")
     if db_service.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para modificar este servicio")
+    
+    # Infer image_url from media_urls if not provided
+    if service_in.media_urls and len(service_in.media_urls) > 0:
+        if not service_in.image_url:
+            service_in.image_url = service_in.media_urls[0]
+
     service = await update_service(db, db_service, service_in)
     return _build_service_response(service)
 

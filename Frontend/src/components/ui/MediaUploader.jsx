@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Upload, X, FileImage, FileVideo, Loader2 } from 'lucide-react';
 
 export default function MediaUploader({
@@ -9,15 +9,54 @@ export default function MediaUploader({
   progress = 0,
   onSelect,
   onClear,
+  onDropItem,
   error = null,
 }) {
+  const [isDragOver, setIsDragOver] = useState(false);
   const isVideo = preview && (preview.startsWith('blob:') || preview?.type?.startsWith?.('video/') || preview?.includes?.('.mp4') || preview?.includes?.('.webm'));
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    try {
+      const raw = e.dataTransfer.getData('application/json');
+      if (raw) {
+        const payload = JSON.parse(raw);
+        if (onDropItem) {
+          onDropItem(payload);
+        }
+      }
+    } catch (err) {
+      console.error('Error procesando drop en MediaUploader:', err);
+    }
+  };
 
   return (
     <div className="media-uploader">
       {label && <label className="form-label">{label}</label>}
 
-      <div className={`media-uploader-dropzone ${error ? 'has-error' : ''}`}>
+      <div
+        className={`media-uploader-dropzone ${error ? 'has-error' : ''} ${isDragOver ? 'is-drag-over' : ''}`}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         {compressing ? (
           <div className="media-uploader-progress">
             <Loader2 width={24} height={24} className="spin" />
@@ -89,6 +128,17 @@ export default function MediaUploader({
 
         .media-uploader-dropzone.has-error {
           border-color: var(--danger);
+        }
+
+        .media-uploader-dropzone.is-drag-over {
+          border-color: var(--gold) !important;
+          background: var(--gold-dim) !important;
+          box-shadow: 0 0 0 3px var(--gold-soft);
+        }
+
+        [data-theme="light"] .media-uploader-dropzone.is-drag-over {
+          border-color: var(--mint-green) !important;
+          background: var(--gold-dim) !important;
         }
 
         .media-uploader-input {

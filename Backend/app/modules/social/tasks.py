@@ -51,6 +51,7 @@ async def _publish_async(
     caption: str,
     is_ai_generated: bool = False,
     account_id_str: str | None = None,
+    local_paths: list[str] | None = None,  # NEW: list for multi-image
 ):
     post_id = uuid.UUID(post_id_str)
     user_id = uuid.UUID(user_id_str)
@@ -201,9 +202,12 @@ async def _publish_async(
                         raise refresh_err
 
             # ── 3. Publish to the specific platform ─────────────────────────
+            # Resolve effective paths list (new multi-image vs legacy single path)
+            effective_paths = local_paths if (local_paths and len(local_paths) > 0) else [local_path]
+
             if platform == "facebook":
                 publish_result = await service.publish_to_meta(
-                    access_token, local_path, caption
+                    access_token, effective_paths, caption
                 )
                 platform_post_id = publish_result.get("id")
 
@@ -217,12 +221,15 @@ async def _publish_async(
                 # Instagram requires a public HTTPS URL. We derive it from our ngrok base url
                 base_url = settings.META_REDIRECT_URI.split("/api/v1")[0]
 
-                # local_path could be 'uploads/...' or '/uploads/...'. Make sure it's absolute for the URL.
-                path_part = local_path if local_path.startswith("/") else f"/{local_path}"
-                public_image_url = f"{base_url}{path_part}"
+                # Build public URLs for all paths
+                def _to_public(lp):
+                    path_part = lp if lp.startswith("/") else f"/{lp}"
+                    return f"{base_url}{path_part}"
+
+                public_image_urls = [_to_public(p) for p in effective_paths]
 
                 publish_result = await service.publish_to_instagram(
-                    access_token, public_image_url, caption, platform_user_id
+                    access_token, public_image_urls, caption, platform_user_id
                 )
                 platform_post_id = publish_result.get("id")
 
@@ -319,8 +326,9 @@ def publish_to_social_task(
     local_path: str,
     caption: str,
     is_ai_generated: bool = False,
-    # ── Retrocompatible: new param is optional (decision #6) ─────────────
+    # ── Retrocompatible: new params are optional (decision #6) ──────────────
     account_id_str: str | None = None,
+    local_paths: list[str] | None = None,  # NEW: list of paths for multi-image
 ):
     """
     Celery task to publish content to social platforms in the background.
@@ -338,6 +346,7 @@ def publish_to_social_task(
                 engine, post_id_str, user_id_str, platform,
                 local_path, caption, is_ai_generated,
                 account_id_str=account_id_str,
+                local_paths=local_paths,
             )
         )
     except ValueError as ve:

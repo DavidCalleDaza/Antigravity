@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
 import { X, Share2, Facebook, Instagram, Video, Copy, Download, Loader2, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { generateShareImage } from '../utils/generateShareImage';
 import { socialClient, tokensClient } from '../utils/apiClient';
 import Helpers from '../utils/helpers';
@@ -61,6 +62,22 @@ export default function ShareModal({
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   const [activeAiSection, setActiveAiSection] = useState(null); // null | 'copy' | 'image' | 'video'
   const [hourlyLimitReached, setHourlyLimitReached] = useState(false);
+  // R1 — Rich text toolbar state
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [hashtagInput, setHashtagInput] = useState('');
+  const textareaRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  // R5 — Multi-image state
+  const [additionalImages, setAdditionalImages] = useState([]); // [{ blob, previewUrl, uploadedUrl }]
+  const additionalImageInputRef = useRef(null);
+  
+  // R5 — derived: any selected account is TikTok?
+  const hasTikTokSelected = useMemo(() => {
+    return selectedAccounts.some(id => {
+      const acc = accounts.find(a => a.id === id);
+      return acc && acc.platform === 'tiktok';
+    });
+  }, [selectedAccounts, accounts]);
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +89,91 @@ export default function ShareModal({
         .catch(() => setHourlyLimitReached(false));
     }
   }, [isOpen]);
+
+  // ── R1 Unicode formatting helpers ────────────────────────────────────────
+  const BOLD_MAP = Object.fromEntries(
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.split('').map((c, i) => {
+      const bases = [
+        [65, 0x1D400], [97, 0x1D41A], [48, 0x1D7CE],
+      ];
+      for (const [start, offset] of bases) {
+        const code = c.charCodeAt(0);
+        if (code >= start && code < start + (start === 48 ? 10 : 26)) {
+          return [c, String.fromCodePoint(offset + code - start)];
+        }
+      }
+      return [c, c];
+    })
+  );
+  const ITALIC_MAP = Object.fromEntries(
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('').map((c) => {
+      const code = c.charCodeAt(0);
+      if (code >= 65 && code <= 90) return [c, String.fromCodePoint(0x1D434 + code - 65)];
+      if (code >= 97 && code <= 122) return [c, String.fromCodePoint(0x1D44E + code - 97)];
+      return [c, c];
+    })
+  );
+
+  const applyUnicodeFormat = useCallback((map) => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    if (start === end) return; // nothing selected
+    const selected = shareText.slice(start, end);
+    const transformed = selected.split('').map(c => map[c] || c).join('');
+    const newText = shareText.slice(0, start) + transformed + shareText.slice(end);
+    setShareText(newText);
+    // Restore selection after state update
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start, start + transformed.length);
+    }, 0);
+  }, [shareText]);
+
+  const insertAtCursor = useCallback((insertion) => {
+    const el = textareaRef.current;
+    if (!el) {
+      setShareText(prev => prev + insertion);
+      return;
+    }
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const newText = shareText.slice(0, start) + insertion + shareText.slice(end);
+    setShareText(newText);
+    setTimeout(() => {
+      el.focus();
+      const pos = start + insertion.length;
+      el.setSelectionRange(pos, pos);
+    }, 0);
+  }, [shareText]);
+
+  const addHashtag = useCallback(() => {
+    const tag = hashtagInput.trim().replace(/^#+/, '');
+    if (!tag) return;
+    const insertion = (shareText.endsWith(' ') || shareText === '' ? '' : ' ') + '#' + tag;
+    setShareText(prev => prev + insertion);
+    setHashtagInput('');
+  }, [hashtagInput, shareText]);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (e) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
+
+  const FREQUENT_EMOJIS = [
+    '😀','😍','🔥','✨','💯','🎉','❤️','👍','🙌','💪',
+    '🎁','🛒','💰','📢','🌟','👀','🆕','💥','🤩','😎',
+    '📸','🍕','🎶','🏆','💡','🚀','✅','⚡','🌈','🎯',
+    '💎','🏷️','📦','🤝','💸','🛍️','🌺','👑','🎊','📣',
+  ];
 
   const handleConnect = async (platform) => {
     try {
@@ -96,6 +198,12 @@ export default function ShareModal({
       setEnhancedImageUrl(null);
       setIsAiGeneratedPost(false);
       setActiveAiSection(null);
+      // Reset additional images
+      setAdditionalImages(prev => {
+        prev.forEach(img => img.previewUrl && URL.revokeObjectURL(img.previewUrl));
+        return [];
+      });
+      setHashtagInput('');
 
       if (mode === 'wallPost') {
         const mediaUrl = Helpers.resolveMediaUrl(item.imageUrl || item.image_url);
@@ -205,11 +313,16 @@ export default function ShareModal({
 
     const publishPromises = selectedAccounts.map(accountId => {
       const acc = accounts.find(a => a.id === accountId);
-      return socialClient.publish({
+
+      // Build the list of media URLs (primary + additional) for multi-image posts
+      const primaryUrl = aiVideoUrl || enhancedImageUrl || item?.imageUrl || item?.image_url || '';
+
+      const buildPayload = (extraUrls) => ({
         account_id: accountId,
-        platform: acc ? acc.platform : undefined, // Fallback support
+        platform: acc ? acc.platform : undefined,
         caption: shareText,
-        media_url: aiVideoUrl || enhancedImageUrl || item?.imageUrl || item?.image_url || '',
+        media_url: primaryUrl,                           // backward compat
+        media_urls: extraUrls.length > 0 ? extraUrls : undefined,  // multi-image
         product_id: isWallPost
           ? (linked?.kind === 'product' ? linked.id : null)
           : (item?.stock !== undefined ? item?.id : null),
@@ -217,6 +330,29 @@ export default function ShareModal({
           ? (linked?.kind === 'service' ? linked.id : null)
           : (item?.duration !== undefined ? item?.id : null),
         is_ai_generated: isAiGeneratedPost,
+      });
+
+      if (additionalImages.length === 0) {
+        // No additional images — single image flow (backward compat)
+        return socialClient.publish(buildPayload([]));
+      }
+
+      // Upload additional images first, then publish
+      const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+      const token = useStore.getState().currentUser?.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const uploadPromises = additionalImages.map(img => {
+        const formData = new FormData();
+        formData.append('file', img.blob, `additional_${Date.now()}.png`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: formData })
+          .then(r => r.json())
+          .then(data => data.url || null);
+      });
+
+      return Promise.all(uploadPromises).then(extraUrls => {
+        const allUrls = [primaryUrl, ...extraUrls.filter(Boolean)];
+        return socialClient.publish(buildPayload(allUrls));
       });
     });
 
@@ -248,6 +384,25 @@ export default function ShareModal({
     }
   };
 
+
+
+  const addAdditionalImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const blob = file;
+    const previewUrl = URL.createObjectURL(blob);
+    setAdditionalImages(prev => [...prev, { blob, previewUrl, uploadedUrl: null }]);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const removeAdditionalImage = (index) => {
+    setAdditionalImages(prev => {
+      URL.revokeObjectURL(prev[index].previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const hasSelected = selectedAccounts.length > 0;
 
   return (
@@ -263,7 +418,7 @@ export default function ShareModal({
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2)' }}>
+      <div className="share-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-2)' }}>
         {activeAiSection === null ? (
           <>
             <div className="share-preview">
@@ -293,6 +448,72 @@ export default function ShareModal({
             </div>
           </div>
 
+          {/* R5 — Multi-image selector */}
+          {!isWallPost && !aiVideoUrl && (
+            <div className="share-multi-img">
+              <div className="share-multi-img-header">
+                <label className="form-label" style={{ marginBottom: 0 }}>Imágenes adicionales</label>
+                {hasTikTokSelected ? (
+                  <span className="share-multi-img-tiktok-warn">
+                    ⚠️ TikTok solo permite 1 imagen
+                  </span>
+                ) : (
+                  <span className="share-multi-img-count">
+                    {additionalImages.length > 0 ? `${additionalImages.length + 1} imágenes (carousel)` : 'Agrega hasta 9'}
+                  </span>
+                )}
+              </div>
+
+              <div className="share-multi-img-strip">
+                {/* Primary image thumbnail (fixed, not removable) */}
+                {previewUrl && (
+                  <div className="share-multi-img-thumb share-multi-img-thumb--primary" title="Imagen principal">
+                    <img src={previewUrl} alt="Principal" />
+                    <span className="share-multi-img-thumb-badge">1</span>
+                  </div>
+                )}
+
+                {/* Additional images */}
+                {additionalImages.map((img, idx) => (
+                  <div key={idx} className="share-multi-img-thumb">
+                    <img src={img.previewUrl} alt={`Imagen ${idx + 2}`} />
+                    <button
+                      type="button"
+                      className="share-multi-img-remove"
+                      onClick={() => removeAdditionalImage(idx)}
+                      title="Quitar imagen"
+                    >
+                      ×
+                    </button>
+                    <span className="share-multi-img-thumb-badge">{idx + 2}</span>
+                  </div>
+                ))}
+
+                {/* Add button — hidden if TikTok selected or max reached */}
+                {!hasTikTokSelected && additionalImages.length < 9 && (
+                  <button
+                    type="button"
+                    className="share-multi-img-add"
+                    onClick={() => additionalImageInputRef.current?.click()}
+                    title="Agregar imagen al carousel"
+                  >
+                    <span className="share-multi-img-add-plus">+</span>
+                    <span className="share-multi-img-add-label">Agregar</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={additionalImageInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={addAdditionalImage}
+              />
+            </div>
+          )}
+
           <div className="ai-accordion">
             {!isWallPost && (
               <AiAccordionEntry
@@ -304,9 +525,10 @@ export default function ShareModal({
             <AiAccordionEntry
               icon={Sparkles}
               label="Mejorar imagen con IA"
-              onClick={() => setActiveAiSection('image')}
-              disabled={!imageBlob || hourlyLimitReached}
-              title={hourlyLimitReached ? 'Límite horario de IA alcanzado' : 'Necesitas una imagen para mejorarla'}
+              onClick={() => {}}
+              disabled={true}
+              badge="Próximamente"
+              title="Próximamente — Mejora de imágenes con IA"
             />
             {!isWallPost && (
               <AiAccordionEntry
@@ -320,12 +542,84 @@ export default function ShareModal({
 
           <div className="form-group">
             <label className="form-label">Texto para publicar</label>
+
+            {/* Toolbar de formato */}
+            <div className="share-text-toolbar">
+              <button
+                type="button"
+                className="share-text-toolbar-btn"
+                title="Negrita unicode (selecciona texto primero)"
+                onClick={() => applyUnicodeFormat(BOLD_MAP)}
+              >
+                <strong>B</strong>
+              </button>
+              <button
+                type="button"
+                className="share-text-toolbar-btn"
+                title="Cursiva unicode (selecciona texto primero)"
+                onClick={() => applyUnicodeFormat(ITALIC_MAP)}
+              >
+                <em>I</em>
+              </button>
+              <div className="share-text-toolbar-divider" />
+              <div style={{ position: 'relative' }} ref={emojiPickerRef}>
+                <button
+                  type="button"
+                  className="share-text-toolbar-btn"
+                  title="Insertar emoji"
+                  onClick={() => setShowEmojiPicker(v => !v)}
+                >
+                  😀
+                </button>
+                {showEmojiPicker && (
+                  <div className="share-emoji-picker">
+                    {FREQUENT_EMOJIS.map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        className="share-emoji-btn"
+                        onClick={() => { insertAtCursor(emoji); setShowEmojiPicker(false); }}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="share-text-toolbar-spacer" />
+              <span className={`share-char-counter ${shareText.length > 2200 ? 'share-char-counter--warn' : ''}`}>
+                {shareText.length} / 2200
+              </span>
+            </div>
+
             <textarea
+              ref={textareaRef}
               className="form-textarea share-textarea"
               value={shareText}
               onChange={(e) => setShareText(e.target.value)}
-              rows="3"
+              rows="4"
             />
+
+            {/* Hashtag helper */}
+            <div className="share-hashtag-row">
+              <span className="share-hashtag-label">#</span>
+              <input
+                type="text"
+                className="share-hashtag-input"
+                placeholder="agrega una etiqueta y presiona Enter"
+                value={hashtagInput}
+                onChange={(e) => setHashtagInput(e.target.value.replace(/\s/g, ''))}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHashtag(); } }}
+              />
+              <button
+                type="button"
+                className="share-hashtag-add-btn"
+                onClick={addHashtag}
+                disabled={!hashtagInput.trim()}
+              >
+                + Agregar
+              </button>
+            </div>
           </div>
 
           <div className="form-group">
@@ -345,8 +639,8 @@ export default function ShareModal({
             <div className="share-networks">
               {activeAccounts.length === 0 ? (
                 <div className="text-sm text-secondary p-3 border border-dashed border-neutral-700 rounded-lg w-full text-center">
-                  No hay cuentas conectadas y activas. 
-                  <a href="/profile/social" className="text-primary ml-1 hover:underline">Ir a Configuración</a>
+                  No hay cuentas conectadas y activas.
+                  <Link to="/profile?tab=social" className="text-primary ml-1 hover:underline">Ir a Configuración</Link>
                 </div>
               ) : (
                 activeAccounts.map((account) => {
@@ -454,7 +748,7 @@ export default function ShareModal({
         <div className="drawer-form-actions" style={{ borderTop: '1px solid var(--border)' }}>
           <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
           <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-publish-dark"
             onClick={handlePublishClick}
             disabled={!hasSelected || publishing}
           >
@@ -464,7 +758,7 @@ export default function ShareModal({
                 Publicando...
               </>
             ) : (
-              <>Publicar →</>
+              <>PUBLICAR</>
             )}
           </button>
         </div>
@@ -828,6 +1122,338 @@ export default function ShareModal({
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+
+        /* === Share Modal Specific Overrides === */
+        /* Center the action buttons only in this modal, without touching .drawer-form-actions globally */
+        .share-modal-body .drawer-form-actions {
+          justify-content: center;
+        }
+
+        /* PUBLICAR button: always black in both themes */
+        .btn-publish-dark {
+          background: #000000 !important;
+          color: #ffffff !important;
+          border: none !important;
+        }
+
+        .btn-publish-dark:hover:not(:disabled) {
+          background: #222222 !important;
+        }
+
+        .btn-publish-dark:disabled {
+          background: #555555 !important;
+          opacity: 0.6 !important;
+        }
+
+        /* === R1: Rich Text Toolbar === */
+        .share-text-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 6px;
+          background: var(--neutral-800);
+          border: 1px solid var(--neutral-700);
+          border-bottom: none;
+          border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        [data-theme="light"] .share-text-toolbar {
+          background: var(--surface);
+          border-color: var(--border-color);
+        }
+
+        .share-text-toolbar + .form-textarea {
+          border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+
+        .share-text-toolbar-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.875rem;
+          transition: background var(--transition-fast), color var(--transition-fast);
+        }
+
+        .share-text-toolbar-btn:hover {
+          background: var(--neutral-700);
+          color: var(--text-primary);
+        }
+
+        [data-theme="light"] .share-text-toolbar-btn:hover {
+          background: var(--neutral-200, #e5e7eb);
+          color: #121212;
+        }
+
+        .share-text-toolbar-divider {
+          width: 1px;
+          height: 18px;
+          background: var(--neutral-700);
+          margin: 0 4px;
+        }
+
+        [data-theme="light"] .share-text-toolbar-divider {
+          background: var(--border-color);
+        }
+
+        .share-text-toolbar-spacer {
+          flex: 1;
+        }
+
+        .share-char-counter {
+          font-size: 0.7rem;
+          color: var(--text-tertiary);
+          white-space: nowrap;
+          padding-right: 4px;
+        }
+
+        .share-char-counter--warn {
+          color: #ef4444;
+          font-weight: 600;
+        }
+
+        /* Emoji picker */
+        .share-emoji-picker {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          z-index: 100;
+          background: var(--neutral-800);
+          border: 1px solid var(--neutral-700);
+          border-radius: var(--radius-md);
+          padding: 8px;
+          display: grid;
+          grid-template-columns: repeat(8, 1fr);
+          gap: 2px;
+          width: 260px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="light"] .share-emoji-picker {
+          background: var(--surface);
+          border-color: var(--border-color);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .share-emoji-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-radius: 4px;
+          font-size: 1rem;
+          transition: background var(--transition-fast);
+        }
+
+        .share-emoji-btn:hover {
+          background: var(--neutral-700);
+        }
+
+        [data-theme="light"] .share-emoji-btn:hover {
+          background: var(--neutral-200, #e5e7eb);
+        }
+
+        /* Hashtag row */
+        .share-hashtag-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+        }
+
+        .share-hashtag-label {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--gold);
+          flex-shrink: 0;
+        }
+
+        .share-hashtag-input {
+          flex: 1;
+          min-width: 0;
+          padding: 5px 10px;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--neutral-700);
+          background: var(--neutral-900);
+          color: var(--text-primary);
+          font-size: 0.8rem;
+          outline: none;
+          transition: border-color var(--transition-fast);
+        }
+
+        .share-hashtag-input:focus {
+          border-color: var(--gold);
+        }
+
+        [data-theme="light"] .share-hashtag-input {
+          background: var(--surface);
+          border-color: var(--border-color);
+        }
+
+        .share-hashtag-add-btn {
+          flex-shrink: 0;
+          padding: 5px 10px;
+          border-radius: var(--radius-md);
+          border: 1px solid var(--gold);
+          background: transparent;
+          color: var(--gold);
+          font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all var(--transition-fast);
+        }
+
+        .share-hashtag-add-btn:hover:not(:disabled) {
+          background: var(--gold);
+          color: #fff;
+        }
+
+        .share-hashtag-add-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        /* === R5: Multi-image strip === */
+        .share-multi-img {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .share-multi-img-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .share-multi-img-count {
+          font-size: 0.72rem;
+          color: var(--text-tertiary);
+        }
+
+        .share-multi-img-tiktok-warn {
+          font-size: 0.72rem;
+          color: #f59e0b;
+          font-weight: 600;
+        }
+
+        .share-multi-img-strip {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .share-multi-img-thumb {
+          position: relative;
+          width: 64px;
+          height: 64px;
+          border-radius: 8px;
+          overflow: visible;
+          flex-shrink: 0;
+          border: 2px solid var(--neutral-700);
+        }
+
+        .share-multi-img-thumb--primary {
+          border-color: var(--gold);
+        }
+
+        .share-multi-img-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 6px;
+          display: block;
+        }
+
+        .share-multi-img-thumb-badge {
+          position: absolute;
+          bottom: -6px;
+          right: -6px;
+          width: 18px;
+          height: 18px;
+          background: var(--gold);
+          color: #fff;
+          font-size: 0.6rem;
+          font-weight: 700;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid var(--neutral-900);
+        }
+
+        .share-multi-img-remove {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          border: none;
+          background: #ef4444;
+          color: #fff;
+          font-size: 0.7rem;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          z-index: 1;
+          transition: background var(--transition-fast);
+        }
+
+        .share-multi-img-remove:hover {
+          background: #dc2626;
+        }
+
+        .share-multi-img-add {
+          width: 64px;
+          height: 64px;
+          border: 2px dashed var(--neutral-600);
+          border-radius: 8px;
+          background: var(--neutral-900);
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          color: var(--text-tertiary);
+          transition: all var(--transition-fast);
+          flex-shrink: 0;
+        }
+
+        .share-multi-img-add:hover {
+          border-color: var(--gold);
+          color: var(--gold);
+          background: rgba(212,175,55,0.05);
+        }
+
+        .share-multi-img-add-plus {
+          font-size: 1.2rem;
+          font-weight: 300;
+          line-height: 1;
+        }
+
+        .share-multi-img-add-label {
+          font-size: 0.6rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
       `}</style>
     </Drawer>

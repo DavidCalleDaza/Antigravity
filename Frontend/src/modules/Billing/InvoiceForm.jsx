@@ -61,10 +61,12 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
   const [quickProduct, setQuickProduct] = useState({
     name: '', category_id: '', price: 0, stock: 0,
     status: 'active', description: '', image_url: '', video_url: '',
+    additionalImages: [], media_urls: [],
   });
   const [quickService, setQuickService] = useState({
     name: '', category_id: '', price: 0, duration: '',
     status: 'active', description: '', image_url: '', video_url: '',
+    additionalImages: [], media_urls: [],
   });
 
   const [productMediaError, setProductMediaError] = useState(null);
@@ -418,6 +420,36 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
       const meansIsValid = validPaymentMeans.some(opt => opt.value === paymentMeans);
       if (!meansIsValid) { toast.error('El medio de pago seleccionado no es válido para el método de pago elegido.'); return; }
       const payload = { ...quickProduct, category_id: quickProduct.category_id || null };
+      
+      // Upload additional images first
+      let extraUrls = [];
+      if (quickProduct.additionalImages && quickProduct.additionalImages.length > 0) {
+        const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+        const token = useStore.getState().currentUser?.token;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const uploadPromises = quickProduct.additionalImages.map(img => {
+          const form = new FormData();
+          form.append('file', img.blob, `product_gallery_${Date.now()}.png`);
+          return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+            .then(r => r.json())
+            .then(data => data.url || null);
+        });
+        const uploaded = await Promise.all(uploadPromises);
+        extraUrls = uploaded.filter(Boolean);
+      }
+      
+      const existingMedia = quickProduct.media_urls || [];
+      const primary = quickProduct.image_url;
+      const allUrlsSet = new Set();
+      if (primary) allUrlsSet.add(primary);
+      existingMedia.forEach(url => allUrlsSet.add(url));
+      extraUrls.forEach(url => allUrlsSet.add(url));
+      
+      const allUrls = Array.from(allUrlsSet);
+      if (allUrls.length > 0) payload.media_urls = allUrls;
+      delete payload.additionalImages;
+
       const created = await productClient.create(payload);
       toast.success('Producto creado y seleccionado exitosamente.');
       setProducts(prev => [created, ...prev]);
@@ -433,7 +465,7 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
 
   const resetQuickProductForm = () => {
     setShowQuickProduct(false);
-    setQuickProduct({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', image_url: '', video_url: '' });
+    setQuickProduct({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', image_url: '', video_url: '', additionalImages: [], media_urls: [] });
     fileUploadProd.reset(); setProductMediaError(null);
   };
 
@@ -449,6 +481,35 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
       };
       if (quickService.image_url) payload.image_url = quickService.image_url;
       if (quickService.video_url) payload.video_url = quickService.video_url;
+
+      // Upload additional images first
+      let extraUrls = [];
+      if (quickService.additionalImages && quickService.additionalImages.length > 0) {
+        const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+        const token = useStore.getState().currentUser?.token;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const uploadPromises = quickService.additionalImages.map(img => {
+          const form = new FormData();
+          form.append('file', img.blob, `service_gallery_${Date.now()}.png`);
+          return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+            .then(r => r.json())
+            .then(data => data.url || null);
+        });
+        const uploaded = await Promise.all(uploadPromises);
+        extraUrls = uploaded.filter(Boolean);
+      }
+      
+      const existingMedia = quickService.media_urls || [];
+      const primary = quickService.image_url;
+      const allUrlsSet = new Set();
+      if (primary) allUrlsSet.add(primary);
+      existingMedia.forEach(url => allUrlsSet.add(url));
+      extraUrls.forEach(url => allUrlsSet.add(url));
+      
+      const allUrls = Array.from(allUrlsSet);
+      if (allUrls.length > 0) payload.media_urls = allUrls;
+
       const created = await serviceClient.create(payload);
       toast.success('Servicio creado y seleccionado exitosamente.');
       setServices(prev => [created, ...prev]);
@@ -464,7 +525,7 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
 
   const resetQuickServiceForm = () => {
     setShowQuickService(false);
-    setQuickService({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', image_url: '', video_url: '' });
+    setQuickService({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', image_url: '', video_url: '', additionalImages: [], media_urls: [] });
     fileUploadServ.reset(); setServiceMediaError(null);
   };
 
@@ -983,6 +1044,85 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
               uploading={fileUploadProd.uploading} compressing={fileUploadProd.compressing}
               progress={fileUploadProd.progress}
               onSelect={handleProductFileSelect} onClear={fileUploadProd.reset} error={productMediaError} />
+            
+            {/* Galería de imágenes adicionales */}
+            <div className="share-multi-img">
+              <div className="share-multi-img-header">
+                <label className="form-label" style={{ marginBottom: 0 }}>Imágenes adicionales</label>
+                <span className="share-multi-img-count">
+                  {quickProduct.additionalImages?.length > 0 || (quickProduct.media_urls?.length > 1) 
+                    ? `${(quickProduct.additionalImages?.length || 0) + (quickProduct.media_urls?.length > 1 ? quickProduct.media_urls.length - 1 : 0)} adicionales` 
+                    : 'Opcional'}
+                </span>
+              </div>
+              <div className="share-multi-img-strip">
+                {/* Existing additional URLs */}
+                {quickProduct.media_urls?.filter(url => url !== quickProduct.image_url).map((url, idx) => (
+                  <div key={`existing-${idx}`} className="share-multi-img-thumb">
+                    <img src={Helpers.resolveMediaUrl(url)} alt={`Adicional ${idx}`} />
+                    <button
+                      type="button"
+                      className="share-multi-img-remove"
+                      onClick={() => {
+                        const newMediaUrls = quickProduct.media_urls.filter(u => u !== url);
+                        setQuickProduct({ ...quickProduct, media_urls: newMediaUrls });
+                      }}
+                      title="Quitar"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                {/* New additional images */}
+                {quickProduct.additionalImages?.map((img, idx) => (
+                  <div key={`new-${idx}`} className="share-multi-img-thumb">
+                    <img src={img.previewUrl} alt={`Nueva ${idx}`} />
+                    <button
+                      type="button"
+                      className="share-multi-img-remove"
+                      onClick={() => {
+                        URL.revokeObjectURL(img.previewUrl);
+                        const newImages = quickProduct.additionalImages.filter((_, i) => i !== idx);
+                        setQuickProduct({ ...quickProduct, additionalImages: newImages });
+                      }}
+                      title="Quitar"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="share-multi-img-add"
+                  onClick={() => {
+                    const fileInput = document.getElementById('quickProductGalleryInput');
+                    if(fileInput) fileInput.click();
+                  }}
+                  title="Agregar imagen"
+                >
+                  +
+                </button>
+                <input
+                  id="quickProductGalleryInput"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const blob = file;
+                    const previewUrl = URL.createObjectURL(blob);
+                    setQuickProduct({
+                      ...quickProduct,
+                      additionalImages: [...(quickProduct.additionalImages || []), { blob, previewUrl }]
+                    });
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+            </div>
             <div className="form-group">
               <label className="form-label">Nombre del producto <span className="required">*</span></label>
               <input type="text" className="form-input" value={quickProduct.name}
@@ -1053,6 +1193,85 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
               uploading={fileUploadServ.uploading} compressing={fileUploadServ.compressing}
               progress={fileUploadServ.progress}
               onSelect={handleServiceFileSelect} onClear={fileUploadServ.reset} error={serviceMediaError} />
+            
+            {/* Galería de imágenes adicionales */}
+            <div className="share-multi-img">
+              <div className="share-multi-img-header">
+                <label className="form-label" style={{ marginBottom: 0 }}>Imágenes adicionales</label>
+                <span className="share-multi-img-count">
+                  {quickService.additionalImages?.length > 0 || (quickService.media_urls?.length > 1) 
+                    ? `${(quickService.additionalImages?.length || 0) + (quickService.media_urls?.length > 1 ? quickService.media_urls.length - 1 : 0)} adicionales` 
+                    : 'Opcional'}
+                </span>
+              </div>
+              <div className="share-multi-img-strip">
+                {/* Existing additional URLs */}
+                {quickService.media_urls?.filter(url => url !== quickService.image_url).map((url, idx) => (
+                  <div key={`existing-${idx}`} className="share-multi-img-thumb">
+                    <img src={Helpers.resolveMediaUrl(url)} alt={`Adicional ${idx}`} />
+                    <button
+                      type="button"
+                      className="share-multi-img-remove"
+                      onClick={() => {
+                        const newMediaUrls = quickService.media_urls.filter(u => u !== url);
+                        setQuickService({ ...quickService, media_urls: newMediaUrls });
+                      }}
+                      title="Quitar"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                {/* New additional images */}
+                {quickService.additionalImages?.map((img, idx) => (
+                  <div key={`new-${idx}`} className="share-multi-img-thumb">
+                    <img src={img.previewUrl} alt={`Nueva ${idx}`} />
+                    <button
+                      type="button"
+                      className="share-multi-img-remove"
+                      onClick={() => {
+                        URL.revokeObjectURL(img.previewUrl);
+                        const newImages = quickService.additionalImages.filter((_, i) => i !== idx);
+                        setQuickService({ ...quickService, additionalImages: newImages });
+                      }}
+                      title="Quitar"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  className="share-multi-img-add"
+                  onClick={() => {
+                    const fileInput = document.getElementById('quickServiceGalleryInput');
+                    if(fileInput) fileInput.click();
+                  }}
+                  title="Agregar imagen"
+                >
+                  +
+                </button>
+                <input
+                  id="quickServiceGalleryInput"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const blob = file;
+                    const previewUrl = URL.createObjectURL(blob);
+                    setQuickService({
+                      ...quickService,
+                      additionalImages: [...(quickService.additionalImages || []), { blob, previewUrl }]
+                    });
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+            </div>
             <div className="form-group">
               <label className="form-label">Nombre <span className="required">*</span></label>
               <input type="text" className="form-input" value={quickService.name}

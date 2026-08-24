@@ -112,15 +112,29 @@ async def exchange_tiktok_code(code: str, redirect_uri: str) -> dict:
 # ── Content Publishing ──────────────────────────────────────────────────────
 
 
-async def publish_to_meta(access_token: str, local_image_path: str, caption: str, is_ai_generated: bool = False) -> dict:
+async def publish_to_meta(access_token: str, local_image_paths: str | list, caption: str, is_ai_generated: bool = False) -> dict:
     """
-    Publish a photo to a Facebook Page using multipart/form-data upload.
+    Publish a photo (or carousel) to a Facebook Page.
+
+    - Single image: uses /{page_id}/photos with direct file upload (existing behaviour).
+    - Multiple images: creates carousel containers (is_carousel_item=true) then
+      posts a feed entry with attached_media referencing all containers.
+
     Facebook Photos API accepts direct file upload — no Cloudinary needed.
     """
-    abs_path = os.path.abspath(local_image_path)
+    # Normalise to list
+    if isinstance(local_image_paths, str):
+        paths = [local_image_paths]
+    else:
+        paths = list(local_image_paths)
 
-    if not os.path.exists(abs_path):
-        raise HTTPException(status_code=400, detail=f"Local image file not found: {abs_path}")
+    # Validate all files exist first
+    abs_paths = []
+    for p in paths:
+        ap = os.path.abspath(p)
+        if not os.path.exists(ap):
+            raise HTTPException(status_code=400, detail=f"Local image file not found: {ap}")
+        abs_paths.append(ap)
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         # Get the user's page(s)
@@ -140,85 +154,201 @@ async def publish_to_meta(access_token: str, local_image_path: str, caption: str
 
         page = me_data["data"][0]
         page_id = page["id"]
-        # Use page access token (not user token) for publishing to the page
         page_access_token = page.get("access_token", access_token)
 
-        logger.info(f"Publishing to Meta Page {page_id}. AI Generated: {is_ai_generated}")
-        
-        # Upload photo to the page
-        with open(abs_path, "rb") as f:
-            post_resp = await client.post(
-                f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}/photos",
+        logger.info(f"Publishing to Meta Page {page_id}. Images: {len(abs_paths)}. AI Generated: {is_ai_generated}")
+
+        if len(abs_paths) == 1:
+            # ── Single image: existing flow ────────────────────────────────
+            with open(abs_paths[0], "rb") as f:
+                post_resp = await client.post(
+                    f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}/photos",
+                    data={
+                        "message": caption,
+                        "access_token": page_access_token,
+                    },
+                    files={"source": f},
+                )
+            post_data = post_resp.json()
+            if "error" in post_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Meta API error (publish): {post_data['error'].get('message')}",
+                )
+            return post_data
+
+        else:
+            # ── Multi-image carousel: upload each as unpublished, then feed post ──
+            media_fbids = []
+            for ap in abs_paths:
+                with open(ap, "rb") as f:
+                    photo_resp = await client.post(
+                        f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}/photos",
+                        data={
+                            "published": "false",
+                            "is_carousel_item": "true",
+                            "access_token": page_access_token,
+                        },
+                        files={"source": f},
+                    )
+                photo_data = photo_resp.json()
+                if "error" in photo_data:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Meta API error (carousel upload): {photo_data['error'].get('message')}",
+                    )
+                media_fbids.append({"media_fbid": photo_data["id"]})
+                logger.info(f"Uploaded carousel item: {photo_data['id']}")
+
+            # Create the feed post attaching all carousel items
+            feed_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}/feed",
                 data={
                     "message": caption,
                     "access_token": page_access_token,
+                    "attached_media": str(media_fbids).replace("'", '"'),
                 },
-                files={"source": f},
             )
+            feed_data = feed_resp.json()
+            if "error" in feed_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Meta API error (carousel feed post): {feed_data['error'].get('message')}",
+                )
+            return feed_data
 
-        post_data = post_resp.json()
-        if "error" in post_data:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Meta API error (publish): {post_data['error'].get('message')}",
-            )
-        return post_data
 
-
-async def publish_to_instagram(access_token: str, image_url: str, caption: str, ig_user_id: str, is_ai_generated: bool = False) -> dict:
+async def publish_to_instagram(access_token: str, image_url: str | list, caption: str, ig_user_id: str, is_ai_generated: bool = False) -> dict:
     """
-    Publish a photo to Instagram using the Instagram Graph API (2-step process).
+    Publish a photo (or carousel) to Instagram using the Instagram Graph API.
 
-    IMPORTANT: Instagram requires a publicly accessible HTTPS URL for the image.
-    This means Cloudinary (or equivalent) must be used — direct file upload is NOT supported.
+    IMPORTANT: Instagram requires publicly accessible HTTPS URLs for images.
+
+    - Single image: 2-step process (create container → media_publish) — existing behaviour.
+    - Multiple images: carousel — create N item containers (is_carousel_item=true),
+      create a CAROUSEL container referencing all of them, then media_publish.
 
     Args:
-        access_token: The page/user access token with instagram_content_publish scope.
-        image_url: A public HTTPS URL pointing to the image (e.g., Cloudinary URL).
+        access_token: Page/user access token with instagram_content_publish scope.
+        image_url: A public HTTPS URL (str) or list of URLs for carousel.
         caption: The post caption.
         ig_user_id: The Instagram Business Account ID.
     """
+    # Normalise to list
+    if isinstance(image_url, str):
+        image_urls = [image_url]
+    else:
+        image_urls = list(image_url)
+
     async with httpx.AsyncClient(timeout=60.0) as client:
-        logger.info(f"Publishing to Instagram {ig_user_id}. AI Generated: {is_ai_generated}")
-        # Step 1: Create a media container
-        container_resp = await client.post(
-            f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
-            data={
-                "image_url": image_url,
-                "caption": caption,
-                "access_token": access_token,
-            },
-        )
-        container_data = container_resp.json()
-        if "error" in container_data:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Instagram API error (create container): {container_data['error'].get('message')}",
-            )
+        logger.info(f"Publishing to Instagram {ig_user_id}. Images: {len(image_urls)}. AI Generated: {is_ai_generated}")
 
-        creation_id = container_data.get("id")
-        if not creation_id:
-            raise HTTPException(
-                status_code=400,
-                detail="Instagram API error: no creation_id returned",
+        if len(image_urls) == 1:
+            # ── Single image: existing 2-step flow ────────────────────────
+            container_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
+                data={
+                    "image_url": image_urls[0],
+                    "caption": caption,
+                    "access_token": access_token,
+                },
             )
+            container_data = container_resp.json()
+            if "error" in container_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Instagram API error (create container): {container_data['error'].get('message')}",
+                )
 
-        # Step 2: Publish the container
-        publish_resp = await client.post(
-            f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media_publish",
-            data={
-                "creation_id": creation_id,
-                "access_token": access_token,
-            },
-        )
-        publish_data = publish_resp.json()
-        if "error" in publish_data:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Instagram API error (publish): {publish_data['error'].get('message')}",
+            creation_id = container_data.get("id")
+            if not creation_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Instagram API error: no creation_id returned",
+                )
+
+            publish_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media_publish",
+                data={
+                    "creation_id": creation_id,
+                    "access_token": access_token,
+                },
             )
+            publish_data = publish_resp.json()
+            if "error" in publish_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Instagram API error (publish): {publish_data['error'].get('message')}",
+                )
+            return publish_data
 
-        return publish_data
+        else:
+            # ── Multi-image carousel ──────────────────────────────────────
+            # Step 1: Create a media container for each image (is_carousel_item=true)
+            child_ids = []
+            for url in image_urls:
+                item_resp = await client.post(
+                    f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
+                    data={
+                        "image_url": url,
+                        "is_carousel_item": "true",
+                        "access_token": access_token,
+                    },
+                )
+                item_data = item_resp.json()
+                if "error" in item_data:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Instagram API error (carousel item): {item_data['error'].get('message')}",
+                    )
+                child_id = item_data.get("id")
+                if not child_id:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Instagram API error: no id returned for carousel item",
+                    )
+                child_ids.append(child_id)
+                logger.info(f"Created IG carousel item: {child_id}")
+
+            # Step 2: Create the CAROUSEL container
+            carousel_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
+                data={
+                    "media_type": "CAROUSEL",
+                    "children": ",".join(child_ids),
+                    "caption": caption,
+                    "access_token": access_token,
+                },
+            )
+            carousel_data = carousel_resp.json()
+            if "error" in carousel_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Instagram API error (carousel container): {carousel_data['error'].get('message')}",
+                )
+
+            carousel_id = carousel_data.get("id")
+            if not carousel_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Instagram API error: no carousel container id returned",
+                )
+
+            # Step 3: Publish the carousel
+            publish_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media_publish",
+                data={
+                    "creation_id": carousel_id,
+                    "access_token": access_token,
+                },
+            )
+            publish_data = publish_resp.json()
+            if "error" in publish_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Instagram API error (carousel publish): {publish_data['error'].get('message')}",
+                )
+            return publish_data
 
 
 async def fetch_tiktok_publish_status(access_token: str, publish_id: str) -> dict:

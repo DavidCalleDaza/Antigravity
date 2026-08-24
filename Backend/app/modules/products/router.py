@@ -79,6 +79,12 @@ async def create_new_product(
 ) -> ProductResponse:
     if current_user.role not in ("admin", "seller"):
         raise HTTPException(status_code=403, detail="Solo vendedores pueden crear productos")
+    
+    # Infer image_url from media_urls if not provided
+    if product_in.media_urls and len(product_in.media_urls) > 0:
+        if not product_in.image_url:
+            product_in.image_url = product_in.media_urls[0]
+
     try:
         product = await create_product(db, product_in, current_user.id)
         return _build_product_response(product)
@@ -113,6 +119,12 @@ async def update_existing_product(
         raise HTTPException(status_code=404, detail="Product not found")
     if db_product.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para modificar este producto")
+
+    # Infer image_url from media_urls if not provided
+    if product_in.media_urls and len(product_in.media_urls) > 0:
+        if not product_in.image_url:
+            product_in.image_url = product_in.media_urls[0]
+
     product = await update_product(db, db_product, product_in)
     return _build_product_response(product)
 

@@ -53,6 +53,7 @@ class ServiceCreate(ServiceBase):
     """Schema for creating a new service."""
 
     image_url: Annotated[str | None, Field(None)] = None
+    media_urls: Annotated[list[str] | None, Field(None, description="List of image URLs for the service gallery.")] = None
     video_url: Annotated[str | None, Field(None)] = None
     store_location_id: Annotated[uuid.UUID | None, Field(None)] = None
 
@@ -67,6 +68,7 @@ class ServiceUpdate(BaseModel):
     duration: Annotated[int | None, Field(None)]
     status: Annotated[str | None, Field(None, max_length=20)]
     image_url: Annotated[str | None, Field(None)]
+    media_urls: Annotated[list[str] | None, Field(None, description="Optional gallery images.")]
     video_url: Annotated[str | None, Field(None)]
 
 
@@ -78,6 +80,7 @@ class ServiceResponse(ServiceBase):
     id: Annotated[uuid.UUID, Field(description="Service UUID.")]
     user_id: Annotated[uuid.UUID | None, Field(None, description="User UUID.")]
     image_url: Annotated[str | None, Field(None, description="Optional image URL.")]
+    media_urls: Annotated[list[str] | None, Field(None, description="Optional gallery images.")]
     video_url: Annotated[str | None, Field(None, description="Optional video URL.")]
     store_location_id: Annotated[uuid.UUID | None, Field(None, description="Store location UUID.")]
     created_at: Annotated[datetime, Field(description="Creation timestamp.")]

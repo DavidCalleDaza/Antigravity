@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation, Store, Lock } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
@@ -20,13 +20,21 @@ const ROLE_OPTIONS = Object.entries(APP_CONFIG.ROLES).map(([key, value]) => ({
 export default function Profile() {
   const { currentUser, setCurrentUser, logout } = useStore();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
   const userRole = currentUser?.role;
   const canManageIntegrations = userRole === SELLER || userRole === ADMIN;
   const roleSelectOptions = currentUser?.needsOnboarding
     ? ROLE_OPTIONS.filter((opt) => opt.value !== ADMIN)
     : ROLE_OPTIONS;
-  const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'social'
+
+  // Initialise tab from ?tab= query param (e.g. /profile?tab=social from ShareModal link)
+  const initialTab = (() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'social' || tabParam === 'whatsapp') return tabParam;
+    return 'personal';
+  })();
+  const [activeTab, setActiveTab] = useState(initialTab); // 'personal' | 'social' | 'whatsapp'
 
   const [formData, setFormData] = useState({
     full_name: currentUser?.name || '',

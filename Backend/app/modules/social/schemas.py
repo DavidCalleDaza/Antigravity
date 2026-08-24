@@ -4,7 +4,7 @@ DonApp API — Social Module: Pydantic Schemas.
 Request/response models for social account management, publishing, and admin flows.
 """
 
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 import uuid
 from datetime import datetime
@@ -106,7 +106,8 @@ class AppCredentialReveal(BaseModel):
 class SocialPostBase(BaseModel):
     platform: Optional[str] = None  # Now optional — derived from account when account_id present
     caption: Optional[str] = None
-    media_url: Optional[str] = None
+    media_url: Optional[str] = None           # Deprecated — kept for backward compat; prefer media_urls
+    media_urls: Optional[List[str]] = None    # NEW: list of media URLs for multi-image posts
     product_id: Optional[uuid.UUID] = None
     service_id: Optional[uuid.UUID] = None
     is_ai_generated: bool = False

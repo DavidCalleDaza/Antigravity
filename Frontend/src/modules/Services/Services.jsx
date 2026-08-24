@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Loader2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
@@ -60,17 +60,49 @@ export default function Services() {
   const [isSaving, setIsSaving] = useState(false);
 
   const toast = useToast();
+  const promotingItemRef = useRef(null);
 
   const { upload, uploading, compressing, progress, preview, reset, validateFile } = useFileUpload({
     onSuccess: (data) => {
-      setFormData(prev => ({ ...prev, image_url: data.url, video_url: data.type === 'video' ? data.url : prev.video_url }));
-      toast.success('Media subido correctamente');
+      const promoted = promotingItemRef.current;
+      if (promoted) {
+        setFormData(prev => {
+          const prevMain = prev.image_url;
+          const newMediaUrls = prev.media_urls ? [...prev.media_urls] : [];
+          if (prevMain && !newMediaUrls.includes(prevMain)) {
+            newMediaUrls.unshift(prevMain);
+          }
+          const newAdditional = (prev.additionalImages || []).filter((_, i) => i !== promoted.index);
+          if (promoted.previewUrl) {
+            URL.revokeObjectURL(promoted.previewUrl);
+          }
+          return {
+            ...prev,
+            image_url: data.url,
+            media_urls: newMediaUrls,
+            additionalImages: newAdditional,
+          };
+        });
+        promotingItemRef.current = null;
+        toast.success('Imagen promovida a principal');
+      } else {
+        setFormData(prev => ({ ...prev, image_url: data.url, video_url: data.type === 'video' ? data.url : prev.video_url }));
+        toast.success('Media subido correctamente');
+      }
     },
     onError: (err) => {
+      promotingItemRef.current = null;
       setMediaError(err);
       toast.error(err);
     },
   });
+
+  const handlePromoteNewImage = (index) => {
+    const item = formData.additionalImages?.[index];
+    if (!item || !item.blob) return;
+    promotingItemRef.current = { index, previewUrl: item.previewUrl };
+    upload(item.blob);
+  };
 
   const categoryOptions = [
     { value: '', label: 'Todas las categorías' },
@@ -172,6 +204,38 @@ export default function Services() {
       if (formData.image_url) payload.image_url = formData.image_url;
       if (formData.video_url) payload.video_url = formData.video_url;
 
+      // Upload additional images first
+      let extraUrls = [];
+      if (formData.additionalImages && formData.additionalImages.length > 0) {
+        const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+        const token = useStore.getState().currentUser?.token;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const uploadPromises = formData.additionalImages.map(img => {
+          const form = new FormData();
+          form.append('file', img.blob, `service_gallery_${Date.now()}.png`);
+          return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+            .then(r => r.json())
+            .then(data => data.url || null);
+        });
+        const uploaded = await Promise.all(uploadPromises);
+        extraUrls = uploaded.filter(Boolean);
+      }
+
+      // Combine existing media_urls + extraUrls
+      const existingMedia = formData.media_urls || [];
+      const primary = formData.image_url || (editingService ? editingService.image_url : null);
+      
+      const allUrlsSet = new Set();
+      if (primary) allUrlsSet.add(primary);
+      existingMedia.forEach(url => allUrlsSet.add(url));
+      extraUrls.forEach(url => allUrlsSet.add(url));
+
+      const allUrls = Array.from(allUrlsSet);
+      if (allUrls.length > 0) {
+        payload.media_urls = allUrls;
+      }
+
       let savedItem;
       if (editingService) {
         savedItem = await serviceClient.update(editingService.id, payload);
@@ -264,9 +328,13 @@ export default function Services() {
       duration: '',
       status: 'active',
       description: '',
+      image_url: '',
+      video_url: '',
       store_location_id: '',
+      additionalImages: [],
+      media_urls: [],
     });
-    setShareOnSave([]);
+    setEditingService(null);
     reset();
     setMediaError(null);
   };
@@ -283,6 +351,8 @@ export default function Services() {
       image_url: service.image_url || null,
       video_url: service.video_url || null,
       store_location_id: service.store_location_id || '',
+      additionalImages: [],
+      media_urls: service.media_urls || [],
     });
     setIsModalOpen(true);
   };
@@ -294,7 +364,11 @@ export default function Services() {
 
   const handleOpenNew = () => {
     setEditingService(null);
-    setFormData({ name: '', category_id: '', price: 0, duration: '', status: 'active', description: '', store_location_id: '' });
+    setFormData({ 
+      name: '', category_id: '', price: 0, duration: '', status: 'active', 
+      description: '', image_url: '', video_url: '', store_location_id: '',
+      additionalImages: [], media_urls: [] 
+    });
     setIsModalOpen(true);
   };
 
@@ -374,6 +448,7 @@ export default function Services() {
         compressing={compressing}
         progress={progress}
         onFileSelect={handleFileSelect}
+        onPromoteNewImage={handlePromoteNewImage}
         onMediaClear={reset}
         mediaError={mediaError}
         dbCategories={dbCategories}

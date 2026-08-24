@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, ShoppingCart, CalendarPlus, Play, Share2 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 import DonAppLogo from './DonAppLogo';
+import MediaGalleryViewer from './MediaGalleryViewer';
 
 const STATUS_CONFIG = {
   product: {
@@ -38,7 +39,7 @@ export default function MediaCard({
   const videoRef = useRef(null);
 
   const isVideo = item.video_url && !item.image_url;
-  const hasMedia = item.image_url || item.video_url;
+  const hasMedia = item.image_url || item.video_url || (Array.isArray(item.media_urls) && item.media_urls.length > 0);
   const accentColor = ACCENT_COLORS[variant];
 
   useEffect(() => {
@@ -93,11 +94,24 @@ export default function MediaCard({
       );
     }
 
+    // Construir lista de imágenes: imagen principal primero + imágenes adicionales de media_urls
+    const imagesList = [];
+    if (item.image_url) {
+      imagesList.push(item.image_url);
+    }
+    if (Array.isArray(item.media_urls)) {
+      item.media_urls.forEach((url) => {
+        if (url && !imagesList.includes(url)) {
+          imagesList.push(url);
+        }
+      });
+    }
+
     return (
-      <img
-        src={Helpers.resolveMediaUrl(item.image_url)}
+      <MediaGalleryViewer
+        images={imagesList}
         alt={item.name}
-        className="media-card-image"
+        accentColor={accentColor}
         onError={handleMediaError}
       />
     );

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Boolean, Index, String, Text, ForeignKey, DateTime, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TypeDecorator
 
@@ -123,6 +123,7 @@ class SocialPost(Base):
     status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
     caption: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     media_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    media_urls: Mapped[Optional[list]] = mapped_column(JSONB, nullable=True)  # NEW: list of URLs for carousel/multi-image
     platform_post_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     published_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

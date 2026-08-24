@@ -578,9 +578,28 @@ async def publish_content(
                 detail=f"Account is {account.status}. Please reconnect before publishing.",
             )
 
-    # TikTok only accepts video — reject non-video before enqueuing
-    if platform == "tiktok" and not post_in.media_url:
+    # ── Resolve effective media URLs (multi-image or single) ───────────────────
+    # Prefer media_urls (new field); fall back to media_url for backward compat.
+    if post_in.media_urls and len(post_in.media_urls) > 0:
+        effective_urls = post_in.media_urls
+    elif post_in.media_url:
+        effective_urls = [post_in.media_url]
+    else:
+        effective_urls = []
+
+    # TikTok only accepts a single image/video — reject multi-image before enqueuing
+    if platform == "tiktok" and len(effective_urls) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="TikTok solo permite una imagen por publicación. Selecciona solo una imagen cuando publiques en TikTok."
+        )
+
+    # TikTok also requires at least one media_url (video or image)
+    if platform == "tiktok" and len(effective_urls) == 0:
         raise HTTPException(status_code=400, detail="TikTok requires a video media_url")
+
+    if len(effective_urls) == 0:
+        raise HTTPException(status_code=400, detail="media_url is required for publishing")
 
     # Ensure platform is set on the post data
     if not post_in.platform:
@@ -588,9 +607,8 @@ async def publish_content(
 
     db_post = await crud.create_social_post(db, current_user.id, post_in, account_id=account.id)
 
-    local_path = post_in.media_url.lstrip('/') if post_in.media_url else None
-    if not local_path:
-        raise HTTPException(status_code=400, detail="media_url is required for publishing")
+    # Strip leading slash for local filesystem path resolution
+    local_paths = [u.lstrip('/') for u in effective_urls]
 
     from app.modules.social.tasks import publish_to_social_task
 
@@ -598,7 +616,8 @@ async def publish_content(
         post_id_str=str(db_post.id),
         user_id_str=str(current_user.id),
         platform=platform,
-        local_path=local_path,
+        local_path=local_paths[0],       # retrocompat: first path as singular
+        local_paths=local_paths,          # new: full list for multi-image
         caption=post_in.caption or "",
         is_ai_generated=post_in.is_ai_generated,
         account_id_str=str(account.id),

@@ -83,6 +83,7 @@ async def create_service(db: AsyncSession, service_in: ServiceCreate, user_id: u
         duration=service_in.duration,
         status=service_in.status,
         image_url=service_in.image_url,
+        media_urls=service_in.media_urls,
         video_url=service_in.video_url,
         store_location_id=service_in.store_location_id,
         user_id=user_id,

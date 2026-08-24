@@ -52,6 +52,7 @@ class ProductCreate(ProductBase):
     """Schema for creating a new product."""
 
     image_url: Annotated[str | None, Field(None)] = None
+    media_urls: Annotated[list[str] | None, Field(None, description="List of image URLs for the product gallery.")] = None
     video_url: Annotated[str | None, Field(None)] = None
     store_location_id: Annotated[uuid.UUID | None, Field(None)] = None
 
@@ -69,6 +70,7 @@ class ProductUpdate(BaseModel):
     stock: Annotated[int | None, Field(None, ge=0)]
     status: Annotated[str | None, Field(None, max_length=20)]
     image_url: Annotated[str | None, Field(None)]
+    media_urls: Annotated[list[str] | None, Field(None, description="Optional gallery images.")]
     video_url: Annotated[str | None, Field(None)]
 
 
@@ -80,6 +82,7 @@ class ProductResponse(ProductBase):
     id: Annotated[uuid.UUID, Field(description="Product UUID.")]
     user_id: Annotated[uuid.UUID | None, Field(None, description="User UUID.")]
     image_url: Annotated[str | None, Field(None, description="Optional image URL.")]
+    media_urls: Annotated[list[str] | None, Field(None, description="Optional gallery images.")]
     video_url: Annotated[str | None, Field(None, description="Optional video URL.")]
     store_location_id: Annotated[uuid.UUID | None, Field(None, description="Store location UUID.")]
     created_at: Annotated[datetime, Field(description="Creation timestamp.")]

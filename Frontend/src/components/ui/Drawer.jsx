@@ -10,7 +10,8 @@ const Drawer = ({
   children,
   showHeader = true,
   closeIcon = true,
-  width
+  width,
+  headerActions = null,
 }) => {
   const setSidebarCollapsed = useStore(state => state.setSidebarCollapsed);
   const sidebarCollapsed = useStore(state => state.sidebarCollapsed);
@@ -67,6 +68,11 @@ const Drawer = ({
             <div className="drawer-title-row">
               <h3 className="drawer-title">{title}</h3>
             </div>
+            {headerActions && (
+              <div className="drawer-header-actions">
+                {headerActions}
+              </div>
+            )}
             {closeIcon && (
               <button className="drawer-close" onClick={onClose} aria-label="Cerrar">
                 <X width="20" height="20" />

@@ -977,6 +977,14 @@
   background: #000000 !important;
 }
 
+.drawer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  margin-right: var(--space-2);
+}
+
 .drawer-header .drawer-close {
   color: #ffffff !important;
 }
@@ -1586,6 +1594,39 @@
 [data-theme="light"] .drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) li:hover,
 [data-theme="light"] .drawer .form-group [class*="dropdown"]:not(.searchable-select-dropdown) [class*="option"]:hover {
   color: var(--text-primary);
+}
+
+/* ── Ajustes Exclusivos Tema Claro: Drawers & Formularios ── */
+[data-theme="light"] .drawer .media-uploader {
+  order: -3;
+}
+
+[data-theme="light"] .drawer .media-carousel {
+  order: -2;
+}
+
+[data-theme="light"] .drawer-form-actions--entity-top {
+  order: -1;
+  justify-content: center;
+  position: static;
+  margin-top: 0;
+  margin-bottom: var(--space-2);
+  padding-top: 0;
+  padding-bottom: var(--space-3);
+  background: transparent;
+}
+
+[data-theme="light"] .form-label .required {
+  color: var(--mint-green);
+}
+
+[data-theme="light"] .drawer .form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%233EB489' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E") !important;
+}
+
+[data-theme="light"] .drawer .form-group button:not(.btn):not(.searchable-select-dropdown *) svg,
+[data-theme="light"] .drawer .form-group [role="button"]:not(.btn):not(.searchable-select-dropdown *) svg {
+  color: var(--mint-green) !important;
 }
 
 /* ── Global Main Icons ── */

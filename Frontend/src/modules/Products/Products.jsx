@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Package, Loader2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
@@ -96,16 +96,49 @@ export default function Products() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const promotingItemRef = useRef(null);
+
   const { upload, uploading, compressing, progress, preview, reset, validateFile } = useFileUpload({
     onSuccess: (data) => {
-      setFormData(prev => ({ ...prev, image_url: data.url, video_url: data.type === 'video' ? data.url : prev.video_url }));
-      toast.success('Media subido correctamente');
+      const promoted = promotingItemRef.current;
+      if (promoted) {
+        setFormData(prev => {
+          const prevMain = prev.image_url;
+          const newMediaUrls = prev.media_urls ? [...prev.media_urls] : [];
+          if (prevMain && !newMediaUrls.includes(prevMain)) {
+            newMediaUrls.unshift(prevMain);
+          }
+          const newAdditional = (prev.additionalImages || []).filter((_, i) => i !== promoted.index);
+          if (promoted.previewUrl) {
+            URL.revokeObjectURL(promoted.previewUrl);
+          }
+          return {
+            ...prev,
+            image_url: data.url,
+            media_urls: newMediaUrls,
+            additionalImages: newAdditional,
+          };
+        });
+        promotingItemRef.current = null;
+        toast.success('Imagen promovida a principal');
+      } else {
+        setFormData(prev => ({ ...prev, image_url: data.url, video_url: data.type === 'video' ? data.url : prev.video_url }));
+        toast.success('Media subido correctamente');
+      }
     },
     onError: (err) => {
+      promotingItemRef.current = null;
       setMediaError(err);
       toast.error(err);
     },
   });
+
+  const handlePromoteNewImage = (index) => {
+    const item = formData.additionalImages?.[index];
+    if (!item || !item.blob) return;
+    promotingItemRef.current = { index, previewUrl: item.previewUrl };
+    upload(item.blob);
+  };
 
   useEffect(() => {
     loadProducts();
@@ -187,6 +220,42 @@ export default function Products() {
         category_id: formData.category_id || null,
         store_location_id: formData.store_location_id || null 
       };
+
+      // Upload additional images first
+      let extraUrls = [];
+      if (formData.additionalImages && formData.additionalImages.length > 0) {
+        const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+        const token = useStore.getState().currentUser?.token;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const uploadPromises = formData.additionalImages.map(img => {
+          const form = new FormData();
+          form.append('file', img.blob, `product_gallery_${Date.now()}.png`);
+          return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+            .then(r => r.json())
+            .then(data => data.url || null);
+        });
+        const uploaded = await Promise.all(uploadPromises);
+        extraUrls = uploaded.filter(Boolean);
+      }
+
+      // Combine existing media_urls + extraUrls
+      // If there's an image_url or formData.image_url, it should be the first element,
+      // but only if we rely on the backend inferring it, or we explicitly build it.
+      const existingMedia = formData.media_urls || [];
+      const primary = formData.image_url || (editingProduct ? editingProduct.image_url : null);
+      
+      const allUrlsSet = new Set();
+      if (primary) allUrlsSet.add(primary);
+      existingMedia.forEach(url => allUrlsSet.add(url));
+      extraUrls.forEach(url => allUrlsSet.add(url));
+
+      const allUrls = Array.from(allUrlsSet);
+      if (allUrls.length > 0) {
+        payload.media_urls = allUrls;
+      }
+      
+      delete payload.additionalImages; // don't send to backend
       let savedItem;
       if (editingProduct) {
         savedItem = await productClient.update(editingProduct.id, payload);
@@ -253,6 +322,8 @@ export default function Products() {
       status: 'active',
       description: '',
       store_location_id: '',
+      additionalImages: [],
+      media_urls: [],
     });
     setEditingProduct(null);
     setShareOnSave([]);
@@ -269,6 +340,8 @@ export default function Products() {
       status: product.status,
       description: product.description || '',
       store_location_id: product.store_location_id || '',
+      additionalImages: [],
+      media_urls: product.media_urls || [],
     });
     setIsModalOpen(true);
   };
@@ -280,7 +353,7 @@ export default function Products() {
 
   const handleOpenNew = () => {
     setEditingProduct(null);
-    setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', store_location_id: '' });
+    setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', store_location_id: '', additionalImages: [], media_urls: [] });
     setIsModalOpen(true);
   };
 
@@ -361,6 +434,7 @@ export default function Products() {
         compressing={compressing}
         progress={progress}
         onFileSelect={handleFileSelect}
+        onPromoteNewImage={handlePromoteNewImage}
         onMediaClear={reset}
         mediaError={mediaError}
         dbCategories={dbCategories}

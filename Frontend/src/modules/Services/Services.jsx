@@ -24,6 +24,7 @@ export default function Services() {
   const navigate = useNavigate();
 
   const [view, setView] = useState('grid');
+  const [revealImages, setRevealImages] = useState(false);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -402,6 +403,8 @@ export default function Services() {
         setStatusFilter={setStatusFilter}
         view={view}
         setView={setView}
+        revealImages={revealImages}
+        setRevealImages={setRevealImages}
       />
 
       {loading ? (
@@ -421,6 +424,7 @@ export default function Services() {
           onDeleteRequest={handleDeleteRequest}
           onShare={(item) => setShareModal({ isOpen: true, item })}
           navigate={navigate}
+          revealImages={revealImages}
         />
       ) : (
         <ServicesTable
@@ -470,6 +474,14 @@ export default function Services() {
         shareModal={shareModal}
         setShareModal={setShareModal}
         onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
+        view={view}
+        setView={setView}
+        dbCategories={dbCategories}
+        onCategoryCreated={loadCategories}
+        onItemUpdated={(updated) => {
+          setServices((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)));
+          loadServices();
+        }}
       />
     </div>
   );

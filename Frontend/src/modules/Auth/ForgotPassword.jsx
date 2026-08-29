@@ -72,7 +72,7 @@ export default function ForgotPassword() {
       <div className="auth-right">
         <div className="auth-form-container">
           <Link to="/" className="auth-logo">
-            <DonAppLogo width={52} height={52} variant="gold" />
+            <DonAppLogo width={52} height={52} variant="auto" />
           </Link>
 
           {phase === 1 ? (

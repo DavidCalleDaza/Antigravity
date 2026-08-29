@@ -2,7 +2,7 @@ import React from 'react';
 import { PackageX, ShoppingCart } from 'lucide-react';
 import MediaCard from '../../../components/ui/MediaCard';
 
-export default function ProductsGrid({ filteredProducts, canManage, openEditModal, onDeleteRequest, onShare, toast }) {
+export default function ProductsGrid({ filteredProducts, canManage, openEditModal, onDeleteRequest, onShare, toast, revealImages }) {
   return (
     <div className="product-grid">
       {filteredProducts.length === 0 ? (
@@ -24,6 +24,7 @@ export default function ProductsGrid({ filteredProducts, canManage, openEditModa
             onShare={(item) => onShare(item)}
             actionLabel="Añadir"
             actionIcon={ShoppingCart}
+            revealImages={revealImages}
           />
         ))
       )}

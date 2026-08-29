@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 const safeStorage = {
   getItem: (name) => {
@@ -71,7 +71,7 @@ export const useStore = create(
     }),
     {
       name: 'antigravity-storage',
-      storage: safeStorage,
+      storage: createJSONStorage(() => safeStorage),
       partialize: (state) => ({
         theme: state.theme,
         sidebarCollapsed: state.sidebarCollapsed,

@@ -346,7 +346,7 @@
 }
 
 .stats-dashboard-wrapper .custom-dropdown-option.selected {
-  background-color: rgba(212, 175, 55, 0.15);
+  background-color: rgba(62, 180, 137, 0.22);
 }
 
 .stats-dashboard-wrapper .custom-dropdown-option.selected .custom-dropdown-option-label {
@@ -1280,8 +1280,10 @@
 }
 
 [data-theme="light"] .custom-dropdown-menu {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.30) !important;
+  background: rgba(255, 255, 255, 0.30) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-color: rgba(0, 0, 0, 0.1);
 }
 

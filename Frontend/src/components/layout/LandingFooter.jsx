@@ -7,7 +7,7 @@ export default function LandingFooter() {
       <div className="footer-grid">
         <div>
           <div className="landing-logo">
-            <DonAppLogo width={40} height={40} variant="gold" />
+            <DonAppLogo width={40} height={40} variant="auto" />
           </div>
           <p className="footer-brand-text">Tecnología que sirve. Un gestor de productos y servicios pensado para los negocios que mueven la economía real de un país.</p>
         </div>

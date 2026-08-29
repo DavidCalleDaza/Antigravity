@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Sparkles, Loader2, Wand2, Check } from 'lucide-react';
 import { aiClient } from '../../utils/apiClient';
 
 const TONES = [
@@ -12,24 +12,35 @@ const TONES = [
 export default function AiCopyGenerator({ item, onGenerated }) {
   const [loading, setLoading] = useState(false);
   const [tone, setTone] = useState('persuasivo');
+  const [variants, setVariants] = useState([]);
   const [error, setError] = useState(null);
 
   const handleGenerate = async () => {
     if (!item) return;
     setLoading(true);
     setError(null);
+    setVariants([]);
+
     try {
-      const response = await aiClient.generateCopy({
-        product_name: item.name,
-        description: item.description || '',
-        tone: tone,
-      });
-      if (response && response.text) {
-        onGenerated(response.text);
+      const promises = [
+        aiClient.generateCopy({ product_name: item.name, description: item.description || '', tone }),
+        aiClient.generateCopy({ product_name: item.name, description: item.description || '', tone }),
+        aiClient.generateCopy({ product_name: item.name, description: item.description || '', tone }),
+      ];
+
+      const results = await Promise.allSettled(promises);
+      const successfulTexts = results
+        .filter((r) => r.status === 'fulfilled' && r.value?.text)
+        .map((r) => r.value.text);
+
+      if (successfulTexts.length > 0) {
+        setVariants(successfulTexts);
+      } else {
+        setError('No se pudieron generar opciones de texto. Intenta de nuevo.');
       }
     } catch (err) {
-      console.error('Error generating AI copy:', err);
-      setError(err.detail || err.message || 'Error desconocido al generar el texto.');
+      console.error('Error generating AI copy variants:', err);
+      setError(err.detail || err.message || 'Error al conectar con la IA.');
     } finally {
       setLoading(false);
     }
@@ -40,20 +51,20 @@ export default function AiCopyGenerator({ item, onGenerated }) {
       {/* Header */}
       <div className="ai-copy-header">
         <div className="ai-copy-header-icon">
-          <Sparkles width={20} height={20} />
+          <Sparkles width={18} height={18} />
         </div>
         <div>
-          <h4 className="ai-copy-title">Generar texto con Gemini</h4>
+          <h4 className="ai-copy-title">Generar textos con IA</h4>
           <p className="ai-copy-subtitle">
-            Elige el tono y la IA escribirá un caption optimizado para redes.
+            Selecciona un tono y la IA creará 3 variantes de caption para tus redes.
           </p>
         </div>
       </div>
 
-      {/* Tone selector — chip pills */}
+      {/* Tone selector — subtle chip pills */}
       <div className="ai-copy-tone-label">Tono del mensaje</div>
       <div className="ai-copy-tones">
-        {TONES.map(t => (
+        {TONES.map((t) => (
           <button
             key={t.value}
             type="button"
@@ -69,6 +80,7 @@ export default function AiCopyGenerator({ item, onGenerated }) {
 
       {/* Generate button */}
       <button
+        type="button"
         className="ai-copy-generate-btn"
         onClick={handleGenerate}
         disabled={loading}
@@ -76,12 +88,12 @@ export default function AiCopyGenerator({ item, onGenerated }) {
         {loading ? (
           <>
             <Loader2 width={16} height={16} className="spin" />
-            Generando con IA…
+            Generando 3 opciones con IA…
           </>
         ) : (
           <>
             <Wand2 width={16} height={16} />
-            Generar caption
+            Generar 3 opciones
           </>
         )}
       </button>
@@ -96,9 +108,31 @@ export default function AiCopyGenerator({ item, onGenerated }) {
       )}
 
       {/* Error */}
-      {error && (
-        <div className="ai-copy-error">
-          ⚠️ {error}
+      {error && <div className="ai-copy-error">⚠️ {error}</div>}
+
+      {/* Render 3 Variants */}
+      {variants.length > 0 && !loading && (
+        <div className="ai-copy-variants">
+          <div className="text-xs font-semibold text-gold mb-2 uppercase tracking-wide">
+            Selecciona la opción que prefieras:
+          </div>
+          <div className="flex flex-col gap-3">
+            {variants.map((varText, idx) => (
+              <div
+                key={idx}
+                className="ai-variant-card"
+                onClick={() => onGenerated(varText)}
+              >
+                <div className="ai-variant-card-header">
+                  <span className="ai-variant-badge">Opción {idx + 1}</span>
+                  <span className="ai-variant-use-btn">
+                    Usar esta opción <Check width={12} height={12} className="inline ml-1" />
+                  </span>
+                </div>
+                <p className="ai-variant-text">{varText}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -106,111 +140,184 @@ export default function AiCopyGenerator({ item, onGenerated }) {
         .ai-copy-card {
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          padding: 16px;
-          background: var(--neutral-800);
-          border: 1px solid var(--neutral-700);
-          border-radius: 12px;
+          gap: 14px;
+          padding: 14px;
+          background: var(--surface-raised);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-lg);
         }
-        [data-theme="light"] .ai-copy-card {
-          background: var(--gold-dim);
-          border-color: var(--gold);
-        }
+
         .ai-copy-header {
           display: flex;
           align-items: flex-start;
-          gap: 12px;
+          gap: 10px;
         }
+
         .ai-copy-header-icon {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 40px;
-          height: 40px;
+          width: 34px;
+          height: 34px;
           flex-shrink: 0;
-          background: linear-gradient(135deg, var(--gold), #b8860b);
-          border-radius: 10px;
-          color: #fff;
+          background: var(--gold-dim);
+          border-radius: 8px;
+          color: var(--gold);
         }
+
+        [data-theme="light"] .ai-copy-header-icon {
+          background: rgba(62, 180, 137, 0.15);
+          color: var(--mint-green);
+        }
+
         .ai-copy-title {
-          font-size: 0.9rem;
+          font-size: 0.88rem;
           font-weight: 700;
           color: var(--text-primary);
           margin: 0 0 2px;
         }
-        [data-theme="light"] .ai-copy-title { color: #121212; }
+
         .ai-copy-subtitle {
-          font-size: 0.75rem;
+          font-size: 0.73rem;
           color: var(--text-secondary);
           margin: 0;
-          line-height: 1.4;
+          line-height: 1.35;
         }
+
         .ai-copy-tone-label {
-          font-size: 0.7rem;
+          font-size: 0.68rem;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.04em;
           color: var(--text-tertiary);
         }
+
         .ai-copy-tones {
           display: flex;
-          gap: 8px;
+          gap: 6px;
           flex-wrap: wrap;
         }
+
+        /* Subtle Pill Styling */
         .ai-copy-tone-chip {
-          padding: 6px 12px;
+          padding: 5px 10px;
           border-radius: 999px;
-          border: 1px solid var(--neutral-700);
-          background: var(--neutral-900);
+          border: 1px solid var(--border-color);
+          background: var(--card-bg);
           color: var(--text-secondary);
-          font-size: 0.78rem;
+          font-size: 0.75rem;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: all var(--transition-fast);
           white-space: nowrap;
         }
-        [data-theme="light"] .ai-copy-tone-chip {
-          background: #fff;
-          border-color: var(--border-color);
-          color: #444;
-        }
+
         .ai-copy-tone-chip:hover:not(:disabled) {
           border-color: var(--gold);
           color: var(--gold);
         }
+
         .ai-copy-tone-chip--active {
           border-color: var(--gold) !important;
-          background: var(--gold) !important;
-          color: #fff !important;
+          background: var(--gold-dim) !important;
+          color: var(--gold) !important;
+          font-weight: 600;
         }
-        .ai-copy-tone-chip:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+
+        [data-theme="light"] .ai-copy-tone-chip--active {
+          border-color: var(--mint-green) !important;
+          background: rgba(62, 180, 137, 0.15) !important;
+          color: var(--mint-green) !important;
         }
+
         .ai-copy-generate-btn {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 10px 20px;
-          border-radius: 8px;
+          padding: 9px 16px;
+          border-radius: var(--radius-md);
           border: 1px solid var(--gold);
           background: transparent;
           color: var(--gold);
-          font-size: 0.875rem;
+          font-size: 0.82rem;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: all var(--transition-fast);
           width: 100%;
         }
+
         .ai-copy-generate-btn:hover:not(:disabled) {
           background: var(--gold);
           color: #fff;
         }
+
         .ai-copy-generate-btn:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
+
+        /* Variants display */
+        .ai-copy-variants {
+          margin-top: 6px;
+        }
+
+        .ai-variant-card {
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-md);
+          padding: 10px 12px;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .ai-variant-card:hover {
+          border-color: var(--gold);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
+        }
+
+        [data-theme="light"] .ai-variant-card:hover {
+          border-color: var(--mint-green);
+        }
+
+        .ai-variant-card-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .ai-variant-badge {
+          font-size: 0.65rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--gold);
+          background: var(--gold-dim);
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .ai-variant-use-btn {
+          font-size: 0.72rem;
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
+
+        .ai-variant-card:hover .ai-variant-use-btn {
+          color: var(--gold);
+        }
+
+        .ai-variant-text {
+          font-size: 0.8rem;
+          color: var(--text-primary);
+          line-height: 1.4;
+          margin: 0;
+          white-space: pre-line;
+        }
+
         /* Shimmer */
         .ai-copy-shimmer {
           display: flex;

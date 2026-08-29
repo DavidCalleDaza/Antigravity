@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Grid3X3 } from 'lucide-react';
+import { List, Grid3X3, Eye, EyeOff } from 'lucide-react';
 import Dropdown from '../../../components/ui/Dropdown';
 
 export default function ProductsToolbar({
@@ -15,6 +15,8 @@ export default function ProductsToolbar({
   setStatusFilter,
   view,
   setView,
+  revealImages,
+  setRevealImages,
 }) {
   return (
     <div className="products-toolbar">
@@ -55,6 +57,13 @@ export default function ProductsToolbar({
           title="Vista de grid"
         >
           <Grid3X3 width="18" height="18" />
+        </button>
+        <button
+          className={`view-toggle-btn ${revealImages ? 'active' : ''}`}
+          onClick={() => setRevealImages(!revealImages)}
+          title={revealImages ? 'Ocultar imágenes reales' : 'Mostrar imágenes reales'}
+        >
+          {revealImages ? <EyeOff width="18" height="18" /> : <Eye width="18" height="18" />}
         </button>
       </div>
     </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { CalendarPlus } from 'lucide-react';
 import MediaCard from '../../../components/ui/MediaCard';
 
-export default function ServicesGrid({ filteredServices, canManage, openEditModal, onDeleteRequest, onShare, navigate }) {
+export default function ServicesGrid({ filteredServices, canManage, openEditModal, onDeleteRequest, onShare, navigate, revealImages }) {
   return (
     <div className="product-grid">
       {filteredServices.map(s => {
@@ -18,6 +18,7 @@ export default function ServicesGrid({ filteredServices, canManage, openEditModa
             onShare={(item) => onShare(item)}
             actionLabel="Agendar"
             actionIcon={CalendarPlus}
+            revealImages={revealImages}
           />
         );
       })}

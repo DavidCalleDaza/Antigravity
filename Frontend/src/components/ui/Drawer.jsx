@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, RectangleHorizontal, Minimize2 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 const Drawer = ({
@@ -12,6 +12,8 @@ const Drawer = ({
   closeIcon = true,
   width,
   headerActions = null,
+  onToggleExpand = null,
+  isExpanded = false,
 }) => {
   const setSidebarCollapsed = useStore(state => state.setSidebarCollapsed);
   const sidebarCollapsed = useStore(state => state.sidebarCollapsed);
@@ -73,11 +75,24 @@ const Drawer = ({
                 {headerActions}
               </div>
             )}
-            {closeIcon && (
-              <button className="drawer-close" onClick={onClose} aria-label="Cerrar">
-                <X width="20" height="20" />
-              </button>
-            )}
+            <div className="drawer-header-controls" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {onToggleExpand && (
+                <button
+                  type="button"
+                  className="drawer-close drawer-expand-btn"
+                  onClick={onToggleExpand}
+                  aria-label={isExpanded ? 'Contraer panel' : 'Expandir panel'}
+                  title={isExpanded ? 'Contraer panel' : 'Expandir panel'}
+                >
+                  {isExpanded ? <Minimize2 width="18" height="18" /> : <RectangleHorizontal width="18" height="18" />}
+                </button>
+              )}
+              {closeIcon && (
+                <button className="drawer-close" onClick={onClose} aria-label="Cerrar">
+                  <X width="20" height="20" />
+                </button>
+              )}
+            </div>
           </div>
         )}
         <div className="drawer-body">

@@ -104,28 +104,23 @@
 .nav-item:hover::before { transform: scaleX(1); }
 
 .nav-item:hover {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(62, 180, 137, 0.10);
   color: var(--gold);
 }
 
 [data-theme="light"] .nav-item:hover {
-  background: rgba(62, 180, 137, 0.08);
+  background: rgba(62, 180, 137, 0.10);
   color: var(--gold);
 }
 
 .nav-item.active {
-  background: var(--accent-subtle);
+  background: rgba(62, 180, 137, 0.16);
   color: var(--gold);
   font-weight: var(--font-semibold);
   border-left: 3px solid var(--gold);
 }
 
 .nav-item.active::before { transform: scaleX(0) !important; }
-
-[data-theme="light"] .nav-item.active {
-  background: var(--card-bg);
-  border-left: 3px solid var(--gold);
-}
 
 [data-theme="light"] .sidebar-user:hover {
   background: var(--primary-50);
@@ -237,17 +232,17 @@
 }
 
 .nav-item:hover {
-  background: var(--primary-50);
+  background: rgba(62, 180, 137, 0.10);
   color: var(--gold);
 }
 
 [data-theme="light"] .nav-item:hover {
-  background: var(--mint-green);
-  color: #000000;
+  background: rgba(62, 180, 137, 0.10);
+  color: var(--gold);
 }
 
 .nav-item.active {
-  background: var(--accent-subtle);
+  background: rgba(62, 180, 137, 0.16);
   color: var(--gold);
   font-weight: var(--font-semibold);
   border-left: 3px solid var(--gold);

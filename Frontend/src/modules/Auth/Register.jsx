@@ -98,7 +98,7 @@ export default function Register() {
               <p className="auth-subtitle">Completa tus datos para comenzar</p>
             </div>
             <Link to="/" className="auth-logo">
-              <DonAppLogo width={68} height={68} variant="gold" />
+              <DonAppLogo width={68} height={68} variant="auto" />
             </Link>
           </div>
 

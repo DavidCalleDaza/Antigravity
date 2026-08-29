@@ -80,7 +80,7 @@ export default function Login() {
               <p className="auth-subtitle">Ingresa tus datos para acceder a tu cuenta</p>
             </div>
             <Link to="/" className="auth-logo">
-              <DonAppLogo width={68} height={68} variant="gold" />
+              <DonAppLogo width={68} height={68} variant="auto" />
             </Link>
           </div>
 

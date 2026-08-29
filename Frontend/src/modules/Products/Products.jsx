@@ -24,6 +24,7 @@ export default function Products() {
   const navigate = useNavigate();
 
   const [view, setView] = useState('grid');
+  const [revealImages, setRevealImages] = useState(false);
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
@@ -388,6 +389,8 @@ export default function Products() {
         setStatusFilter={setStatusFilter}
         view={view}
         setView={setView}
+        revealImages={revealImages}
+        setRevealImages={setRevealImages}
       />
 
       {loading ? (
@@ -407,6 +410,7 @@ export default function Products() {
           onDeleteRequest={handleDeleteRequest}
           onShare={(item) => setShareModal({ isOpen: true, item })}
           toast={toast}
+          revealImages={revealImages}
         />
       ) : (
         <ProductsTable
@@ -456,6 +460,14 @@ export default function Products() {
         shareModal={shareModal}
         setShareModal={setShareModal}
         onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}
+        view={view}
+        setView={setView}
+        dbCategories={dbCategories}
+        onCategoryCreated={loadCategories}
+        onItemUpdated={(updated) => {
+          setProducts((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+          loadProducts();
+        }}
       />
     </div>
   );

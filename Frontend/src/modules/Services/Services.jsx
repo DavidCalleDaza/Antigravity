@@ -363,6 +363,8 @@ export default function Services() {
     setIsConfirmOpen(true);
   };
 
+
+
   const handleOpenNew = () => {
     setEditingService(null);
     setFormData({ 

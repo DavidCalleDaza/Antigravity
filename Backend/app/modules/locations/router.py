@@ -11,7 +11,7 @@ from app.modules.locations.schemas import (
     NeighborhoodCreate, NeighborhoodResponse,
     StoreLocationBrief, StoreLocationCreate,
 )
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import get_current_user, require_seller
 from app.modules.auth.models import User
 
 router = APIRouter()
@@ -103,11 +103,10 @@ async def list_store_locations(
 async def create_store_location(
     data: StoreLocationCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ):
     """Create a new store location for the current user."""
-    if current_user.role not in ("admin", "seller"):
-        raise HTTPException(status_code=403, detail="Solo vendedores pueden crear ubicaciones")
+    # Role check delegated to require_seller dependency above.
     sl = StoreLocation(
         user_id=current_user.id,
         name=data.name,

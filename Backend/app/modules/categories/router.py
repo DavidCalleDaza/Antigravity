@@ -12,7 +12,7 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import get_current_user, require_seller
 from app.modules.auth.models import User
 from app.modules.categories.models import Category
 from pydantic import BaseModel, ConfigDict
@@ -91,13 +91,9 @@ async def list_categories(
 async def create_category(
     category_in: CategoryCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ) -> CategoryResponse:
-    if current_user.role not in ["admin", "seller"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para crear categorías."
-        )
+    # Role check delegated to require_seller dependency above.
     
     # Normalizar nombre y remover espacios extra
     name_clean = category_in.name.strip()
@@ -161,18 +157,14 @@ async def update_category(
     category_id: uuid.UUID,
     category_in: CategoryUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ) -> CategoryResponse:
     """
     Actualiza una categoría existente. No permite reasignar entity_type
     (product/service) porque cambiaría el árbol de forma inconsistente con
     los productos/servicios ya asociados — para eso se crea una nueva.
     """
-    if current_user.role not in ["admin", "seller"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para editar categorías."
-        )
+    # Role check delegated to require_seller dependency above.
 
     stmt = select(Category).where(Category.id == category_id)
     result = await db.execute(stmt)
@@ -296,16 +288,12 @@ async def update_category(
     category_id: uuid.UUID,
     category_in: CategoryUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ) -> CategoryResponse:
     """
     Actualiza una categoría existente y sus dependientes de forma segura.
     """
-    if current_user.role not in ["admin", "seller"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para editar categorías."
-        )
+    # Role check delegated to require_seller dependency above.
 
     stmt = select(Category).where(Category.id == category_id)
     result = await db.execute(stmt)
@@ -397,7 +385,7 @@ async def update_category(
 async def delete_category(
     category_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ) -> dict:
     """
     Elimina (soft-delete) una categoría marcándola como 'inactive'.
@@ -407,11 +395,7 @@ async def delete_category(
     Bloquea el borrado si la categoría tiene subcategorías activas —
     el usuario debe reasignarlas o borrarlas primero.
     """
-    if current_user.role not in ["admin", "seller"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para eliminar categorías."
-        )
+    # Role check delegated to require_seller dependency above.
 
     stmt = select(Category).where(Category.id == category_id)
     result = await db.execute(stmt)

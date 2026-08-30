@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-servinow_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-servinow_secret_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME_LOCAL_ONLY}
       POSTGRES_DB: ${POSTGRES_DB:-servinow_db}
     ports:
       - "${POSTGRES_HOST_PORT:-5432}:5432"

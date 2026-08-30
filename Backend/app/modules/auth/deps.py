@@ -5,12 +5,17 @@ Provides FastAPI dependencies for authenticated routes, including JWT
 validation and current user resolution.
 """
 
+import hashlib
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
 
+from app.core.config import settings
 from app.core.security import decode_access_token
+from app.core.redis_client import get_redis
 from app.db.session import get_db
 from app.modules.auth.models import User
 
@@ -20,6 +25,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
+    redis_client: Redis = Depends(get_redis),
 ) -> User:
     """
     FastAPI dependency that resolves the current authenticated user.
@@ -50,6 +56,18 @@ async def get_current_user(
 
     payload = decode_access_token(token)
     if payload is None:
+        raise credentials_exception
+
+    # --- JWT blocklist check (logout invalidation) ---
+    # For tokens issued after the jti fix: use jti as the blocklist key.
+    # For older tokens (no jti claim): fall back to SHA1 of the raw token.
+    jti = payload.get("jti")
+    blocklist_key = (
+        f"jwt:blocklist:{jti}"
+        if jti
+        else f"jwt:blocklist:{hashlib.sha1(token.encode()).hexdigest()}"
+    )
+    if await redis_client.exists(blocklist_key):
         raise credentials_exception
 
     user_id_str: str | None = payload.get("sub")

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.uploads import schedule_file_cleanup
 from app.db.session import get_db
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import get_current_user, require_seller
 from app.modules.auth.models import User
 from app.modules.products.crud import (
     create_product,
@@ -75,11 +75,9 @@ async def list_products(
 async def create_new_product(
     product_in: ProductCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ) -> ProductResponse:
-    if current_user.role not in ("admin", "seller"):
-        raise HTTPException(status_code=403, detail="Solo vendedores pueden crear productos")
-    
+    # Role check delegated to require_seller dependency above.
     # Infer image_url from media_urls if not provided
     if product_in.media_urls and len(product_in.media_urls) > 0:
         if not product_in.image_url:

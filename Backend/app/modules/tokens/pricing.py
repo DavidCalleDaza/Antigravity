@@ -48,6 +48,14 @@ VIDEO_PRICING_PER_SECOND: dict[str, Decimal] = {
 
 DEFAULT_VIDEO_QUALITY = "720p"
 
+# Costo fijo por llamada (no depende de tokens/segundos). Confirmado por
+# David: ~$0.42 USD por video en GPU A100 de Replicate.
+REPLICATE_VIDEO_ENHANCE_COST_USD = Decimal("0.42")
+
+# Placeholder conservador hasta que se confirme el costo real del plan de
+# Auphonic — marcar siempre is_estimated=True al registrar el uso.
+AUPHONIC_ENHANCE_COST_USD = Decimal("0.05")
+
 
 def estimate_cost_usd(
     model_name: str,
@@ -66,6 +74,12 @@ def estimate_cost_usd(
     if model_name == "veo-3.1-fast-generate-preview":
         per_second = VIDEO_PRICING_PER_SECOND.get(video_quality, VIDEO_PRICING_PER_SECOND[DEFAULT_VIDEO_QUALITY])
         return (Decimal(video_seconds) * per_second).quantize(Decimal("0.000001"))
+
+    if model_name == "lucataco/real-esrgan-video":
+        return REPLICATE_VIDEO_ENHANCE_COST_USD
+
+    if model_name == "auphonic-enhance":
+        return AUPHONIC_ENHANCE_COST_USD
 
     pricing = MODEL_PRICING.get(model_name)
     if pricing is None:

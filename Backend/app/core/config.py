@@ -5,10 +5,13 @@ Loads all application settings from environment variables using
 pydantic-settings. Values fallback to defaults defined here.
 """
 
+import logging
 from typing import List
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -61,13 +64,13 @@ class Settings(BaseSettings):
 
     # --- Database ---
     POSTGRES_USER: str = "servinow_user"
-    POSTGRES_PASSWORD: str = "servinow_secret_password"
+    POSTGRES_PASSWORD: str = "CHANGE_ME_LOCAL_ONLY"
     POSTGRES_DB: str = "servinow_db"
     POSTGRES_HOST: str = "db"
     POSTGRES_PORT: int = 5432
     postgres_host_port: int = 5432
     DATABASE_URL: str = (
-        "postgresql+asyncpg://servinow_user:servinow_secret_password@db:5432/servinow_db"
+        "postgresql+asyncpg://servinow_user:CHANGE_ME_LOCAL_ONLY@db:5432/servinow_db"
     )
 
     # --- Security / JWT ---
@@ -75,6 +78,38 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
     FIELD_ENCRYPTION_KEY: str = ""
+
+    _INSECURE_SECRET_KEY = "change-me-to-a-very-long-random-string-in-production"
+
+    @field_validator("SECRET_KEY", mode="after")
+    @classmethod
+    def validate_secret_key(cls, v: str, info) -> str:
+        """Block startup in production if SECRET_KEY is insecure.
+
+        In development, allow the default but emit a warning so developers
+        don't accidentally run with an insecure key without noticing.
+        Generate a secure key with:
+            python -c "import secrets; print(secrets.token_urlsafe(64))"
+        """
+        is_insecure = v == cls._INSECURE_SECRET_KEY or len(v) < 32
+        # info.data may not yet have ENVIRONMENT if validation order differs;
+        # fall back to a direct env read to be safe.
+        import os
+        environment = (info.data or {}).get("ENVIRONMENT") or os.getenv("ENVIRONMENT", "production")
+        if is_insecure:
+            if environment == "production":
+                raise ValueError(
+                    "SECRET_KEY is insecure and ENVIRONMENT=production is set. "
+                    "Set a strong SECRET_KEY (>=32 chars, not the default value) before starting in production. "
+                    "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(64))\""
+                )
+            else:
+                _logger.warning(
+                    "[SECURITY] SECRET_KEY is using the insecure default value. "
+                    "This is acceptable in development but MUST be changed before going to production. "
+                    "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(64))\""
+                )
+        return v
 
     @field_validator("FIELD_ENCRYPTION_KEY", mode="after")
     @classmethod
@@ -157,6 +192,10 @@ class Settings(BaseSettings):
     GOOGLE_CLOUD_LOCATION: str = "global"
     GCS_VIDEO_BUCKET: str = "servinow-ai-video-dev"
     AI_VIDEO_DAILY_LIMIT: int = 50
+
+    # --- AI Media Enhancement (Muro: audios/videos adicionales) ---
+    AUPHONIC_API_KEY: str = ""
+    REPLICATE_API_TOKEN: str = ""
 
     # --- AI Cost Control (Tokens Module) ---
     # Máximo consumo USD por usuario en una ventana de 1 hora.

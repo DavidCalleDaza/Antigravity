@@ -6,6 +6,7 @@ Provides JWT token creation / verification and password hashing utilities.
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
+import uuid as _uuid
 
 import bcrypt
 from jose import JWTError, jwt
@@ -41,6 +42,9 @@ def create_access_token(
         Encoded JWT string.
     """
     to_encode = data.copy()
+    # Add a unique token ID so individual tokens can be blocklisted on logout
+    # without invalidating all tokens for the same user.
+    to_encode.setdefault("jti", str(_uuid.uuid4()))
     expire = datetime.now(timezone.utc) + (
         expires_delta
         if expires_delta

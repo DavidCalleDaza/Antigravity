@@ -34,3 +34,4 @@ from app.modules.ai.models import AiGenerationTask  # noqa: F401
 from app.modules.agenda.models import Appointment, AvailabilityOverride, AvailabilityTemplate  # noqa: F401
 from app.modules.notifications.models import Notification  # noqa: F401
 from app.modules.tokens.models import ExchangeRate, TokenUsage  # noqa: F401
+from app.api.upload_models import UploadedFile  # noqa: F401

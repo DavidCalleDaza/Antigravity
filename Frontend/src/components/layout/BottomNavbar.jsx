@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Package, Wrench, HeartHandshake, UserCircle, FileText, BarChart3, Calendar, MoreHorizontal, X } from 'lucide-react';
+import { Package, Wrench, Leaf, UserCircle, FileText, BarChart3, Calendar, MoreHorizontal, X, TreePine } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { APP_CONFIG } from '../../config/appConfig';
 
@@ -9,7 +9,7 @@ const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 const MAIN_NAV_ITEMS = [
   { id: 'products', label: 'Productos', icon: Package, path: '/products', allowedRoles: [ADMIN, SELLER, CLIENT] },
   { id: 'services', label: 'Servicios', icon: Wrench, path: '/services', allowedRoles: [ADMIN, SELLER, CLIENT] },
-  { id: 'wall', label: 'Muro de Impacto', icon: HeartHandshake, path: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
+  { id: 'wall', label: 'Muro de Impacto', icon: TreePine, path: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
   { id: 'profile', label: 'Mi Perfil', icon: UserCircle, path: '/profile', allowedRoles: [ADMIN, SELLER, CLIENT] },
 ];
 

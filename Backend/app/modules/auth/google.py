@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 import httpx
 import redis.asyncio as redis
+from redis.asyncio import Redis
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
@@ -20,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import BadRequestException, UnauthorizedException
+from app.core.redis_client import get_redis
 from app.core.security import create_access_token
 from app.db.session import get_db
 from app.modules.auth.crud import get_user_by_email
@@ -30,7 +32,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/google", tags=["google-auth"])
 
-redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
 signer = URLSafeTimedSerializer(settings.SECRET_KEY)
 
 GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -38,7 +39,7 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 
 
-async def check_rate_limit(request: Request):
+async def check_rate_limit(request: Request, redis_client: Redis = Depends(get_redis)):
     """Simple Redis-based rate limiter: 10 requests per minute per IP."""
     client_ip = request.client.host if request.client else "unknown"
     key = f"rate_limit:google_auth:{client_ip}"
@@ -61,7 +62,7 @@ def generate_pkce_pair() -> tuple[str, str]:
 
 
 @router.get("/authorize", dependencies=[Depends(check_rate_limit)])
-async def google_authorize(request: Request, role: str = "client", intent: str = "login"):  # <-- Inyectamos 'request'
+async def google_authorize(request: Request, role: str = "client", intent: str = "login", redis_client: Redis = Depends(get_redis)):  # <-- Inyectamos 'request'
     """
     Initiate Google OAuth2 flow with PKCE and OIDC nonce.
     """
@@ -118,7 +119,7 @@ async def google_authorize(request: Request, role: str = "client", intent: str =
 # app/modules/auth/google.py
 
 @router.get("/callback", dependencies=[Depends(check_rate_limit)])
-async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
+async def google_callback(request: Request, db: AsyncSession = Depends(get_db), redis_client: Redis = Depends(get_redis)):
     """
     Handle Google OAuth2 callback.
     """
@@ -297,7 +298,7 @@ class ExchangeRequest(BaseModel):
 
 
 @router.post("/exchange", dependencies=[Depends(check_rate_limit)])
-async def google_exchange(payload: ExchangeRequest, db: AsyncSession = Depends(get_db)):
+async def google_exchange(payload: ExchangeRequest, db: AsyncSession = Depends(get_db), redis_client: Redis = Depends(get_redis)):
     """
     Exchange the short-lived one-time code for the actual JWT access_token.
     """

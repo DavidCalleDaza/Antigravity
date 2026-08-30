@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
+import redis.asyncio as redis
 from app.db.session import engine
 from app.modules.auth.router import router as auth_router
 from app.modules.wall.router import router as wall_router
@@ -43,9 +44,11 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     run `alembic upgrade head` before starting the app.
     """
     # --- Startup ---
+    _app.state.redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
     yield
     
     # --- Shutdown ---
+    await _app.state.redis.aclose()
     await engine.dispose()
 
 # ── Application Factory ─────────────────────────────────────────────────────

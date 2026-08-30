@@ -398,6 +398,21 @@ export const aiClient = {
     if (prompt) formData.append('prompt', prompt);
     return apiClient.requestFormData('/ai/enhance-image', formData);
   },
+  enhanceAudio: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.requestFormData('/ai/enhance-audio', formData);
+  },
+  enhanceVideo: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.requestFormData('/ai/enhance-video', formData);
+  },
+  describeMedia: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.requestFormData('/ai/describe-media', formData);
+  },
   improvePostCopy: (data) => apiClient.post('/ai/improve-post-copy', data),
 };
 

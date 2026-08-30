@@ -352,6 +352,8 @@ export default function Products() {
     setIsConfirmOpen(true);
   };
 
+
+
   const handleOpenNew = () => {
     setEditingProduct(null);
     setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', store_location_id: '', additionalImages: [], media_urls: [] });

@@ -101,7 +101,8 @@ async def test_google_auth_non_escalation_role(client: AsyncClient, db_session: 
     code_verifier = "mock_verifier"
     
     # Mock redis get/delete/setex
-    from app.modules.auth.google import redis_client
+    from app.main import app
+    redis_client = app.state.redis
     
     async def mock_redis_get(key):
         if key == f"pkce:{state_id}":

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.uploads import schedule_file_cleanup
 from app.db.session import get_db
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import get_current_user, require_seller
 from app.modules.auth.models import User
 from app.modules.services.crud import (
     create_service,
@@ -83,11 +83,9 @@ async def list_services(
 async def create_new_service(
     service_in: ServiceCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_seller),
 ) -> ServiceResponse:
-    if current_user.role not in ("admin", "seller"):
-        raise HTTPException(status_code=403, detail="Solo vendedores pueden crear servicios")
-    
+    # Role check delegated to require_seller dependency above.
     # Infer image_url from media_urls if not provided
     if service_in.media_urls and len(service_in.media_urls) > 0:
         if not service_in.image_url:

@@ -6,25 +6,42 @@ from sqlalchemy import func
 from app.modules.ai.models import AiGenerationTask, ArchivedCopy, CopyRequest
 from app.core.config import settings
 
-async def create_ai_task(db: AsyncSession, user_id: uuid.UUID, product_id: uuid.UUID = None, service_id: uuid.UUID = None) -> AiGenerationTask:
+async def create_ai_task(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    product_id: uuid.UUID = None,
+    service_id: uuid.UUID = None,
+    task_type: str = "generate_video",
+) -> AiGenerationTask:
     db_obj = AiGenerationTask(
         user_id=user_id,
         product_id=product_id,
         service_id=service_id,
-        status="pending"
+        status="pending",
+        task_type=task_type,
     )
     db.add(db_obj)
     await db.commit()
     await db.refresh(db_obj)
     return db_obj
 
-async def update_ai_task_status(db: AsyncSession, task_id: uuid.UUID, status: str, video_url: str = None, error_message: str = None, estimated_cost_usd: float = None) -> AiGenerationTask:
+async def update_ai_task_status(
+    db: AsyncSession,
+    task_id: uuid.UUID,
+    status: str,
+    video_url: str = None,
+    media_url: str = None,
+    error_message: str = None,
+    estimated_cost_usd: float = None,
+) -> AiGenerationTask:
     result = await db.execute(select(AiGenerationTask).where(AiGenerationTask.id == task_id))
     task = result.scalar_one_or_none()
     if task:
         task.status = status
         if video_url:
             task.video_url = video_url
+        if media_url:
+            task.media_url = media_url
         if error_message:
             task.error_message = error_message
         if estimated_cost_usd is not None:
@@ -40,9 +57,13 @@ async def get_ai_task(db: AsyncSession, task_id: uuid.UUID) -> AiGenerationTask:
     return result.scalar_one_or_none()
 
 async def count_video_tasks_today(db: AsyncSession) -> int:
+    """Cuenta solo tareas de generación de video (Veo) — no mejoras de audio/video."""
     today_start = datetime.combine(datetime.now(timezone.utc).date(), time.min).replace(tzinfo=timezone.utc)
     result = await db.execute(
-        select(func.count(AiGenerationTask.id)).where(AiGenerationTask.created_at >= today_start)
+        select(func.count(AiGenerationTask.id)).where(
+            AiGenerationTask.created_at >= today_start,
+            AiGenerationTask.task_type == "generate_video",
+        )
     )
     return result.scalar_one() or 0
 

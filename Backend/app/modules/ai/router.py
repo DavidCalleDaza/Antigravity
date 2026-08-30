@@ -272,8 +272,89 @@ async def get_task_status(
         "id": str(task.id),
         "status": task.status,
         "video_url": task.video_url,
+        "media_url": task.media_url,
         "error_message": task.error_message
     }
+
+
+@router.post("/enhance-audio")
+async def enhance_audio(
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Reduce ruido y normaliza volumen de un audio con Auphonic (asíncrono).
+    Responde de inmediato con {task_id}; el resultado se consulta con
+    GET /ai/task/{task_id} (campo media_url cuando status == "success").
+    """
+    if not settings.AUPHONIC_API_KEY:
+        raise HTTPException(status_code=503, detail="Servicio de mejora de audio no configurado.")
+
+    await _enforce_hourly_limit(db, current_user)
+
+    try:
+        audio_bytes = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error leyendo el audio: {e}")
+
+    if len(audio_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Audio demasiado grande (máx 5MB).")
+
+    import os
+    os.makedirs("uploads/inputs", exist_ok=True)
+    ext = os.path.splitext(file.filename or "")[1] or ".mp3"
+    local_filename = f"uploads/inputs/{uuid.uuid4()}{ext}"
+    try:
+        with open(local_filename, "wb") as f:
+            f.write(audio_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error guardando el audio localmente: {e}")
+
+    task = await crud.create_ai_task(db=db, user_id=current_user.id, task_type="enhance_audio")
+    tasks.enhance_audio_task.delay(str(task.id), local_filename)
+
+    return {"task_id": str(task.id)}
+
+
+@router.post("/enhance-video")
+async def enhance_video(
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Aumenta la resolución/calidad de un video con Replicate (asíncrono).
+    Responde de inmediato con {task_id}; el resultado se consulta con
+    GET /ai/task/{task_id} (campo media_url cuando status == "success").
+    """
+    if not settings.REPLICATE_API_TOKEN:
+        raise HTTPException(status_code=503, detail="Servicio de mejora de video no configurado.")
+
+    await _enforce_hourly_limit(db, current_user)
+
+    try:
+        video_bytes = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error leyendo el video: {e}")
+
+    if len(video_bytes) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Video demasiado grande (máx 25MB).")
+
+    import os
+    os.makedirs("uploads/inputs", exist_ok=True)
+    ext = os.path.splitext(file.filename or "")[1] or ".mp4"
+    local_filename = f"uploads/inputs/{uuid.uuid4()}{ext}"
+    try:
+        with open(local_filename, "wb") as f:
+            f.write(video_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error guardando el video localmente: {e}")
+
+    task = await crud.create_ai_task(db=db, user_id=current_user.id, task_type="enhance_video")
+    tasks.enhance_video_task.delay(str(task.id), local_filename)
+
+    return {"task_id": str(task.id)}
 
 
 @router.post("/enhance-image")
@@ -320,3 +401,53 @@ async def enhance_image(
         "image_base64": base64.b64encode(enhanced_bytes).decode("ascii"),
         "mime_type": mime_type,
     }
+
+
+@router.post("/describe-media")
+async def describe_media(
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Genera un texto/caption sugerido a partir del contenido real de una
+    imagen/audio/video (multimodal, síncrono — cabe dentro del límite de
+    datos inline de Gemini).
+    """
+    content_type = file.content_type or ""
+    if not (
+        content_type.startswith("image/")
+        or content_type.startswith("audio/")
+        or content_type.startswith("video/")
+    ):
+        raise HTTPException(status_code=400, detail="Tipo de archivo no soportado (imagen, audio o video).")
+
+    await _enforce_hourly_limit(db, current_user)
+
+    try:
+        media_bytes = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error leyendo el archivo: {e}")
+
+    if len(media_bytes) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Archivo demasiado grande (máx 25MB).")
+
+    try:
+        text, model_name, usage, is_estimated = await service.describe_media(media_bytes, content_type)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error generando texto con IA: {e}")
+
+    await _record_ai_usage(
+        db,
+        current_user,
+        ai_action="describe_media",
+        model_name=model_name,
+        usage=usage,
+        is_estimated=is_estimated,
+        price_kwargs={
+            "input_tokens": usage.get("input_tokens", 0),
+            "output_tokens": usage.get("output_tokens", 0),
+        },
+    )
+
+    return {"text": text}

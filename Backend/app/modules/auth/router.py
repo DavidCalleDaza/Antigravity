@@ -5,7 +5,7 @@ Defines endpoints for user registration and (future) authentication.
 All routes are mounted under ``/api/v1/auth`` via the main application.
 """
 
-from fastapi import APIRouter, Depends, status, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ConflictException, UnauthorizedException
@@ -15,7 +15,9 @@ from app.modules.auth.crud import create_user, deactivate_user, delete_user, get
 from app.modules.auth.deps import get_current_user
 from app.modules.auth.models import User
 from app.modules.auth.schemas import TokenResponse, UserCreate, UserLogin, UserResponse, UserUpdateMe, PasswordRecoveryRequest, PasswordRecoveryReset
-from app.modules.auth.google import router as google_router, redis_client
+from app.modules.auth.google import router as google_router
+from app.core.redis_client import get_redis
+from redis.asyncio import Redis
 from app.core.email import send_email
 
 router = APIRouter()
@@ -75,14 +77,27 @@ async def register_user(
 async def login(
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db),
+    redis_client: Redis = Depends(get_redis),
 ) -> TokenResponse:
     """
     Authenticate a user and return a JWT token.
 
     Workflow:
-        1. Look up the user by email.
-        2. Verify the password against the stored hash.
-        3. Generate and return a JWT access token.
+        1. Check Redis lockout key — 429 if locked.
+        2. Look up the user by email.
+        3. Verify the password against the stored hash.
+        4. On failure: increment attempt counter (atomic INCR); lock after 5 failures.
+        5. On success: clear attempt counters and issue JWT.
+
+    Rate limiting is applied per email address using Redis atomic INCR.
+    Design decision: throttle by email (not IP) for simplicity, consistent
+    with the OTP lockout pattern in whatsapp/tasks.py.
+
+    Concurrency note: INCR is atomic in Redis, so simultaneous failed login
+    attempts from the same email (e.g., brute-force with parallel requests)
+    are correctly counted without race conditions.  We set EXPIRE only when
+    INCR returns 1 (first failure in the window) to avoid resetting the TTL
+    on every attempt.
 
     Args:
         credentials: Email and password.
@@ -92,22 +107,53 @@ async def login(
         TokenResponse with access_token, token_type, and user data.
 
     Raises:
+        HTTPException 429: Too many failed attempts — locked out.
         UnauthorizedException: If credentials are invalid.
     """
+    from fastapi import status as http_status
     from app.core.security import create_access_token
 
+    _LOGIN_MAX_ATTEMPTS = 5
+    _LOGIN_WINDOW_SECONDS = 900   # 15 minutes
+    _LOGIN_LOCKOUT_SECONDS = 900  # 15 minutes
+
+    attempts_key = f"login:attempts:{credentials.email}"
+    lockout_key = f"login:lockout:{credentials.email}"
+
+    # --- Step 1: Check lockout before doing *any* DB query ---
+    if await redis_client.exists(lockout_key):
+        from app.core.exceptions import TooManyRequestsException
+        raise TooManyRequestsException(
+            detail=(
+                "Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente. "
+                "Inténtalo de nuevo en 15 minutos."
+            )
+        )
+
+    # --- Step 2 & 3: Validate credentials ---
     user = await get_user_by_email(db, credentials.email)
-    if not user:
-        raise UnauthorizedException(detail="Credenciales inválidas.")
+    credentials_invalid = (
+        user is None
+        or user.hashed_password is None
+        or not verify_password(credentials.password, user.hashed_password)
+    )
 
-    if user.hashed_password is None:
-        raise UnauthorizedException(detail="Credenciales inválidas.")
-
-    if not verify_password(credentials.password, user.hashed_password):
+    if credentials_invalid:
+        # --- Step 4: Increment attempt counter atomically ---
+        count = await redis_client.incr(attempts_key)
+        if count == 1:
+            # First failure in this window — set the expiry.
+            # Doing it conditionally avoids resetting TTL on every attempt.
+            await redis_client.expire(attempts_key, _LOGIN_WINDOW_SECONDS)
+        if count >= _LOGIN_MAX_ATTEMPTS:
+            await redis_client.set(lockout_key, 1, ex=_LOGIN_LOCKOUT_SECONDS)
         raise UnauthorizedException(detail="Credenciales inválidas.")
 
     if not user.is_active:
         raise UnauthorizedException(detail="Cuenta desactivada.")
+
+    # --- Step 5: Successful login — clear counters ---
+    await redis_client.delete(attempts_key, lockout_key)
 
     access_token = create_access_token(data={"sub": str(user.id), "email": user.email, "role": user.role})
     return TokenResponse(
@@ -115,6 +161,59 @@ async def login(
         token_type="bearer",
         user=UserResponse.model_validate(user),
     )
+
+
+
+import hashlib as _hashlib
+from datetime import timezone as _tz, datetime as _datetime
+from fastapi.security import OAuth2PasswordBearer as _OAuth2
+
+_oauth2_scheme_logout = _OAuth2(tokenUrl="/api/v1/auth/login")
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Cerrar sesión",
+    description="Invalida el JWT actual. Requests subsecuentes con ese token recibirán 401.",
+)
+async def logout(
+    raw_token: str = Depends(_oauth2_scheme_logout),
+    _current_user: User = Depends(get_current_user),
+    redis_client: Redis = Depends(get_redis),
+) -> None:
+    """Invalidate the current JWT by adding it to the Redis blocklist.
+
+    Uses the token's ``jti`` claim as the blocklist key.  For older tokens
+    without ``jti``, falls back to a SHA1 hash of the raw token string.
+
+    TTL is set equal to the token's remaining lifetime so the Redis key is
+    automatically evicted — no stale entry accumulation.
+
+    Concurrency: ``SET key value EX ttl`` is atomic.  Calling logout with
+    the same token from two tabs simultaneously is idempotent and safe.
+    """
+    from app.core.security import decode_access_token
+
+    payload = decode_access_token(raw_token)
+    if payload is None:
+        return  # Already invalid — nothing to blocklist
+
+    jti = payload.get("jti")
+    blocklist_key = (
+        f"jwt:blocklist:{jti}"
+        if jti
+        else f"jwt:blocklist:{_hashlib.sha1(raw_token.encode()).hexdigest()}"
+    )
+
+    exp = payload.get("exp")
+    if exp:
+        remaining = int(exp - _datetime.now(_tz.utc).timestamp())
+        ttl = max(remaining, 1)
+    else:
+        ttl = 1
+
+    await redis_client.set(blocklist_key, 1, ex=ttl)
 
 
 @router.get(
@@ -272,6 +371,7 @@ async def upload_avatar(
 async def request_password_recovery(
     payload: PasswordRecoveryRequest,
     db: AsyncSession = Depends(get_db),
+    redis_client: Redis = Depends(get_redis),
 ) -> dict:
     import random
     from app.core.config import settings
@@ -323,6 +423,7 @@ async def request_password_recovery(
 async def reset_password_with_code(
     payload: PasswordRecoveryReset,
     db: AsyncSession = Depends(get_db),
+    redis_client: Redis = Depends(get_redis),
 ) -> dict:
     redis_key = f"password-reset:code:{payload.email}"
     stored_code = await redis_client.get(redis_key)

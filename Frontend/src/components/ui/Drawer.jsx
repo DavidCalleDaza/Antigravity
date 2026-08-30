@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, RectangleHorizontal, Minimize2 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
@@ -17,6 +18,30 @@ const Drawer = ({
 }) => {
   const setSidebarCollapsed = useStore(state => state.setSidebarCollapsed);
   const sidebarCollapsed = useStore(state => state.sidebarCollapsed);
+
+  const [shouldRender, setShouldRender] = React.useState(isOpen);
+  const [animateOpen, setAnimateOpen] = React.useState(false);
+
+  useEffect(() => {
+    let openFrame;
+    let unmountTimer;
+
+    if (isOpen) {
+      setShouldRender(true);
+      openFrame = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setAnimateOpen(true));
+      });
+    } else {
+      setAnimateOpen(false);
+      unmountTimer = setTimeout(() => setShouldRender(false), 360);
+    }
+
+    return () => {
+      if (openFrame) cancelAnimationFrame(openFrame);
+      if (unmountTimer) clearTimeout(unmountTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -47,19 +72,19 @@ const Drawer = ({
     };
   }, [isOpen, onClose, position, width]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   const positionClass = position === 'right' ? 'drawer-right' : 'drawer-left';
 
-  return (
+  return createPortal(
     <>
       <div
-        className={`drawer-overlay ${isOpen ? 'active' : ''}`}
+        className={`drawer-overlay ${animateOpen ? 'active' : ''}`}
         onClick={onClose}
         aria-hidden="true"
       />
       <aside
-        className={`drawer ${positionClass} ${isOpen ? 'open' : ''}`}
+        className={`drawer ${positionClass} ${animateOpen ? 'open' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -99,7 +124,8 @@ const Drawer = ({
           {children}
         </div>
       </aside>
-    </>
+    </>,
+    document.body
   );
 };
 

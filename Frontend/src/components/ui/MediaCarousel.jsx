@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, X, Mic, Video } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 
 /**
@@ -12,6 +12,8 @@ import Helpers from '../../utils/helpers';
  */
 export default function MediaCarousel({
   label = 'Imágenes adicionales',
+  kind = 'image', // 'image' | 'audio' | 'video'
+  accept = 'image/*',
   existingUrls = [],
   primaryUrl = '',
   newImages = [],
@@ -19,6 +21,7 @@ export default function MediaCarousel({
   onRemoveExisting,
   onRemoveNew,
   onAddFile,
+  onItemClick,
 }) {
   const fileInputRef = useRef(null);
   const trackRef = useRef(null);
@@ -146,21 +149,29 @@ export default function MediaCarousel({
           {items.map((item, idx) => (
             <div
               key={item.id || idx}
-              className={`media-carousel-item ${idx === activeIndex ? 'is-active' : ''}`}
-              draggable={true}
-              onDragStart={(e) => {
+              className={`media-carousel-item ${kind !== 'image' ? 'media-carousel-item--file' : ''} ${idx === activeIndex ? 'is-active' : ''} ${onItemClick ? 'media-carousel-item--clickable' : ''}`}
+              draggable={kind === 'image'}
+              onDragStart={kind === 'image' ? (e) => {
                 e.dataTransfer.effectAllowed = 'move';
                 const payload = item.isNew
                   ? { kind: 'new', index: item.newIndex }
                   : { kind: 'existing', url: item.rawUrl || item.url };
                 e.dataTransfer.setData('application/json', JSON.stringify(payload));
-              }}
+              } : undefined}
+              onClick={onItemClick ? () => onItemClick(item) : undefined}
             >
-              <img
-                src={item.url}
-                alt={`Adicional ${idx + 1}`}
-                className="media-carousel-img"
-              />
+              {kind === 'image' ? (
+                <img
+                  src={item.url}
+                  alt={`Adicional ${idx + 1}`}
+                  className="media-carousel-img"
+                />
+              ) : (
+                <div className="media-carousel-file">
+                  {kind === 'audio' ? <Mic width={20} height={20} /> : <Video width={20} height={20} />}
+                  <span className="media-carousel-file-name">{item.name}</span>
+                </div>
+              )}
               {item.onRemove && (
                 <button
                   type="button"
@@ -169,8 +180,8 @@ export default function MediaCarousel({
                     e.stopPropagation();
                     item.onRemove();
                   }}
-                  title="Quitar imagen"
-                  aria-label="Quitar imagen"
+                  title="Quitar"
+                  aria-label="Quitar"
                 >
                   <X width={12} height={12} />
                 </button>
@@ -192,7 +203,7 @@ export default function MediaCarousel({
           <input
             type="file"
             ref={fileInputRef}
-            accept="image/*"
+            accept={accept}
             className="media-carousel-file-input"
             onChange={handleFileChange}
           />
@@ -309,11 +320,48 @@ export default function MediaCarousel({
           border-color: var(--gold);
         }
 
+        .media-carousel-item--clickable {
+          cursor: pointer;
+        }
+
+        .media-carousel-item--clickable:hover {
+          box-shadow: 0 0 0 2px var(--gold-soft);
+        }
+
         .media-carousel-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           display: block;
+        }
+
+        .media-carousel-item--file {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          padding: 6px;
+          color: var(--text-secondary);
+          cursor: default;
+        }
+
+        .media-carousel-file {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          width: 100%;
+        }
+
+        .media-carousel-file-name {
+          font-size: 10px;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
         }
 
         .media-carousel-remove {

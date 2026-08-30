@@ -82,7 +82,7 @@ export const APP_CONFIG = {
     {
       section: 'Principal',
       items: [
-        { id: 'wall', label: 'Muro de Impacto', icon: 'HeartHandshake', page: '/wall', badge: null }
+        { id: 'wall', label: 'Muro de Impacto', icon: 'TreePine', page: '/wall', badge: null }
       ]
     },
     {

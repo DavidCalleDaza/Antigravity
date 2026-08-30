@@ -161,14 +161,62 @@ async def get_appointments(
 async def create_appointment(
     db: AsyncSession, data: AppointmentCreate, client_id: uuid.UUID
 ) -> Appointment:
+    """Create a new appointment with concurrent-booking protection.
+
+    Uses ``SELECT ... FOR UPDATE`` over the seller's existing appointments for
+    the requested date to lock those rows before checking for overlap.  This
+    ensures that two clients booking the same slot simultaneously will result
+    in exactly one success (201) and one failure (409), never two 201s.
+
+    Pattern: read-lock-check-write, *not* read-decide-write (which would have
+    a TOCTOU race under concurrent load).
+
+    Note: a PostgreSQL ``EXCLUDE`` constraint using ``btree_gist`` on
+    ``(seller_id, tsrange(date + start_time, date + end_time))`` would add
+    a database-level safety net.  Not implemented here to avoid a btree_gist
+    extension migration, but recommended if booking volume grows.
+
+    Raises:
+        ConflictException: If the requested slot overlaps an existing
+            pending/confirmed appointment for the same seller.
+    """
+    from app.core.exceptions import ConflictException
+
+    start_time = _parse_time(data.start_time)
+    end_time = _parse_time(data.end_time)
+    target_date = datetime.strptime(data.date, "%Y-%m-%d").date()
+
+    # Lock the seller's appointments for this date so that concurrent requests
+    # cannot both see an empty slot and both insert.
+    lock_stmt = (
+        select(Appointment)
+        .where(
+            Appointment.seller_id == data.seller_id,
+            Appointment.date == target_date,
+            Appointment.status.in_(["pending", "confirmed"]),
+        )
+        .with_for_update()
+    )
+    lock_result = await db.execute(lock_stmt)
+    existing = list(lock_result.scalars().all())
+
+    candidate_start = _time_to_minutes(start_time)
+    candidate_end = _time_to_minutes(end_time)
+
+    if _is_slot_occupied(candidate_start, candidate_end, existing):
+        raise ConflictException(
+            "El horario seleccionado ya no está disponible. "
+            "Por favor elige otro horario."
+        )
+
     apt = Appointment(
         seller_id=data.seller_id,
         client_id=client_id,
         service_id=data.service_id,
         store_location_id=data.store_location_id,
-        date=datetime.strptime(data.date, "%Y-%m-%d").date(),
-        start_time=_parse_time(data.start_time),
-        end_time=_parse_time(data.end_time),
+        date=target_date,
+        start_time=start_time,
+        end_time=end_time,
         status="pending",
         notes=data.notes,
     )

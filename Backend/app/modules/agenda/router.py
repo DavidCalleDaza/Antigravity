@@ -214,7 +214,13 @@ async def create_appointment(
         if not svc.scalar_one_or_none():
             raise HTTPException(status_code=404, detail="Servicio no encontrado")
 
-    apt = await crud.create_appointment(db, data, current_user.id)
+    try:
+        apt = await crud.create_appointment(db, data, current_user.id)
+    except Exception as e:
+        from app.core.exceptions import ConflictException
+        if isinstance(e, ConflictException):
+            raise HTTPException(status_code=409, detail=str(e))
+        raise
     send_appointment_request_notification.delay(str(apt.id))
     return apt
 

@@ -14,8 +14,9 @@ class AiGenerationTask(Base):
     service_id = Column(UUID(as_uuid=True), ForeignKey("services.id", ondelete="SET NULL"), nullable=True)
 
     status = Column(String, default="pending", nullable=False, index=True)  # pending, success, failed
-    video_url = Column(String, nullable=True)
-    media_url = Column(String, nullable=True)
+    task_type = Column(String, default="generate_video", nullable=False)  # generate_video, enhance_audio, enhance_video
+    video_url = Column(String, nullable=True)  # resultado de generate_video (Veo)
+    media_url = Column(String, nullable=True)  # resultado de enhance_audio/enhance_video
     estimated_cost_usd = Column(Numeric(precision=10, scale=4), nullable=True)
     error_message = Column(String, nullable=True)
 

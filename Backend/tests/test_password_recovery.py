@@ -21,7 +21,7 @@ async def test_request_password_recovery_success(client: AsyncClient, db_session
     db_session.add(user)
     await db_session.commit()
 
-    with patch("app.modules.auth.router.redis_client.setex", new_callable=AsyncMock) as mock_setex, \
+    with patch("redis.asyncio.Redis.setex", new_callable=AsyncMock) as mock_setex, \
          patch("app.modules.auth.router.send_email", return_value=True) as mock_send_email:
         
         response = await client.post(
@@ -84,8 +84,8 @@ async def test_reset_password_success(client: AsyncClient, db_session: AsyncSess
     await db_session.commit()
 
     # Setup redis mock to return code
-    with patch("app.modules.auth.router.redis_client.get", new_callable=AsyncMock) as mock_get, \
-         patch("app.modules.auth.router.redis_client.delete", new_callable=AsyncMock) as mock_delete:
+    with patch("redis.asyncio.Redis.get", new_callable=AsyncMock) as mock_get, \
+         patch("redis.asyncio.Redis.delete", new_callable=AsyncMock) as mock_delete:
         
         mock_get.return_value = "123456"
 
@@ -120,7 +120,7 @@ async def test_reset_password_invalid_code(client: AsyncClient, db_session: Asyn
     db_session.add(user)
     await db_session.commit()
 
-    with patch("app.modules.auth.router.redis_client.get", new_callable=AsyncMock) as mock_get:
+    with patch("redis.asyncio.Redis.get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = "123456"  # Stored code is 123456
 
         response = await client.post(

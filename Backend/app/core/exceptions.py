@@ -46,6 +46,13 @@ class ForbiddenException(DonAppException):
         super().__init__(status_code=403, detail=detail)
 
 
+class TooManyRequestsException(DonAppException):
+    """Raised when the client sends too many requests."""
+
+    def __init__(self, detail: str = "Too many requests. Please try again later.") -> None:
+        super().__init__(status_code=429, detail=detail)
+
+
 class BadRequestException(DonAppException):
     """Raised when the client sends malformed or invalid data."""
 

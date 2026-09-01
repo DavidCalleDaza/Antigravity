@@ -1947,5 +1947,82 @@ main .btn-success svg,
   filter: drop-shadow(0 4px 14px rgba(255, 255, 255, 0.25));
 }
 
+/* ── Global Thumbnail Transparency & Hover Reveal Effect ── */
+.media-card-image,
+.media-gallery-viewer-img,
+.media-card-video,
+.wall-post-media img,
+.wall-post-media video,
+.wall-post-media-grid img,
+.wall-post-media-grid video,
+.wall-post-media-thumb img,
+.wall-post-media-thumb video,
+.wall-linked-card-media img,
+.wall-picker-item-media img,
+.table-thumb img,
+.product-thumb img,
+.service-thumb img,
+.media-carousel-thumb img,
+.media-carousel-thumb video,
+.avatar img,
+img.thumbnail,
+.img-thumbnail {
+  opacity: 0.35 !important;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:is(
+  .media-card,
+  .wall-post,
+  .wall-linked-card,
+  .wall-picker-item,
+  .media-carousel-thumb,
+  .wall-post-media-thumb,
+  .table-thumb,
+  .avatar,
+  tr
+):hover :is(
+  .media-card-image,
+  .media-gallery-viewer-img,
+  .media-card-video,
+  .wall-post-media img,
+  .wall-post-media video,
+  .wall-post-media-grid img,
+  .wall-post-media-grid video,
+  .wall-post-media-thumb img,
+  .wall-post-media-thumb video,
+  .wall-linked-card-media img,
+  .wall-picker-item-media img,
+  .table-thumb img,
+  .product-thumb img,
+  .service-thumb img,
+  .media-carousel-thumb img,
+  .media-carousel-thumb video,
+  .avatar img,
+  img.thumbnail,
+  .img-thumbnail
+),
+.media-card-image:hover,
+.media-gallery-viewer-img:hover,
+.media-card-video:hover,
+.wall-post-media img:hover,
+.wall-post-media video:hover,
+.wall-post-media-grid img:hover,
+.wall-post-media-grid video:hover,
+.wall-post-media-thumb img:hover,
+.wall-post-media-thumb video:hover,
+.wall-linked-card-media img:hover,
+.wall-picker-item-media img:hover,
+.table-thumb img:hover,
+.product-thumb img:hover,
+.service-thumb img:hover,
+.media-carousel-thumb img:hover,
+.media-carousel-thumb video:hover,
+.avatar img:hover,
+img.thumbnail:hover,
+.img-thumbnail:hover {
+  opacity: 1 !important;
+}
+
 
 

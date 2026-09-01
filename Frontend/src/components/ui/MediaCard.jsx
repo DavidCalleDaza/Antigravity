@@ -180,13 +180,8 @@ export default function MediaCard({
           </span>
         </div>
       )}
-      <div className={`media-card-media ${hasMedia && !imageError && !isVideo ? 'has-image-overlay' : ''} ${revealImages ? 'media-card-media--reveal' : ''}`}>
+      <div className="media-card-media">
         {renderMedia()}
-        {hasMedia && !imageError && !isVideo && (
-          <div className="media-card-image-overlay">
-            <DonAppLogo width={48} height={48} variant="auto" />
-          </div>
-        )}
       </div>
 
       <div className="media-card-body">
@@ -293,55 +288,19 @@ export default function MediaCard({
           background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--page-bg) 100%);
         }
 
-        .media-card-image {
+        .media-card-image,
+        .media-gallery-viewer-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          filter: grayscale(1);
-          transition: transform var(--transition-base), filter var(--transition-base);
+          opacity: 0.35;
+          transition: transform var(--transition-base), opacity var(--transition-base);
         }
 
-        .media-card-image-overlay {
-          position: absolute;
-          inset: 0;
-          background: rgba(255, 255, 255, 0.88);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transform: translateY(0);
-          transition: transform var(--transition-base);
-          pointer-events: none;
-          z-index: 2;
-        }
-
-        .media-card:hover .media-card-image-overlay {
-          transform: translateY(-100%);
-        }
-
-        .media-card:hover .media-card-image {
-          transform: scale(1.05);
-          filter: grayscale(0);
-        }
-
-        .media-card-media--reveal .media-card-image-overlay {
-          transform: translateY(-100%);
-        }
-
-        .media-card-media--reveal .media-card-image {
-          filter: grayscale(0);
-        }
-
-        .media-card-media--reveal .media-gallery-viewer-img {
-          filter: grayscale(0);
-        }
-
-        .media-card .media-gallery-viewer-img {
-          filter: grayscale(1);
-          transition: filter var(--transition-base);
-        }
-
+        .media-card:hover .media-card-image,
         .media-card:hover .media-gallery-viewer-img {
-          filter: grayscale(0);
+          transform: scale(1.05);
+          opacity: 1;
         }
 
         .media-card-video-wrapper {

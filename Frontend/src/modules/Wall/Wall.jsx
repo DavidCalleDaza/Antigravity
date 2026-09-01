@@ -13,6 +13,7 @@ import ShareModal from '../../components/ShareModal';
 import WallComposer from './components/WallComposer';
 import WallFeed from './components/WallFeed';
 import WallSidebar from './components/WallSidebar';
+import WallMediaEnhancePanel from './components/WallMediaEnhancePanel';
 import { useWallPosts } from './hooks/useWallPosts';
 import { useWallComposer } from './hooks/useWallComposer';
 
@@ -277,6 +278,44 @@ export default function Wall() {
     }
   }), []);
 
+  const handleOpenEnhanceModal = (kind, item, postId) => {
+    composerProps.openEnhanceModal(kind, { ...item, postId });
+  };
+
+  const handleApplyEnhance = async (file) => {
+    const target = composerProps.enhanceTarget;
+    if (!target) return;
+    if (target.item?.postId) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const media = await apiClient.requestFormData(`/wall/${target.item.postId}/media`, formData);
+        setPosts((prev) => prev.map((p) => (p.id === target.item.postId ? { ...p, media: [...(p.media || []), media] } : p)));
+        toast.success('Multimedia mejorado agregado a la publicación.');
+      } catch (err) {
+        toast.error('No se pudo guardar la mejora.');
+      }
+    } else {
+      composerProps.applyEnhancedItem(target.kind, target.item, file);
+    }
+    composerProps.closeEnhanceModal();
+  };
+
+  const handleTextGenerated = (text, mode) => {
+    const target = composerProps.enhanceTarget;
+    if (target?.item?.postId) {
+      const textarea = document.getElementById(`edit-post-${target.item.postId}`);
+      if (textarea) {
+        const current = textarea.value.trim();
+        textarea.value = mode === 'append' && current ? `${current}\n\n${text}` : text;
+        toast.success('Texto agregado a la edición.');
+      }
+    } else {
+      composerProps.insertGeneratedText(text, mode);
+    }
+    composerProps.closeEnhanceModal();
+  };
+
   const feedProps = {
     loading, posts, editingPostId, setEditingPostId, editingCommentId, setEditingCommentId,
     editTargetPostId, setEditTargetPostId, handleDeletePost, handleUpdatePost,
@@ -284,7 +323,8 @@ export default function Wall() {
     handleDeleteComment,
     viewModeMenuOpen, setViewModeMenuOpen,
     postViewModes, setPostViewModes,
-    postRefsMap, setSharePost, editFileInputRef
+    postRefsMap, setSharePost, editFileInputRef,
+    onOpenEnhanceModal: handleOpenEnhanceModal
   };
 
   const utilsProps = {
@@ -440,6 +480,16 @@ export default function Wall() {
           linkedItem: sharePost.linked_item ? { id: sharePost.linked_item.id, kind: sharePost.linked_item.kind } : null
         } : null}
       />
+
+      {composerProps.enhanceTarget && (
+        <WallMediaEnhancePanel
+          item={composerProps.enhanceTarget.item}
+          kind={composerProps.enhanceTarget.kind}
+          onApply={handleApplyEnhance}
+          onTextGenerated={handleTextGenerated}
+          onClose={composerProps.closeEnhanceModal}
+        />
+      )}
     </div>
   );
 }

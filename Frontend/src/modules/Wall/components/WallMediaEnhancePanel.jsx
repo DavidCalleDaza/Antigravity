@@ -28,8 +28,19 @@ function base64ToFile(base64, mimeType, filename) {
   return new File([byteArray], filename, { type: mimeType });
 }
 
-function sourceFile(item, kind) {
-  return kind === 'image' ? item.blob : item.file;
+async function getFileFromItem(item, kind) {
+  if (kind === 'image' && item.blob) return item.blob;
+  if (item.file) return item.file;
+  const rawUrl = item.media_url || item.url || item.previewUrl;
+  if (rawUrl) {
+    const url = Helpers.resolveMediaUrl(rawUrl);
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const fallbackExt = kind === 'image' ? 'png' : kind === 'audio' ? 'mp3' : 'mp4';
+    const ext = blob.type?.split('/')[1] || fallbackExt;
+    return new File([blob], `media_${Date.now()}.${ext}`, { type: blob.type || (kind === 'image' ? 'image/png' : kind === 'audio' ? 'audio/mpeg' : 'video/mp4') });
+  }
+  throw new Error('No se pudo cargar el archivo original.');
 }
 
 export default function WallMediaEnhancePanel({ item, kind, onApply, onTextGenerated, onClose }) {
@@ -53,9 +64,13 @@ export default function WallMediaEnhancePanel({ item, kind, onApply, onTextGener
 
   useEffect(() => {
     if (kind !== 'image') return;
-    const url = URL.createObjectURL(item.blob);
-    setBeforeUrl(url);
-    return () => URL.revokeObjectURL(url);
+    if (item.blob) {
+      const url = URL.createObjectURL(item.blob);
+      setBeforeUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (item.media_url || item.url || item.previewUrl) {
+      setBeforeUrl(Helpers.resolveMediaUrl(item.media_url || item.url || item.previewUrl));
+    }
   }, [item, kind]);
 
   useEffect(() => {
@@ -101,16 +116,17 @@ export default function WallMediaEnhancePanel({ item, kind, onApply, onTextGener
     setPhase('processing');
     setErrorMessage('');
     try {
+      const fileToProcess = await getFileFromItem(item, kind);
       if (kind === 'image') {
-        const res = await aiClient.enhanceImage(item.blob);
+        const res = await aiClient.enhanceImage(fileToProcess);
         const file = base64ToFile(res.image_base64, res.mime_type, `enhanced_${Date.now()}.png`);
         setResultFile(file);
         setPhase('success');
       } else if (kind === 'audio') {
-        const { task_id } = await aiClient.enhanceAudio(item.file);
+        const { task_id } = await aiClient.enhanceAudio(fileToProcess);
         pollTask(task_id);
       } else if (kind === 'video') {
-        const { task_id } = await aiClient.enhanceVideo(item.file);
+        const { task_id } = await aiClient.enhanceVideo(fileToProcess);
         pollTask(task_id);
       }
     } catch (err) {
@@ -123,7 +139,8 @@ export default function WallMediaEnhancePanel({ item, kind, onApply, onTextGener
     setTextPhase('processing');
     setTextError('');
     try {
-      const res = await aiClient.describeMedia(sourceFile(item, kind));
+      const fileToProcess = await getFileFromItem(item, kind);
+      const res = await aiClient.describeMedia(fileToProcess);
       setGeneratedText(res.text || '');
       setTextPhase('success');
     } catch (err) {

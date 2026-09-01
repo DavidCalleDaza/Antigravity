@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Facebook, Instagram, Share2, Plus, Trash2, CheckCircle2, AlertCircle, Info, Loader2, Star, AlertTriangle, XCircle, Eye, EyeOff, Lock, RefreshCw, Sparkles, Pencil } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, AlertCircle, Info, Loader2, Star, AlertTriangle, XCircle, Eye, EyeOff, Lock, RefreshCw, Sparkles, Pencil } from 'lucide-react';
+import { MetaBrandIcon, TikTokBrandIcon, FacebookBrandIcon, InstagramBrandIcon } from '../../components/ui/SocialBrandIcons';
 import { useToast } from '../../components/ui/Toast';
 import { socialClient } from '../../utils/apiClient';
 import { useStore } from '../../store/useStore';
@@ -286,9 +287,9 @@ export default function SocialSettings() {
           <div key={account.id} className="sns-account-chip">
             <div className="sns-account-main">
               <div className="sns-account-avatar">
-                {account.platform === 'facebook' && <Facebook width={16} />}
-                {account.platform === 'instagram' && <Instagram width={16} />}
-                {account.platform === 'tiktok' && <Share2 width={16} />}
+                {account.platform === 'facebook' && <FacebookBrandIcon size={18} />}
+                {account.platform === 'instagram' && <InstagramBrandIcon size={18} />}
+                {account.platform === 'tiktok' && <TikTokBrandIcon size={18} />}
               </div>
               <div className="sns-account-info">
                 <div className="sns-account-name-row">
@@ -497,7 +498,7 @@ export default function SocialSettings() {
         <div className="sns-card sns-card--meta">
           <div className="sns-card-header">
             <div className="sns-card-title">
-              <div className="sns-card-icon"><Facebook width={22} height={22} /></div>
+              <div className="sns-card-icon sns-platform-icon meta"><MetaBrandIcon size={28} /></div>
               <div>
                 <h4>Meta</h4>
                 <span>Facebook &amp; Instagram</span>
@@ -554,7 +555,7 @@ export default function SocialSettings() {
         <div className="sns-card sns-card--tiktok">
           <div className="sns-card-header">
             <div className="sns-card-title">
-              <div className="sns-card-icon"><Share2 width={22} height={22} /></div>
+              <div className="sns-card-icon sns-platform-icon tiktok"><TikTokBrandIcon size={28} /></div>
               <div>
                 <h4>TikTok</h4>
                 <span>Cuentas de creador</span>

@@ -354,22 +354,13 @@ export default function Profile() {
           Información Personal
         </button>
         {canManageIntegrations && !currentUser?.needsOnboarding && (
-          <>
-            <button 
-              className={`profile-tab ${activeTab === 'social' ? 'active' : ''}`}
-              onClick={() => setActiveTab('social')}
-            >
-              <Share2 width="18" height="18" />
-              Redes Sociales
-            </button>
-            <button
-              className={`profile-tab ${activeTab === 'whatsapp' ? 'active' : ''}`}
-              onClick={() => setActiveTab('whatsapp')}
-            >
-              <MessageCircle width="18" height="18" />
-              WhatsApp
-            </button>
-          </>
+          <button 
+            className={`profile-tab ${(activeTab === 'social' || activeTab === 'whatsapp') ? 'active' : ''}`}
+            onClick={() => setActiveTab('social')}
+          >
+            <Share2 width="18" height="18" />
+            Redes Sociales
+          </button>
         )}
       </div>
 
@@ -636,13 +627,14 @@ export default function Profile() {
           </div>
         </div>
       </>
-    ) : activeTab === 'social' && canManageIntegrations ? (
-      <div className="profile-section-card">
-        <SocialSettings />
-      </div>
-    ) : activeTab === 'whatsapp' && canManageIntegrations ? (
-      <div className="profile-section-card">
-        <WhatsAppSettings />
+    ) : (activeTab === 'social' || activeTab === 'whatsapp') && canManageIntegrations ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', width: '100%' }}>
+        <div className="profile-section-card">
+          <SocialSettings />
+        </div>
+        <div className="profile-section-card">
+          <WhatsAppSettings />
+        </div>
       </div>
     ) : null}
   </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MessageCircle, CheckCircle2, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { WhatsAppBrandIcon } from '../../components/ui/SocialBrandIcons';
 import { useToast } from '../../components/ui/Toast';
 import { whatsappClient } from '../../utils/apiClient';
 import { APP_CONFIG } from '../../config/appConfig';
@@ -79,7 +80,7 @@ export default function WhatsAppSettings() {
     return (
       <div className="social-settings">
         <div className="section-header">
-          <MessageCircle width="20" height="20" />
+          <WhatsAppBrandIcon size={24} />
           <h3>WhatsApp Business</h3>
         </div>
         <div className="flex items-center gap-2 text-secondary">
@@ -93,7 +94,7 @@ export default function WhatsAppSettings() {
   return (
     <div className="social-settings">
       <div className="section-header">
-        <MessageCircle width="20" height="20" />
+        <WhatsAppBrandIcon size={24} />
         <h3>WhatsApp Business</h3>
       </div>
 
@@ -109,8 +110,8 @@ export default function WhatsAppSettings() {
         <div className="social-platform-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'stretch' }}>
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center gap-3">
-              <div className="platform-icon-wrapper" style={{ backgroundColor: '#25D36615', color: '#25D366', borderRadius: '50%', padding: '8px' }}>
-                <MessageCircle width="24" height="24" />
+              <div className="platform-icon-wrapper whatsapp-icon-badge">
+                <WhatsAppBrandIcon size={28} />
               </div>
               <div>
                 <h4 style={{ margin: 0 }}>WhatsApp</h4>

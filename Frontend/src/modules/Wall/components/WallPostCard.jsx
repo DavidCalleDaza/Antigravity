@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Sparkles, Package, Paperclip, Edit2, Trash2, LayoutGrid, Share2,
-  Image as ImageIcon, X
+  Image as ImageIcon, Video, Mic, X
 } from 'lucide-react';
 import Helpers from '../../../utils/helpers';
 
@@ -28,7 +28,12 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
     editFileInputRef,
     postViewModes,
     setPostViewModes,
+    onOpenEnhanceModal,
   } = feed;
+
+  const editImageInputRef = useRef(null);
+  const editVideoInputRef = useRef(null);
+  const editAudioInputRef = useRef(null);
 
   const {
     renderAvatarContent,
@@ -70,10 +75,10 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
         </div>
         {isAuthor && editingPostId !== post.id && (
           <div className="flex gap-2">
-            <button onClick={() => setEditingPostId(post.id)} className="btn-icon-only text-tertiary hover:text-primary">
+            <button onClick={() => setEditingPostId(post.id)} className="btn-icon-only text-tertiary hover:text-primary" title="Editar publicación">
               <Edit2 size={14} />
             </button>
-            <button onClick={() => handleDeletePost(post.id)} className="btn-icon-only text-tertiary hover:text-danger">
+            <button onClick={() => handleDeletePost(post.id)} className="btn-icon-only text-tertiary hover:text-danger" title="Eliminar publicación">
               <Trash2 size={14} />
             </button>
           </div>
@@ -118,41 +123,81 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
             />
             {(post.media && post.media.length > 0) && (
               <div className="wall-post-media-grid">
-                {post.media.map(m => (
-                  <div key={m.id} className="wall-post-media-thumb">
-                    {m.media_type?.startsWith('image/') ? (
-                      <img src={Helpers.resolveMediaUrl(m.media_url)} alt="" />
-                    ) : m.media_type?.startsWith('video/') ? (
-                      <video src={Helpers.resolveMediaUrl(m.media_url)} muted disablePictureInPicture />
-                    ) : m.media_type?.startsWith('audio/') ? (
-                      <audio src={Helpers.resolveMediaUrl(m.media_url)} controls />
-                    ) : (
-                      <Paperclip size="18" />
-                    )}
-                    <button
-                      type="button"
-                      className="wall-post-media-remove"
-                      onClick={() => handleDeleteMedia(post.id, m)}
-                      title="Eliminar imagen"
+                {post.media.map(m => {
+                  const mediaKind = m.media_type?.startsWith('image/') ? 'image' : m.media_type?.startsWith('video/') ? 'video' : 'audio';
+                  return (
+                    <div 
+                      key={m.id} 
+                      className="wall-post-media-thumb group cursor-pointer relative"
+                      onClick={() => onOpenEnhanceModal?.(mediaKind, m, post.id)}
+                      title="Haz clic para mejorar con IA"
                     >
-                      <X size="12" />
-                    </button>
-                  </div>
-                ))}
+                      {m.media_type?.startsWith('image/') ? (
+                        <img src={Helpers.resolveMediaUrl(m.media_url)} alt="" />
+                      ) : m.media_type?.startsWith('video/') ? (
+                        <video src={Helpers.resolveMediaUrl(m.media_url)} muted disablePictureInPicture />
+                      ) : m.media_type?.startsWith('audio/') ? (
+                        <audio src={Helpers.resolveMediaUrl(m.media_url)} controls />
+                      ) : (
+                        <Paperclip size="18" />
+                      )}
+                      <button
+                        type="button"
+                        className="wall-post-media-remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMedia(post.id, m);
+                        }}
+                        title="Eliminar adjunto"
+                      >
+                        <X size="12" />
+                      </button>
+                      <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] py-1 px-1.5 flex items-center justify-center gap-1 backdrop-blur-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                        <Sparkles size={11} className="text-warning" />
+                        <span>Mejorar con IA</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-            <div className="flex gap-2">
-              <input type="file" ref={editFileInputRef} onChange={(e) => handleEditMediaUpload(e, post.id)} accept="image/*,video/*" style={{ display: 'none' }} />
+            <div className="flex flex-wrap gap-2">
+              <input type="file" ref={editImageInputRef} onChange={(e) => handleEditMediaUpload(e, post.id)} accept="image/*" style={{ display: 'none' }} />
+              <input type="file" ref={editVideoInputRef} onChange={(e) => handleEditMediaUpload(e, post.id)} accept="video/*" style={{ display: 'none' }} />
+              <input type="file" ref={editAudioInputRef} onChange={(e) => handleEditMediaUpload(e, post.id)} accept="audio/*" style={{ display: 'none' }} />
+              
               <button
                 type="button"
-                className="btn btn-outline btn-sm"
+                className="btn btn-outline btn-sm gap-1.5"
                 onClick={() => {
                   setEditTargetPostId(post.id);
-                  editFileInputRef.current?.click();
+                  editImageInputRef.current?.click();
                 }}
               >
                 <ImageIcon width="14" height="14" />
                 Agregar imagen
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm gap-1.5"
+                onClick={() => {
+                  setEditTargetPostId(post.id);
+                  editVideoInputRef.current?.click();
+                }}
+              >
+                <Video width="14" height="14" />
+                Agregar video
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm gap-1.5"
+                onClick={() => {
+                  setEditTargetPostId(post.id);
+                  editAudioInputRef.current?.click();
+                }}
+              >
+                <Mic width="14" height="14" />
+                Agregar audio
               </button>
             </div>
             <div className="flex gap-2 justify-end">

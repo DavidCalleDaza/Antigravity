@@ -925,3 +925,66 @@ body.page-scrolled .app:has(.profile-bg-photo) .sidebar {
   backdrop-filter: var(--glass-blur) !important;
   -webkit-backdrop-filter: var(--glass-blur) !important;
 }
+
+/* ── Glassmorphism Transparency for all Profile Cards ── */
+.profile-hero-card,
+.profile-section-card,
+.sns-vault-hero,
+.sns-vault-card,
+.sns-steps-card,
+.sns-account-card,
+.danger-card {
+  background: rgba(28, 25, 36, 0.45) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .profile-hero-card,
+[data-theme="light"] .profile-section-card,
+[data-theme="light"] .sns-vault-hero,
+[data-theme="light"] .sns-vault-card,
+[data-theme="light"] .sns-steps-card,
+[data-theme="light"] .sns-account-card,
+[data-theme="light"] .danger-card {
+  background: rgba(255, 255, 255, 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ── Transparent Glassmorphism Social Brand Icon Badges ── */
+.sns-platform-icon,
+.whatsapp-icon-badge,
+.sns-card-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: var(--radius-xl) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-theme="light"] .sns-platform-icon,
+[data-theme="light"] .whatsapp-icon-badge,
+[data-theme="light"] .sns-card-icon {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05) !important;
+}
+
+.sns-card:hover .sns-platform-icon,
+.sns-card:hover .sns-card-icon,
+.social-platform-card:hover .whatsapp-icon-badge {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}

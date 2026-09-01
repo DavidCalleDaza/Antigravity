@@ -120,6 +120,28 @@ export function useWallPosts({ toast, showConfirm }) {
     );
   };
 
+  const handleDeleteAllPosts = () => {
+    if (!posts.length) return;
+    showConfirm(
+      'Vaciar Muro de Impacto',
+      `¿Estás seguro de que deseas eliminar TODAS las ${posts.length} publicaciones del muro permanentemente? Esta acción no se puede deshacer.`,
+      async () => {
+        try {
+          const results = await Promise.allSettled(
+            posts.map((p) => apiClient.delete(`/wall/${p.id}`))
+          );
+          const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+          setPosts([]);
+          toast.success(`Se han eliminado ${succeeded} publicaciones del muro.`);
+        } catch (err) {
+          toast.error('Ocurrió un error al vaciar el muro.');
+        }
+      },
+      'Eliminar todas',
+      'btn-danger'
+    );
+  };
+
   const handleEditMediaUpload = async (e, postId) => {
     const file = e.target.files[0];
     e.target.value = '';
@@ -219,6 +241,7 @@ export function useWallPosts({ toast, showConfirm }) {
     setEditingCommentId,
     handleUpdatePost,
     handleDeletePost,
+    handleDeleteAllPosts,
     handleEditMediaUpload,
     handleDeleteMedia,
     handleComment,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   HeartHandshake, MessageCircle, Sparkles, 
-  Users, Package, Wrench, ArrowRight
+  Users, Package, Wrench, ArrowRight, Trash2, ShieldAlert
 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 import { useStore } from '../../store/useStore';
@@ -66,7 +66,7 @@ export default function Wall() {
   const postManager = useWallPosts({ toast, showConfirm });
   const {
     loading, posts, setPosts, editingPostId, setEditingPostId, editingCommentId, setEditingCommentId,
-    editTargetPostId, setEditTargetPostId, handleDeletePost, handleUpdatePost,
+    editTargetPostId, setEditTargetPostId, handleDeletePost, handleDeleteAllPosts, handleUpdatePost,
     handleDeleteMedia, handleEditMediaUpload, handleComment, handleUpdateComment,
     handleDeleteComment, createPost
   } = postManager;
@@ -296,6 +296,23 @@ export default function Wall() {
     <div className="page-content wall-bg-photo">
       <div className="wall-layout">
         <div className="wall-main">
+          {currentUser?.role === 'admin' && posts.length > 0 && (
+            <div className="d-flex justify-between items-center mb-4 p-3 rounded-xl" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: 'var(--radius-lg)' }}>
+              <div className="d-flex items-center gap-2" style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>
+                <ShieldAlert width="18" height="18" />
+                <span>Panel Admin: {posts.length} publicaciones en el muro</span>
+              </div>
+              <button
+                className="btn btn-danger btn-sm d-flex items-center gap-2"
+                onClick={handleDeleteAllPosts}
+                style={{ padding: '6px 14px', fontSize: 'var(--text-xs)', fontWeight: 600 }}
+              >
+                <Trash2 width="14" height="14" />
+                <span>Vaciar Muro ({posts.length})</span>
+              </button>
+            </div>
+          )}
+
           <div className="post-composer reveal" ref={composerRef}>
             <WallComposer 
               composer={composerProps} 

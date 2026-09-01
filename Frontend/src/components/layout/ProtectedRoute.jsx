@@ -9,7 +9,9 @@ export default function ProtectedRoute({ allowedRoles, isStaffRequired }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (isStaffRequired && !currentUser?.is_staff) {
+  const isStaffOrAdmin = currentUser?.is_staff || currentUser?.role === 'admin';
+
+  if (isStaffRequired && !isStaffOrAdmin) {
     return <Navigate to="/unauthorized" state={{ from: location }} replace />;
   }
 

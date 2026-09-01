@@ -8,13 +8,46 @@ export default function ProductsTable({
   filteredProducts,
   isClient,
   canManage,
+  isAdmin = false,
+  selectedIds = [],
+  onToggleSelect,
+  onSelectAll,
+  isAllSelected = false,
   openEditModal,
   onToggleRequest,
   onShare,
   onDeleteRequest,
   navigate,
 }) {
-  const columns = buildProductColumns(isClient);
+  const baseColumns = buildProductColumns(isClient);
+  const columns = isAdmin ? [
+    {
+      key: '_select',
+      label: (
+        <input
+          type="checkbox"
+          checked={isAllSelected}
+          onChange={onSelectAll}
+          style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '16px', height: '16px' }}
+          title="Seleccionar todo"
+        />
+      ),
+      sortable: false,
+      width: '40px',
+      render: (_, row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.id)}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleSelect?.(row.id);
+          }}
+          style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '16px', height: '16px' }}
+        />
+      )
+    },
+    ...baseColumns
+  ] : baseColumns;
 
   const tableActions = (row) => (
     <div className="d-flex gap-2">

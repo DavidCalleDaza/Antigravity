@@ -7,6 +7,11 @@ export default function ProductModals({
   isConfirmOpen,
   setIsConfirmOpen,
   onDelete,
+  isBulkConfirmOpen,
+  setIsBulkConfirmOpen,
+  selectedCount = 0,
+  onBulkDelete,
+  isBulkDeleting = false,
   toggleTarget,
   setToggleTarget,
   onConfirmToggle,
@@ -33,6 +38,21 @@ export default function ProductModals({
         ]}
       >
         <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>¿Estás seguro de que deseas eliminar este producto permanentemente? Esta acción no se puede deshacer.</div>
+      </Modal>
+
+      <Modal
+        isOpen={isBulkConfirmOpen}
+        onClose={() => !isBulkDeleting && setIsBulkConfirmOpen(false)}
+        title={`Eliminar ${selectedCount} producto${selectedCount === 1 ? '' : 's'}`}
+        size="sm"
+        actions={[
+          { label: 'Cancelar', onClick: () => setIsBulkConfirmOpen(false), disabled: isBulkDeleting },
+          { label: isBulkDeleting ? 'Eliminando...' : 'Confirmar', className: 'btn-danger', onClick: onBulkDelete, disabled: isBulkDeleting }
+        ]}
+      >
+        <div style={{ color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>
+          ¿Estás seguro de que deseas eliminar los <strong>{selectedCount}</strong> productos seleccionados permanentemente? Esta acción no se puede deshacer.
+        </div>
       </Modal>
 
       <ConfirmModal

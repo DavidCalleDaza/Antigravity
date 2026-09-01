@@ -20,6 +20,7 @@ export default function Products() {
   const { currentUser } = useStore();
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
+  const isAdmin = userRole === ADMIN;
   const isClient = userRole === CLIENT;
   const navigate = useNavigate();
 
@@ -34,6 +35,10 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sellerFilter, setSellerFilter] = useState('');
+
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -198,6 +203,52 @@ export default function Products() {
   const filteredProducts = useMemo(() => {
     return filterProducts(products, categoryFilter, statusFilter, dbCategories);
   }, [products, categoryFilter, statusFilter, dbCategories]);
+
+  const isAllSelected = useMemo(() => {
+    if (!filteredProducts.length) return false;
+    return filteredProducts.every(p => selectedIds.includes(p.id));
+  }, [filteredProducts, selectedIds]);
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredProducts.map(p => p.id));
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length || isBulkDeleting) return;
+    setIsBulkDeleting(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedIds.map(id => productClient.delete(id))
+      );
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      if (succeeded > 0) {
+        toast.success(`${succeeded} producto${succeeded > 1 ? 's' : ''} eliminado${succeeded > 1 ? 's' : ''} correctamente.`);
+      }
+      if (failed > 0) {
+        toast.error(`No se pudieron eliminar ${failed} producto${failed > 1 ? 's' : ''}.`);
+      }
+
+      setSelectedIds([]);
+      setIsBulkConfirmOpen(false);
+      loadProducts();
+    } catch (err) {
+      toast.error('Error al realizar la eliminación masiva.');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -380,6 +431,7 @@ export default function Products() {
 
       <ProductsToolbar
         isClient={isClient}
+        isAdmin={isAdmin}
         sellerFilter={sellerFilter}
         setSellerFilter={setSellerFilter}
         sellers={sellers}
@@ -393,6 +445,11 @@ export default function Products() {
         setView={setView}
         revealImages={revealImages}
         setRevealImages={setRevealImages}
+        isAllSelected={isAllSelected}
+        onSelectAll={handleSelectAll}
+        selectedCount={selectedIds.length}
+        onBulkDeleteClick={() => setIsBulkConfirmOpen(true)}
+        hasItems={filteredProducts.length > 0}
       />
 
       {loading ? (
@@ -408,6 +465,9 @@ export default function Products() {
         <ProductsGrid
           filteredProducts={filteredProducts}
           canManage={canManage}
+          isAdmin={isAdmin}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
           onShare={(item) => setShareModal({ isOpen: true, item })}
@@ -419,6 +479,11 @@ export default function Products() {
           filteredProducts={filteredProducts}
           isClient={isClient}
           canManage={canManage}
+          isAdmin={isAdmin}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
+          onSelectAll={handleSelectAll}
+          isAllSelected={isAllSelected}
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
           onShare={(item) => setShareModal({ isOpen: true, item })}
@@ -455,6 +520,11 @@ export default function Products() {
         isConfirmOpen={isConfirmOpen}
         setIsConfirmOpen={setIsConfirmOpen}
         onDelete={handleDelete}
+        isBulkConfirmOpen={isBulkConfirmOpen}
+        setIsBulkConfirmOpen={setIsBulkConfirmOpen}
+        selectedCount={selectedIds.length}
+        onBulkDelete={handleBulkDelete}
+        isBulkDeleting={isBulkDeleting}
         toggleTarget={toggleTarget}
         setToggleTarget={setToggleTarget}
         onConfirmToggle={handleConfirmToggle}

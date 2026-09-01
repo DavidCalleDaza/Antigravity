@@ -33,7 +33,7 @@ export default function TokensAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [groupBy, toast]);
+  }, [groupBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -47,7 +47,7 @@ export default function TokensAdmin() {
     } catch (err) {
       toast.error('No se pudo cargar el estado de tokens.');
     }
-  }, [toast]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadUsage();

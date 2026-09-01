@@ -27,6 +27,9 @@ export default function MediaCard({
   item,
   variant = 'product',
   canManage = false,
+  selectable = false,
+  isSelected = false,
+  onToggleSelect,
   onEdit,
   onDelete,
   onAction,
@@ -124,22 +127,59 @@ export default function MediaCard({
 
   return (
     <div
-      className={`media-card media-card-${variant}`}
+      className={`media-card media-card-${variant} ${isSelected ? 'media-card-selected' : ''}`}
+      style={{ position: 'relative' }}
       onMouseEnter={(e) => {
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         const color = isLight ? '62, 180, 137' : (variant === 'product' ? '212, 175, 55' : '196, 168, 224');
-        e.currentTarget.style.borderColor = `rgba(${color}, 0.4)`;
+        e.currentTarget.style.borderColor = isSelected ? 'var(--danger)' : `rgba(${color}, 0.4)`;
         e.currentTarget.style.boxShadow = `0 8px 32px rgba(0, 0, 0, 0.12)`;
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.background = 'rgba(28, 25, 36, 0.65)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.borderColor = isSelected ? 'var(--danger)' : 'rgba(255, 255, 255, 0.1)';
         e.currentTarget.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.08)';
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.background = 'rgba(28, 25, 36, 0.5)';
       }}
     >
+      {selectable && (
+        <div
+          className="media-card-select-overlay"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect?.(item.id);
+          }}
+          style={{
+            position: 'absolute',
+            top: 'var(--space-3)',
+            left: 'var(--space-3)',
+            zIndex: 10,
+            background: isSelected ? 'rgba(239, 68, 68, 0.9)' : 'rgba(0, 0, 0, 0.65)',
+            border: `1px solid ${isSelected ? 'var(--danger)' : 'rgba(255, 255, 255, 0.3)'}`,
+            borderRadius: 'var(--radius-md)',
+            padding: '4px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.2s ease',
+          }}
+          title={isSelected ? 'Desmarcar' : 'Seleccionar'}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => {}}
+            style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '15px', height: '15px' }}
+          />
+          <span style={{ fontSize: '11px', color: '#fff', fontWeight: 600, userSelect: 'none' }}>
+            {isSelected ? 'Seleccionado' : 'Seleccionar'}
+          </span>
+        </div>
+      )}
       <div className={`media-card-media ${hasMedia && !imageError && !isVideo ? 'has-image-overlay' : ''} ${revealImages ? 'media-card-media--reveal' : ''}`}>
         {renderMedia()}
         {hasMedia && !imageError && !isVideo && (

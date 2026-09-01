@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Wrench, Loader2 } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { MediaCardSkeleton } from '../../components/ui/ItemCardSkeleton';
 import { useFileUpload } from '../../hooks/useFileUpload';
@@ -20,6 +20,7 @@ export default function Services() {
   const { currentUser } = useStore();
   const userRole = currentUser?.role;
   const canManage = userRole === ADMIN || userRole === SELLER;
+  const isAdmin = userRole === ADMIN;
   const isClient = userRole === 'client';
   const navigate = useNavigate();
 
@@ -30,6 +31,10 @@ export default function Services() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
+  
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   
   // Estados de Main (Borrado duro y filtros)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -173,6 +178,52 @@ export default function Services() {
   const filteredServices = useMemo(() => {
     return filterServices(services, categoryFilter, statusFilter, dbCategories);
   }, [services, categoryFilter, statusFilter, dbCategories]);
+
+  const isAllSelected = useMemo(() => {
+    if (!filteredServices.length) return false;
+    return filteredServices.every(s => selectedIds.includes(s.id));
+  }, [filteredServices, selectedIds]);
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredServices.map(s => s.id));
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length || isBulkDeleting) return;
+    setIsBulkDeleting(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedIds.map(id => serviceClient.delete(id))
+      );
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      if (succeeded > 0) {
+        toast.success(`${succeeded} servicio${succeeded > 1 ? 's' : ''} eliminado${succeeded > 1 ? 's' : ''} correctamente.`);
+      }
+      if (failed > 0) {
+        toast.error(`No se pudieron eliminar ${failed} servicio${failed > 1 ? 's' : ''}.`);
+      }
+
+      setSelectedIds([]);
+      setIsBulkConfirmOpen(false);
+      loadServices();
+    } catch (err) {
+      toast.error('Error al realizar la eliminación masiva.');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -379,7 +430,8 @@ export default function Services() {
     <div className="page-content">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Servicios</h2>
+          <Wrench width="20" height="20" className="page-title-icon" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '8px' }} />
+          <h2 className="page-title" style={{ display: 'inline-block', verticalAlign: 'middle' }}>Servicios</h2>
           <p className="page-description">Gestiona los servicios que ofreces</p>
         </div>
         <div className="page-actions">
@@ -394,6 +446,7 @@ export default function Services() {
 
       <ServicesToolbar
         isClient={isClient}
+        isAdmin={isAdmin}
         sellerFilter={sellerFilter}
         setSellerFilter={setSellerFilter}
         sellers={sellers}
@@ -407,6 +460,11 @@ export default function Services() {
         setView={setView}
         revealImages={revealImages}
         setRevealImages={setRevealImages}
+        isAllSelected={isAllSelected}
+        onSelectAll={handleSelectAll}
+        selectedCount={selectedIds.length}
+        onBulkDeleteClick={() => setIsBulkConfirmOpen(true)}
+        hasItems={filteredServices.length > 0}
       />
 
       {loading ? (
@@ -422,6 +480,9 @@ export default function Services() {
         <ServicesGrid
           filteredServices={filteredServices}
           canManage={canManage}
+          isAdmin={isAdmin}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
           onShare={(item) => setShareModal({ isOpen: true, item })}
@@ -433,6 +494,11 @@ export default function Services() {
           filteredServices={filteredServices}
           isClient={isClient}
           canManage={canManage}
+          isAdmin={isAdmin}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
+          onSelectAll={handleSelectAll}
+          isAllSelected={isAllSelected}
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
           onShare={(item) => setShareModal({ isOpen: true, item })}
@@ -469,6 +535,11 @@ export default function Services() {
         isConfirmOpen={isConfirmOpen}
         setIsConfirmOpen={setIsConfirmOpen}
         onDelete={handleDelete}
+        isBulkConfirmOpen={isBulkConfirmOpen}
+        setIsBulkConfirmOpen={setIsBulkConfirmOpen}
+        selectedCount={selectedIds.length}
+        onBulkDelete={handleBulkDelete}
+        isBulkDeleting={isBulkDeleting}
         toggleTarget={toggleTarget}
         setToggleTarget={setToggleTarget}
         onConfirmToggle={handleConfirmToggle}

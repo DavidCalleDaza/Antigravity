@@ -97,11 +97,11 @@ async def get_current_user(
     return user
 
 async def require_staff(current_user: User = Depends(get_current_user)) -> User:
-    """Dependency that requires the user to be staff."""
-    if not current_user.is_staff:
+    """Dependency that requires the user to be staff or an admin."""
+    if not current_user.is_staff and current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Acceso restringido al equipo interno"
+            detail="Acceso restringido al equipo interno o administradores"
         )
     return current_user
 

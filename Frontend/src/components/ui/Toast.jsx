@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { create } from 'zustand';
@@ -18,12 +18,12 @@ export const useToastStore = create((set) => ({
 export const useToast = () => {
   const addToast = useToastStore((state) => state.addToast);
   
-  return {
+  return useMemo(() => ({
     success: (message, title = 'Éxito') => addToast({ title, message, type: 'success' }),
     error: (message, title = 'Error') => addToast({ title, message, type: 'error' }),
     warning: (message, title = 'Atención') => addToast({ title, message, type: 'warning' }),
     info: (message, title = 'Info') => addToast({ title, message, type: 'info' }),
-  };
+  }), [addToast]);
 };
 
 const ToastItem = ({ toast, onRemove }) => {

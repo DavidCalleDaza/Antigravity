@@ -2,7 +2,18 @@ import React from 'react';
 import { PackageX, ShoppingCart } from 'lucide-react';
 import MediaCard from '../../../components/ui/MediaCard';
 
-export default function ProductsGrid({ filteredProducts, canManage, openEditModal, onDeleteRequest, onShare, toast, revealImages }) {
+export default function ProductsGrid({
+  filteredProducts,
+  canManage,
+  isAdmin = false,
+  selectedIds = [],
+  onToggleSelect,
+  openEditModal,
+  onDeleteRequest,
+  onShare,
+  toast,
+  revealImages
+}) {
   return (
     <div className="product-grid">
       {filteredProducts.length === 0 ? (
@@ -18,6 +29,9 @@ export default function ProductsGrid({ filteredProducts, canManage, openEditModa
             item={p}
             variant="product"
             canManage={canManage}
+            selectable={isAdmin}
+            isSelected={selectedIds.includes(p.id)}
+            onToggleSelect={onToggleSelect}
             onEdit={openEditModal}
             onDelete={(item) => onDeleteRequest(item)}
             onAction={(product) => toast.success(`${product.name} añadido`)}

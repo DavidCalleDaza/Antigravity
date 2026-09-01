@@ -470,7 +470,6 @@ export default function Products() {
           onToggleSelect={handleToggleSelect}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
-          onShare={(item) => setShareModal({ isOpen: true, item })}
           toast={toast}
           revealImages={revealImages}
         />
@@ -486,7 +485,6 @@ export default function Products() {
           isAllSelected={isAllSelected}
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
-          onShare={(item) => setShareModal({ isOpen: true, item })}
           onDeleteRequest={handleDeleteRequest}
           navigate={navigate}
         />

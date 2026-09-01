@@ -128,21 +128,30 @@ export default function ShareModal({
           z-index: 20;
         }
 
-        /* ── TEMA OSCURO (Default): Negro Puro (#000000) & Dorado ── */
+        /* ── Glassmorphism Theme Overrides ── */
         .share-modal-body {
-          background: #000000 !important;
+          background: transparent !important;
         }
 
         .share-modal-body .accordion-section-header {
-          background: #000000 !important;
-          border-color: #222222 !important;
+          background: rgba(28, 25, 36, 0.45) !important;
+          backdrop-filter: blur(20px) !important;
+          -webkit-backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          border-radius: var(--radius-2xl) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+          transition: all 0.3s ease !important;
+          padding: 14px 18px !important;
         }
 
         .share-modal-body .accordion-section-icon,
-        .share-modal-body .accordion-section-title,
-        .share-modal-body .accordion-section-chevron,
+        .share-modal-body .accordion-section-title {
+          color: var(--text-primary) !important;
+          font-weight: 600 !important;
+        }
+
         .share-modal-body .accordion-section-summary {
-          color: var(--gold) !important;
+          color: var(--text-tertiary) !important;
         }
 
         .share-modal-body .share-product-details-card,
@@ -151,86 +160,53 @@ export default function ShareModal({
         .share-modal-body .share-connect-cta-card,
         .share-modal-body .share-wizard-steps,
         .share-modal-body .ai-card-btn,
-        .share-modal-body .share-edit-form-card {
-          background: #000000 !important;
-          border-color: #222222 !important;
+        .share-modal-body .share-edit-form-card,
+        .share-modal-body .share-preview-card {
+          background: rgba(28, 25, 36, 0.45) !important;
+          backdrop-filter: blur(16px) !important;
+          -webkit-backdrop-filter: blur(16px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          border-radius: var(--radius-2xl) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
         }
 
         .share-modal-body .drawer-form-actions {
-          background: #000000 !important;
-          border-top: 1px solid #222222 !important;
+          background: rgba(28, 25, 36, 0.65) !important;
+          backdrop-filter: blur(20px) !important;
+          -webkit-backdrop-filter: blur(20px) !important;
+          border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+          padding: 16px 20px !important;
         }
 
-        /* ── TEMA CLARO ([data-theme="light"]): Blanco & Negro Estricto ── */
-        [data-theme="light"] .share-modal-body {
-          background: #ffffff !important;
-          color: #121212 !important;
-        }
-
+        /* ── Glassmorphism Light Mode ── */
         [data-theme="light"] .share-modal-body .accordion-section-header {
-          background: #f5f5f5 !important;
-          border-color: #e5e5e5 !important;
-          color: #000000 !important;
+          background: rgba(255, 255, 255, 0.65) !important;
+          border-color: rgba(255, 255, 255, 0.6) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+          color: var(--text-primary) !important;
         }
 
         [data-theme="light"] .share-modal-body .accordion-section-header .accordion-section-icon,
-        [data-theme="light"] .share-modal-body .accordion-section-header .accordion-section-title,
-        [data-theme="light"] .share-modal-body .accordion-section-header .accordion-section-chevron,
-        [data-theme="light"] .share-modal-body .accordion-section-header .accordion-section-summary {
-          color: #000000 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .share-wizard-steps {
-          background: #f5f5f5 !important;
-          border-color: #e5e5e5 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .share-wizard-step.is-active {
-          color: #000000 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .share-wizard-step.is-active .share-wizard-step-num {
-          background: #000000 !important;
-          border-color: #000000 !important;
-          color: #ffffff !important;
-        }
-
-        [data-theme="light"] .share-modal-body .ai-card-btn {
-          background: #f5f5f5 !important;
-          border-color: #e5e5e5 !important;
-          color: #000000 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .ai-card-btn:hover:not(:disabled) {
-          border-color: #000000 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .ai-card-icon-wrapper {
-          background: #e5e5e5 !important;
-          color: #000000 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .share-preview-card {
-          background: #f5f5f5 !important;
-          border-color: #e5e5e5 !important;
-        }
-
-        [data-theme="light"] .share-modal-body .share-preview-price {
-          color: #000000 !important;
+        [data-theme="light"] .share-modal-body .accordion-section-header .accordion-section-title {
+          color: var(--text-primary) !important;
         }
 
         [data-theme="light"] .share-modal-body .share-product-details-card,
         [data-theme="light"] .share-modal-body .share-review-card,
         [data-theme="light"] .share-modal-body .share-success-card,
         [data-theme="light"] .share-modal-body .share-connect-cta-card,
-        [data-theme="light"] .share-modal-body .share-edit-form-card {
-          background: #ffffff !important;
-          border-color: #e5e5e5 !important;
+        [data-theme="light"] .share-modal-body .share-wizard-steps,
+        [data-theme="light"] .share-modal-body .ai-card-btn,
+        [data-theme="light"] .share-modal-body .share-edit-form-card,
+        [data-theme="light"] .share-modal-body .share-preview-card {
+          background: rgba(255, 255, 255, 0.65) !important;
+          border-color: rgba(255, 255, 255, 0.6) !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
         }
 
         [data-theme="light"] .share-modal-body .drawer-form-actions {
-          background: #ffffff !important;
-          border-top: 1px solid #e5e5e5 !important;
+          background: rgba(255, 255, 255, 0.75) !important;
+          border-top-color: rgba(0, 0, 0, 0.08) !important;
         }
 
         [data-theme="light"] .share-modal-body .share-filter-pill.is-active {

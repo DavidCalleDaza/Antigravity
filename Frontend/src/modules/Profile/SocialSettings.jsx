@@ -154,11 +154,7 @@ export default function SocialSettings() {
     try {
       const cred = await socialClient.getAppCredentials(platformId);
       setSavedCred(cred);
-      if (cred.has_credential) {
-        setFormData(prev => ({ ...prev, app_id: cred.app_id || '' }));
-      }
     } catch (err) {
-      // No hay credenciales guardadas todavía — se queda en modo "primera vez"
       setSavedCred({ app_id: null, has_credential: false });
     }
   };
@@ -395,74 +391,54 @@ export default function SocialSettings() {
     const labels = PLATFORM_LABELS[activeForm] || PLATFORM_LABELS.meta;
 
     return (
-      <form onSubmit={handleValidate} className="flex flex-col gap-3">
-        {usingSavedCredential ? (
-          <>
-            <div>
-              <label className="sns-field-label"><Lock width={11} /> {labels.appId}</label>
-              <div className="sns-locked-field plain">{formData.app_id}</div>
-            </div>
-            <div>
-              <label className="sns-field-label"><Lock width={11} /> {labels.appSecret}</label>
-              <div className="sns-locked-field">
-                <span>{revealedSecret && secretVisible ? revealedSecret : '••••••••••••••••••'}</span>
-                <button type="button" className="sns-eye-btn" onClick={toggleSecretVisibility}>
-                  {revealedSecret && secretVisible ? <EyeOff width={15} /> : <Eye width={15} />}
-                </button>
-              </div>
-              {showRevealPrompt && (
-                <div className="sns-reveal-popover">
-                  <p className="text-xs text-secondary" style={{ margin: 0 }}>Ingresa tu contraseña de cuenta para ver el {labels.appSecret}</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      className="form-input"
-                      placeholder="Tu contraseña"
-                      value={revealPassword}
-                      onChange={e => setRevealPassword(e.target.value)}
-                      autoFocus
-                    />
-                    <button type="button" className="btn btn-primary btn-sm" onClick={handleRevealSecret} disabled={revealLoading}>
-                      {revealLoading ? <Loader2 className="spin" width={14} /> : 'Ver'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <button type="button" className="sns-edit-creds-link" onClick={handleEditCredentials}>
-              ¿Necesitas cambiar el {labels.appId} o {labels.appSecret}? Editar credenciales guardadas
-            </button>
-          </>
-        ) : (
-          <>
-            <div>
-              <label className="sns-field-label">{labels.appId}</label>
-              <input required type="text" className="form-input" placeholder={labels.appId} value={formData.app_id} onChange={e => setFormData({ ...formData, app_id: e.target.value })} />
-            </div>
-            <div>
-              <label className="sns-field-label">{labels.appSecret}</label>
-              <input required type="password" className="form-input" placeholder={labels.appSecret} value={formData.app_secret} onChange={e => setFormData({ ...formData, app_secret: e.target.value })} />
-            </div>
-          </>
-        )}
+      <form onSubmit={handleValidate} className="sns-cred-form flex flex-col gap-6" autoComplete="off" style={{ gap: '1.75rem' }}>
+        <div className="sns-form-group flex flex-col gap-2">
+          <label className="sns-field-label" style={{ marginBottom: '6px' }}>{labels.appId}</label>
+          <input
+            required
+            type="text"
+            className="form-input"
+            placeholder={`Ingresa tu ${labels.appId}`}
+            value={formData.app_id}
+            onChange={e => setFormData({ ...formData, app_id: e.target.value })}
+            autoComplete="off"
+            name="social_app_id_new"
+          />
+        </div>
 
-        <div>
-          <label className="sns-field-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{labels.accessToken}</span>
+        <div className="sns-form-group flex flex-col gap-2">
+          <label className="sns-field-label" style={{ marginBottom: '6px' }}>{labels.appSecret}</label>
+          <input
+            required
+            type="password"
+            className="form-input"
+            placeholder={`Ingresa tu ${labels.appSecret}`}
+            value={formData.app_secret}
+            onChange={e => setFormData({ ...formData, app_secret: e.target.value })}
+            autoComplete="new-password"
+            name="social_app_secret_new"
+          />
+        </div>
+
+        <div className="sns-form-group flex flex-col gap-2">
+          <div className="flex justify-between items-center flex-wrap gap-2 mb-2">
+            <label className="sns-field-label" style={{ margin: 0 }}>{labels.accessToken}</label>
             {activeForm === 'meta' && (
               <a href={REGEN_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="sns-regen-btn">
-                <RefreshCw width={11} /> Generar token en Graph API Explorer
+                <RefreshCw width={12} height={12} /> Generar token en Graph API Explorer
               </a>
             )}
-          </label>
+          </div>
           <div className="sns-input-wrapper">
             <input
               required
               type={showAccessToken ? 'text' : 'password'}
               className="form-input"
-              placeholder={labels.accessToken}
+              placeholder={`Ingresa tu ${labels.accessToken}`}
               value={formData.access_token}
               onChange={e => setFormData({ ...formData, access_token: e.target.value })}
+              autoComplete="new-password"
+              name="social_access_token_new"
             />
             <button type="button" className="sns-input-eye" onClick={() => setShowAccessToken(v => !v)}>
               {showAccessToken ? <EyeOff width={16} /> : <Eye width={16} />}
@@ -470,7 +446,7 @@ export default function SocialSettings() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-2">
+        <div className="flex justify-end gap-3 mt-4 pt-2">
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveForm(null)}>Cancelar</button>
           <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
             {validating ? <Loader2 className="spin" width={16} /> : 'Validar'}
@@ -483,7 +459,6 @@ export default function SocialSettings() {
   return (
     <div className="sns-wrapper">
       <div className="sns-hero">
-        <div className="sns-hero-icon"><Sparkles width={22} height={22} /></div>
         <div className="sns-hero-text">
           <h4>Gestión de Redes Sociales</h4>
           <p>

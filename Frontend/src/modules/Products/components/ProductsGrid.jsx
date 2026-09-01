@@ -35,7 +35,6 @@ export default function ProductsGrid({
             onEdit={openEditModal}
             onDelete={(item) => onDeleteRequest(item)}
             onAction={(product) => toast.success(`${product.name} añadido`)}
-            onShare={(item) => onShare(item)}
             actionLabel="Añadir"
             actionIcon={ShoppingCart}
             revealImages={revealImages}

@@ -55,18 +55,6 @@ export default function ServiceModals({
         </div>
       </Modal>
 
-      <ShareModal
-        isOpen={shareModal.isOpen}
-        onClose={() => setShareModal({ isOpen: false, item: null })}
-        item={shareModal.item}
-        onPublish={onPublish}
-        view={view}
-        setView={setView}
-        dbCategories={dbCategories}
-        onCategoryCreated={onCategoryCreated}
-        onItemUpdated={onItemUpdated}
-      />
-
       {/* MODAL DE CONFIRMACIÓN MODERNO (Toggle de Estado) */}
       <ConfirmModal
         isOpen={!!toggleTarget}

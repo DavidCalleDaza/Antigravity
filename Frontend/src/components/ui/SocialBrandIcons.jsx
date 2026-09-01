@@ -24,7 +24,7 @@ export function MetaBrandIcon({ size = 26, className = '' }) {
 
 export function TikTokBrandIcon({ size = 26, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={`tiktok-brand-icon ${className}`}>
       <path
         d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 1 1-2.096-2.795V9.404a6.34 6.34 0 1 0 5.541 6.268V9.169a8.214 8.214 0 0 0 4.77 1.517V7.24a4.836 4.836 0 0 1-1.000-.554z"
         fill="#25F4EE"
@@ -35,8 +35,9 @@ export function TikTokBrandIcon({ size = 26, className = '' }) {
         style={{ mixBlendMode: 'screen', opacity: 0.8 }}
       />
       <path
+        className="tiktok-note-body"
         d="M19.45 6.55a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 1 1-2.096-2.795V9.404a6.34 6.34 0 1 0 5.541 6.268V9.169a8.214 8.214 0 0 0 4.77 1.517V7.24a4.836 4.836 0 0 1-1.000-.554z"
-        fill="#FFFFFF"
+        fill="currentColor"
       />
     </svg>
   );

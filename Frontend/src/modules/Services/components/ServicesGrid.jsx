@@ -36,7 +36,6 @@ export default function ServicesGrid({
               onEdit={openEditModal}
               onDelete={(item) => onDeleteRequest(item)}
               onAction={(service) => navigate(`/agenda?seller_id=${service.user_id}&service_id=${service.id}`)}
-              onShare={(item) => onShare(item)}
               actionLabel="Agendar"
               actionIcon={CalendarPlus}
               revealImages={revealImages}

@@ -485,7 +485,6 @@ export default function Services() {
           onToggleSelect={handleToggleSelect}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
-          onShare={(item) => setShareModal({ isOpen: true, item })}
           navigate={navigate}
           revealImages={revealImages}
         />
@@ -501,7 +500,6 @@ export default function Services() {
           isAllSelected={isAllSelected}
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
-          onShare={(item) => setShareModal({ isOpen: true, item })}
           onDeleteRequest={handleDeleteRequest}
           navigate={navigate}
         />

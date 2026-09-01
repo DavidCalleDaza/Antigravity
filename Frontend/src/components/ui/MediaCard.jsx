@@ -408,6 +408,16 @@ export default function MediaCard({
           border-radius: var(--radius-sm);
         }
 
+        [data-theme="light"] .media-card-duration,
+        [data-theme="light"] .service-card-duration {
+          background: rgba(147, 51, 234, 0.14) !important;
+          color: #7e22ce !important;
+          border: 1px solid rgba(147, 51, 234, 0.3) !important;
+          backdrop-filter: blur(8px) !important;
+          -webkit-backdrop-filter: blur(8px) !important;
+          font-weight: 600 !important;
+        }
+
         .media-card-footer {
           display: flex;
           justify-content: space-between;

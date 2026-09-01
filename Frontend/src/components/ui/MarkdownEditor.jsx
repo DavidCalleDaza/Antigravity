@@ -320,12 +320,16 @@ export default function MarkdownEditor({
           transition: border-color var(--transition-fast);
         }
 
+        [data-theme="light"] .markdown-editor {
+          border: 1px solid #000000 !important;
+        }
+
         .markdown-editor:focus-within {
           border-color: var(--gold);
         }
 
         [data-theme="light"] .markdown-editor:focus-within {
-          border-color: var(--mint-green);
+          border-color: #000000 !important;
         }
 
         .markdown-editor-tabs {
@@ -465,6 +469,11 @@ export default function MarkdownEditor({
           outline: none !important;
           resize: vertical;
           padding: var(--space-3) !important;
+        }
+
+        [data-theme="light"] .markdown-editor-textarea {
+          border: none !important;
+          background: transparent !important;
         }
 
         .markdown-editor-preview {

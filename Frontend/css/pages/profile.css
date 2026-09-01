@@ -516,7 +516,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--sns-accent, var(--gold)), transparent);
+  background: rgba(0, 0, 0, 0.3) !important;
 }
 
 .sns-card:hover {
@@ -570,8 +570,8 @@
   gap: var(--space-1);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-full);
-  border: 1px solid var(--sns-accent, var(--primary));
-  color: var(--sns-accent, var(--primary));
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
   background: transparent;
   font-size: var(--text-xs);
   font-weight: var(--font-semibold);
@@ -580,10 +580,37 @@
   white-space: nowrap;
 }
 
+.sns-add-btn svg {
+  stroke: #000000 !important;
+  color: #000000 !important;
+  transition: stroke var(--transition-fast), color var(--transition-fast);
+}
+
 .sns-add-btn:hover {
-  background: var(--sns-accent, var(--primary));
-  color: var(--card-bg);
-  box-shadow: var(--shadow-sm);
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+}
+
+.sns-add-btn:hover svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sns-card::before {
+  background: #ffffff !important;
+}
+
+[data-theme="dark"] .sns-add-btn {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sns-add-btn:hover {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
 }
 
 .sns-accounts {

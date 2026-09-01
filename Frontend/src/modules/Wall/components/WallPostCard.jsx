@@ -94,19 +94,24 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
           </button>
           {viewModeMenuOpen === post.id && (
             <div className="wall-view-mode-menu">
-              {VIEW_MODE_OPTIONS.map(opt => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`wall-view-mode-option ${getPostViewMode(post.id) === opt.id ? 'active' : ''}`}
-                  onClick={() => {
-                    setPostViewModes(prev => ({ ...prev, [post.id]: opt.id }));
-                    setViewModeMenuOpen(null);
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
+              {VIEW_MODE_OPTIONS.map(opt => {
+                const isActive = getPostViewMode(post.id) === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`wall-view-mode-option ${isActive ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPostViewModes(prev => ({ ...prev, [post.id]: opt.id }));
+                      setViewModeMenuOpen(null);
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                    {isActive && <span className="wall-view-mode-check">✓</span>}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

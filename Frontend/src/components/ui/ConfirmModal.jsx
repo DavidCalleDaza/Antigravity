@@ -1,6 +1,5 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
-import { AlertTriangle } from 'lucide-react';
+import Modal from './Modal';
 
 export default function ConfirmModal({ 
   isOpen, 
@@ -13,54 +12,30 @@ export default function ConfirmModal({
   loading = false,
   children 
 }) {
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div 
-      className="modal-overlay active" 
-      onClick={(e) => {
-        e.stopPropagation(); //  👈 Stops the click from spreading so it doesn't close the back detail
-        if (!loading) onClose();
-      }} 
-      style={{ zIndex: 11000 }}
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={() => !loading && onClose()}
+      title={title}
+      size="sm"
+      actions={[
+        {
+          label: cancelText,
+          onClick: () => !loading && onClose(),
+          className: 'btn-outline',
+          disabled: loading
+        },
+        {
+          label: loading ? 'Guardando...' : confirmText,
+          onClick: onConfirm,
+          className: isDanger ? 'btn-danger' : 'btn-primary',
+          disabled: loading
+        }
+      ]}
     >
-      <div className="standard-confirm-modal" onClick={e => e.stopPropagation()}>
-        
-        <div className={`standard-confirm-icon ${isDanger ? 'is-danger' : 'is-success'}`}>
-          <AlertTriangle width="22" height="22" />
-        </div>
-
-        <h3>{title}</h3>
-        
-        <p>{children}</p> 
-
-        <div className="standard-confirm-actions">
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={(e) => {
-              e.stopPropagation(); //  Prevents accidental spread on buttons
-              onClose();
-            }}
-            disabled={loading}
-          >
-            {cancelText}
-          </button>
-          <button
-            type="button"
-            className={`btn ${isDanger ? 'btn-danger' : 'btn-primary'}`}
-            onClick={(e) => {
-              e.stopPropagation(); //  Prevents accidental spread on buttons
-              onConfirm();
-            }}
-            disabled={loading}
-          >
-            {loading ? 'Guardando...' : confirmText}
-          </button>
-        </div>
-
+      <div style={{ color: 'var(--text-secondary)', padding: '4px 0', fontSize: 'var(--text-sm)', lineHeight: '1.6' }}>
+        {children}
       </div>
-    </div>,
-    document.body
+    </Modal>
   );
 }

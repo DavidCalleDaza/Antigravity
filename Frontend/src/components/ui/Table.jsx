@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Inbox, GripVertical } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import Helpers from '../../utils/helpers';
 
@@ -10,21 +10,44 @@ const Table = ({
   searchable = true,
   onRowClick = null,
   actions = null,
-  footer = null
+  footer = null,
+  enableDragAndDrop = true
 }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
+  // Column order state
+  const [colOrder, setColOrder] = useState(columns);
+
+  useEffect(() => {
+    setColOrder(columns);
+  }, [columns]);
+
+  // Data order state
+  const [tableData, setTableData] = useState(data);
+
+  useEffect(() => {
+    setTableData(data);
+  }, [data]);
+
+  // Drag and Drop States for Columns
+  const dragColIdx = useRef(null);
+  const [dragOverColIdx, setDragOverColIdx] = useState(null);
+
+  // Drag and Drop States for Rows
+  const dragRowIdx = useRef(null);
+  const [dragOverRowIdx, setDragOverRowIdx] = useState(null);
+
   // Filter and Sort Data
   const filteredData = useMemo(() => {
-    let result = [...data];
+    let result = [...tableData];
 
     // Search
     if (search) {
       const lowerSearch = search.toLowerCase();
       result = result.filter(row =>
-        columns.some(col => {
+        colOrder.some(col => {
           const val = row[col.key];
           return val && String(val).toLowerCase().includes(lowerSearch);
         })
@@ -49,7 +72,7 @@ const Table = ({
     }
 
     return result;
-  }, [data, search, sortConfig, columns]);
+  }, [tableData, search, sortConfig, colOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -66,9 +89,89 @@ const Table = ({
     setSortConfig({ key, direction });
   };
 
-  const allCols = actions 
-    ? [...columns, { key: '_actions', label: 'Acciones', sortable: false, width: '120px' }] 
-    : columns;
+  // Drag Handlers for Columns
+  const handleColDragStart = (e, index) => {
+    dragColIdx.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleColDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverColIdx !== index) {
+      setDragOverColIdx(index);
+    }
+  };
+
+  const handleColDrop = (e, dropIndex) => {
+    e.preventDefault();
+    const startIndex = dragColIdx.current;
+    if (startIndex !== null && startIndex !== dropIndex) {
+      setColOrder((prevCols) => {
+        const newCols = [...prevCols];
+        const [movedCol] = newCols.splice(startIndex, 1);
+        newCols.splice(dropIndex, 0, movedCol);
+        return newCols;
+      });
+    }
+    dragColIdx.current = null;
+    setDragOverColIdx(null);
+  };
+
+  const handleColDragEnd = () => {
+    dragColIdx.current = null;
+    setDragOverColIdx(null);
+  };
+
+  // Drag Handlers for Rows
+  const handleRowDragStart = (e, index) => {
+    dragRowIdx.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleRowDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverRowIdx !== index) {
+      setDragOverRowIdx(index);
+    }
+  };
+
+  const handleRowDrop = (e, dropIndex) => {
+    e.preventDefault();
+    const startIndex = dragRowIdx.current;
+    if (startIndex !== null && startIndex !== dropIndex) {
+      const draggedItem = paginatedData[startIndex];
+      const targetItem = paginatedData[dropIndex];
+
+      if (draggedItem && targetItem) {
+        setTableData((prevData) => {
+          const newData = [...prevData];
+          const actualStart = newData.findIndex(r => (r.id ? r.id === draggedItem.id : r === draggedItem));
+          const actualDrop = newData.findIndex(r => (r.id ? r.id === targetItem.id : r === targetItem));
+          
+          if (actualStart !== -1 && actualDrop !== -1) {
+            const [moved] = newData.splice(actualStart, 1);
+            newData.splice(actualDrop, 0, moved);
+          }
+          return newData;
+        });
+      }
+    }
+    dragRowIdx.current = null;
+    setDragOverRowIdx(null);
+  };
+
+  const handleRowDragEnd = () => {
+    dragRowIdx.current = null;
+    setDragOverRowIdx(null);
+  };
+
+  const allCols = [
+    ...(enableDragAndDrop ? [{ key: '_drag_handle', label: '', sortable: false, width: '32px' }] : []),
+    ...colOrder,
+    ...(actions ? [{ key: '_actions', label: 'Acciones', sortable: false, width: '120px' }] : []),
+  ];
 
   return (
     <div className="table-wrapper">
@@ -81,20 +184,37 @@ const Table = ({
           </colgroup>
           <thead>
             <tr>
-              {allCols.map((col, idx) => (
-                <th 
-                  key={idx}
-                  className={col.sortable !== false ? 'sortable' : ''} 
-                  onClick={() => col.sortable !== false && handleSort(col.key)}
-                >
-                  {col.label}
-                  {col.sortable !== false && sortConfig.key === col.key && (
-                    sortConfig.direction === 'asc' ? 
-                    <ChevronUp width="14" height="14" style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} /> : 
-                    <ChevronDown width="14" height="14" style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
-                  )}
-                </th>
-              ))}
+              {allCols.map((col, idx) => {
+                const isDataCol = col.key !== '_drag_handle' && col.key !== '_actions';
+                const colDataIdx = colOrder.findIndex(c => c.key === col.key);
+                const isOver = isDataCol && dragOverColIdx === colDataIdx;
+
+                return (
+                  <th 
+                    key={idx}
+                    className={`${col.sortable !== false ? 'sortable' : ''} ${isOver ? 'col-drag-over' : ''}`} 
+                    draggable={enableDragAndDrop && isDataCol}
+                    onDragStart={(e) => isDataCol && handleColDragStart(e, colDataIdx)}
+                    onDragOver={(e) => isDataCol && handleColDragOver(e, colDataIdx)}
+                    onDrop={(e) => isDataCol && handleColDrop(e, colDataIdx)}
+                    onDragEnd={handleColDragEnd}
+                    onClick={() => col.sortable !== false && handleSort(col.key)}
+                    style={isDataCol && enableDragAndDrop ? { cursor: 'grab' } : {}}
+                  >
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {enableDragAndDrop && isDataCol && (
+                        <GripVertical width="12" height="12" style={{ opacity: 0.4 }} />
+                      )}
+                      <span>{col.label}</span>
+                      {col.sortable !== false && sortConfig.key === col.key && (
+                        sortConfig.direction === 'asc' ? 
+                        <ChevronUp width="14" height="14" style={{ display: 'inline', verticalAlign: 'middle' }} /> : 
+                        <ChevronDown width="14" height="14" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
@@ -108,18 +228,33 @@ const Table = ({
                   </div>
                 </td>
               </tr>
-            ) : paginatedData.map((row, idx) => (
-              <tr 
-                key={row.id || idx} 
-                className={onRowClick ? 'cursor-pointer' : ''}
-                onClick={() => onRowClick && onRowClick(row)}
-              >
-                {columns.map((col, cIdx) => (
-                  <td key={cIdx}>{col.render ? col.render(row[col.key], row) : (row[col.key] ?? '-')}</td>
-                ))}
-                {actions && <td>{actions(row)}</td>}
-              </tr>
-            ))}
+            ) : paginatedData.map((row, idx) => {
+              const isRowOver = dragOverRowIdx === idx;
+              const isRowDragging = dragRowIdx.current === idx;
+
+              return (
+                <tr 
+                  key={row.id || idx} 
+                  className={`${onRowClick ? 'cursor-pointer' : ''} ${isRowOver ? 'row-drag-over' : ''} ${isRowDragging ? 'row-dragging' : ''}`}
+                  draggable={enableDragAndDrop}
+                  onDragStart={(e) => enableDragAndDrop && handleRowDragStart(e, idx)}
+                  onDragOver={(e) => enableDragAndDrop && handleRowDragOver(e, idx)}
+                  onDrop={(e) => enableDragAndDrop && handleRowDrop(e, idx)}
+                  onDragEnd={handleRowDragEnd}
+                  onClick={() => onRowClick && onRowClick(row)}
+                >
+                  {enableDragAndDrop && (
+                    <td style={{ textAlign: 'center', padding: '0 4px', cursor: 'grab' }} title="Arrastrar para reordenar registro">
+                      <GripVertical width="14" height="14" style={{ opacity: 0.4 }} />
+                    </td>
+                  )}
+                  {colOrder.map((col, cIdx) => (
+                    <td key={cIdx}>{col.render ? col.render(row[col.key], row) : (row[col.key] ?? '-')}</td>
+                  ))}
+                  {actions && <td>{actions(row)}</td>}
+                </tr>
+              );
+            })}
           </tbody>
           {footer && paginatedData.length > 0 && (
             <tfoot>
@@ -166,8 +301,23 @@ const Table = ({
           </div>
         </div>
       )}
+
+      <style>{`
+        .col-drag-over {
+          border-left: 2px solid var(--primary, #3EB489) !important;
+          background: rgba(62, 180, 137, 0.15) !important;
+        }
+        .row-drag-over {
+          border-top: 2px solid var(--primary, #3EB489) !important;
+          background: rgba(62, 180, 137, 0.12) !important;
+        }
+        .row-dragging {
+          opacity: 0.4;
+        }
+      `}</style>
     </div>
   );
 };
 
 export default Table;
+

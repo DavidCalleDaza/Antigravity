@@ -338,13 +338,14 @@ export default function Wall() {
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false, showInput: false, inputValue: '', canAddComment: false }))}
         title={confirmModal.title}
+        size="sm"
         actions={[
-          { label: 'Cancelar', onClick: () => setConfirmModal(prev => ({ ...prev, isOpen: false, showInput: false, inputValue: '', canAddComment: false })), className: 'btn-ghost' },
+          { label: 'Cancelar', onClick: () => setConfirmModal(prev => ({ ...prev, isOpen: false, showInput: false, inputValue: '', canAddComment: false })), className: 'btn-outline' },
           { label: confirmModal.confirmLabel, onClick: () => confirmModal.onConfirm(confirmModal.inputValue), className: confirmModal.confirmClass }
         ]}
       >
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-secondary leading-relaxed">
+        <div className="flex flex-col gap-4 w-full" style={{ width: '100%' }}>
+          <p className="text-sm text-secondary leading-relaxed w-full" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
             {confirmModal.message}
           </p>
           

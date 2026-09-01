@@ -568,7 +568,9 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--surface-overlay);
+  background: var(--surface-overlay, rgba(255, 255, 255, 0.72));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -584,18 +586,19 @@
 }
 
 .modal {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: var(--radius-2xl);
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.05);
   transform: scale(0.95) translateY(10px);
   transition: transform var(--transition-base);
+  color: #1f2937;
 }
 .modal-overlay.active .modal {
   transform: scale(1) translateY(0);
@@ -606,13 +609,14 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-6);
-  border-bottom: var(--border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .modal-title {
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: var(--font-semibold);
+  color: #111827;
 }
 
 .modal-close {
@@ -622,15 +626,24 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-lg);
-  color: var(--text-tertiary);
+  color: #6b7280;
   transition: all var(--transition-fast);
 }
 .modal-close:hover {
-  background: var(--primary-50);
-  color: var(--primary);
+  background: rgba(0, 0, 0, 0.06);
+  color: #111827;
 }
 
-.modal-body { padding: var(--space-6); }
+.modal-body {
+  padding: var(--space-6);
+  color: #374151;
+  width: 100%;
+}
+
+.modal-body p,
+.modal-body div {
+  width: 100%;
+}
 
 .modal-footer {
   display: flex;
@@ -638,7 +651,7 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  border-top: var(--border);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .modal-lg { max-width: 720px; }

@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   {
     section: 'Principal',
     items: [
-      { id: 'wall', label: 'Muro de Impacto', icon: 'TreePine', page: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
+      { id: 'wall', label: 'Muro de Impacto', icon: 'Sprout', page: '/wall', allowedRoles: [ADMIN, SELLER, CLIENT] },
       { id: 'profile', label: 'Mi Perfil', icon: 'UserCircle', page: '/profile', allowedRoles: [ADMIN, SELLER, CLIENT] },
     ],
   },

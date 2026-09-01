@@ -79,7 +79,6 @@ export default function Wall() {
   const [activityDrawer, setActivityDrawer] = useState(null); // null | 'chart' | 'recent'
 
   const editFileInputRef = useRef(null);
-  const wallHeaderRef = useRef(null);
   const composerRef = useRef(null);
   const postRefsMap = useRef(new Map());
 
@@ -159,23 +158,40 @@ export default function Wall() {
   }, [posts]);
 
   useEffect(() => {
-    const FADE_DISTANCE = 160; 
-    const MIN_OPACITY = 0.2;
+    const FADE_START_OFFSET = 30;
+    const MIN_FADE_DISTANCE = 220;
     let rafId = null;
     const updatePostsBehindState = () => {
       rafId = null;
       const composerEl = composerRef.current;
       if (!composerEl) return;
       const composerBottom = composerEl.getBoundingClientRect().bottom;
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const baseOpacity = isDark ? 0.85 : 1;
+
       postRefsMap.current.forEach((el) => {
         if (!el) return;
-        const top = el.getBoundingClientRect().top;
-        const hidden = composerBottom - top;
-        const progress = Math.min(Math.max(hidden / FADE_DISTANCE, 0), 1);
-        const opacity = baseOpacity - progress * (baseOpacity - MIN_OPACITY);
-        el.style.filter = `opacity(${opacity.toFixed(3)})`;
+        el.style.transition = 'none';
+        const rect = el.getBoundingClientRect();
+        const distanceIntoFade = (composerBottom + FADE_START_OFFSET) - rect.top;
+        if (distanceIntoFade <= 0) {
+          el.style.opacity = '1';
+          el.style.pointerEvents = 'auto';
+          el.style.visibility = 'visible';
+        } else {
+          // La card entera debe terminar de recorrer su propia altura antes de
+          // desaparecer del todo, así una card alta no se esfuma de golpe
+          // mientras aún ocupa gran parte de la pantalla.
+          const fadeDistance = Math.max(rect.height, MIN_FADE_DISTANCE);
+          const progress = Math.min(distanceIntoFade / fadeDistance, 1);
+          const opacity = Math.max(1 - progress, 0);
+          el.style.opacity = opacity.toFixed(3);
+          if (opacity <= 0.02) {
+            el.style.pointerEvents = 'none';
+            el.style.visibility = 'hidden';
+          } else {
+            el.style.pointerEvents = 'auto';
+            el.style.visibility = 'visible';
+          }
+        }
       });
     };
     const handleScroll = () => {
@@ -280,14 +296,6 @@ export default function Wall() {
     <div className="page-content wall-bg-photo">
       <div className="wall-layout">
         <div className="wall-main">
-          <div className="wall-header reveal" ref={wallHeaderRef}>
-            <div className="wall-quote">
-              <span className="wall-quote-mark">“</span>
-              No buscamos aplausos. No buscamos vitrinas. DonApp existe porque servir es el único negocio donde todos ganan — incluso quienes nadie ve.
-            </div>
-            <div className="wall-subtitle">Evidencia de impacto real</div>
-          </div>
-
           <div className="post-composer reveal" ref={composerRef}>
             <WallComposer 
               composer={composerProps} 
@@ -296,11 +304,7 @@ export default function Wall() {
             />
           </div>
 
-          <p className="text-sm text-tertiary mt-2 mb-4">
-            Aquí no hay vueltos.
-          </p>
-
-          <WallFeed 
+          <WallFeed
             feed={feedProps} 
             utils={utilsProps} 
             currentUser={currentUser} 

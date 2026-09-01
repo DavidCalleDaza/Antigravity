@@ -9,7 +9,8 @@ import WallSocialSection from './WallSocialSection';
 import WallMediaEnhancePanel from './WallMediaEnhancePanel';
 
 export default function WallComposer({ composer, renderAvatarContent, currentUser }) {
-  const [multimediaOpen, setMultimediaOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState(null); // 'multimedia' | 'product' | 'social' | null
+  const toggleSection = (key) => setActiveSection((prev) => (prev === key ? null : key));
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const {
     additionalImages,
@@ -94,8 +95,8 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
             <AccordionSection
               icon={<ImageIcon width={16} height={16} />}
               title="MULTIMEDIA ADICIONAL"
-              isOpen={multimediaOpen}
-              onToggle={() => setMultimediaOpen(!multimediaOpen)}
+              isOpen={activeSection === 'multimedia'}
+              onToggle={() => toggleSection('multimedia')}
               summary={multimediaSummary}
             >
               {/* Galería de imágenes adicionales */}
@@ -108,6 +109,7 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
                 onItemClick={(item) =>
                   openEnhanceModal('image', { ...additionalImages[item.newIndex], newIndex: item.newIndex })
                 }
+                multiple
               />
 
               {/* Audios adicionales */}
@@ -120,6 +122,7 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
                 onItemClick={(item) =>
                   openEnhanceModal('audio', additionalAudios.find((a) => a.id === item.id))
                 }
+                multiple
               />
               {audioError && <div className="text-xs text-danger mt-1">{audioError}</div>}
 
@@ -133,13 +136,24 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
                 onItemClick={(item) =>
                   openEnhanceModal('video', additionalVideos.find((v) => v.id === item.id))
                 }
+                multiple
               />
               {videoError && <div className="text-xs text-danger mt-1">{videoError}</div>}
             </AccordionSection>
 
-            <WallProductInfoSection entity={entity} />
+            <WallProductInfoSection
+              entity={entity}
+              isOpen={activeSection === 'product'}
+              onToggle={() => toggleSection('product')}
+            />
 
-            <WallSocialSection accounts={accounts} shareOnSave={shareOnSave} setShareOnSave={setShareOnSave} />
+            <WallSocialSection
+              accounts={accounts}
+              shareOnSave={shareOnSave}
+              setShareOnSave={setShareOnSave}
+              isOpen={activeSection === 'social'}
+              onToggle={() => toggleSection('social')}
+            />
           </>
         )}
 

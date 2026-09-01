@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Share2, Facebook, Instagram, Plus, ExternalLink, AlertCircle } from 'lucide-react';
 import AccordionSection from '../../../components/ui/AccordionSection';
 import ShareOnSaveSection from '../../../components/ui/ShareOnSaveSection';
 
-export default function WallSocialSection({ accounts, shareOnSave, setShareOnSave }) {
+export default function WallSocialSection({ accounts, shareOnSave, setShareOnSave, isOpen, onToggle }) {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
 
   const metaAccounts = accounts.filter((a) => a.platform === 'facebook' || a.platform === 'instagram');
   const tikTokAccounts = accounts.filter((a) => a.platform === 'tiktok');
@@ -23,7 +22,7 @@ export default function WallSocialSection({ accounts, shareOnSave, setShareOnSav
       icon={<Share2 width={16} height={16} />}
       title="REDES SOCIALES"
       isOpen={isOpen}
-      onToggle={() => setIsOpen(!isOpen)}
+      onToggle={onToggle}
       summary={socialSummary}
     >
       {metaAccounts.length === 0 ? (

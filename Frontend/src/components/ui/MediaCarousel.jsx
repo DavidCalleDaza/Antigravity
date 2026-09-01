@@ -22,6 +22,7 @@ export default function MediaCarousel({
   onRemoveNew,
   onAddFile,
   onItemClick,
+  multiple = false,
 }) {
   const fileInputRef = useRef(null);
   const trackRef = useRef(null);
@@ -95,10 +96,10 @@ export default function MediaCarousel({
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     if (onAddFile) {
-      onAddFile(file);
+      files.forEach((file) => onAddFile(file));
     }
     e.target.value = '';
     // Scroll automático al final al agregar una imagen
@@ -204,6 +205,7 @@ export default function MediaCarousel({
             type="file"
             ref={fileInputRef}
             accept={accept}
+            multiple={multiple}
             className="media-carousel-file-input"
             onChange={handleFileChange}
           />

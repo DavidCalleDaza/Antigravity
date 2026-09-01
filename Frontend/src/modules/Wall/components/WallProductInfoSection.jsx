@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Package, Wrench, X } from 'lucide-react';
 import AccordionSection from '../../../components/ui/AccordionSection';
 import MediaUploader from '../../../components/ui/MediaUploader';
@@ -6,8 +6,7 @@ import CategorySelect from '../../../components/ui/CategorySelect';
 import MarkdownEditor from '../../../components/ui/MarkdownEditor';
 import Helpers from '../../../utils/helpers';
 
-export default function WallProductInfoSection({ entity }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
   const {
     entityKind,
     setEntityKind,
@@ -45,7 +44,7 @@ export default function WallProductInfoSection({ entity }) {
       icon={<Package width={16} height={16} />}
       title="INFORMACIÓN DEL PRODUCTO"
       isOpen={isOpen}
-      onToggle={() => setIsOpen(!isOpen)}
+      onToggle={onToggle}
       summary={summary}
     >
       {linkedItem && (

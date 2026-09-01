@@ -394,11 +394,11 @@ export default function Services() {
   const openEditModal = (service) => {
     setEditingService(service);
     setFormData({
-      name: service.name,
+      name: service.name || '',
       category_id: service.category_id || '',
-      price: service.price,
-      duration: service.duration || '',
-      status: service.status,
+      price: service.price ?? 0,
+      duration: service.duration != null ? String(service.duration) : '',
+      status: service.status || 'active',
       description: service.description || '',
       image_url: service.image_url || null,
       video_url: service.video_url || null,

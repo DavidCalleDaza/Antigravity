@@ -178,12 +178,12 @@ export default function ProductFormDrawer({
   const mediaSummary = `${totalMedia} elemento${totalMedia === 1 ? '' : 's'}`;
 
   const completedProductFields = [
-    Boolean(formData.name?.trim()),
+    Boolean(String(formData.name || '').trim()),
     Boolean(formData.category_id),
     Boolean(formData.price !== '' && formData.price !== null && formData.price !== undefined && Number(formData.price) >= 0),
     Boolean(formData.stock !== '' && formData.stock !== null && formData.stock !== undefined),
     Boolean(formData.status),
-    Boolean(formData.description?.trim()),
+    Boolean(String(formData.description || '').trim()),
   ].filter(Boolean).length;
   const infoSummary = `${completedProductFields} / 6 campos`;
 

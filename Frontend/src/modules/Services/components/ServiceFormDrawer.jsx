@@ -178,12 +178,12 @@ export default function ServiceFormDrawer({
   const mediaSummary = `${totalMedia} elemento${totalMedia === 1 ? '' : 's'}`;
 
   const completedServiceFields = [
-    Boolean(formData.name?.trim()),
+    Boolean(String(formData.name || '').trim()),
     Boolean(formData.category_id),
     Boolean(formData.price !== '' && formData.price !== null && formData.price !== undefined && Number(formData.price) >= 0),
-    Boolean(formData.duration?.trim()),
+    Boolean(String(formData.duration ?? '').trim()),
     Boolean(formData.status),
-    Boolean(formData.description?.trim()),
+    Boolean(String(formData.description || '').trim()),
   ].filter(Boolean).length;
   const infoSummary = `${completedServiceFields} / 6 campos`;
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Power, Calendar } from 'lucide-react';
 import Table from '../../../components/ui/Table';
 import { PencilIcon, TrashIcon, ShareIcon, CartIcon } from '../../../components/ui/icons';
@@ -18,8 +18,9 @@ export default function ProductsTable({
   onShare,
   onDeleteRequest,
   navigate,
+  revealImages = true,
 }) {
-  const baseColumns = buildProductColumns(isClient);
+  const baseColumns = useMemo(() => buildProductColumns(isClient, revealImages), [isClient, revealImages]);
   const columns = isAdmin ? [
     {
       key: '_select',

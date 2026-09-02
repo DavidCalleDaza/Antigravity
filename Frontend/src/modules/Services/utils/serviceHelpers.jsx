@@ -22,7 +22,7 @@ export function filterServices(services, categoryFilter, statusFilter, dbCategor
     }));
 }
 
-export function buildServiceColumns(isClient) {
+export function buildServiceColumns(isClient, revealImages = false) {
   return [
     { key: 'name', label: 'Servicio', sortable: true, width: '180px' },
     ...(isClient ? [
@@ -31,7 +31,13 @@ export function buildServiceColumns(isClient) {
       { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
     ] : []),
     { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
-    { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
+    { 
+      key: 'price', 
+      label: 'Precio', 
+      sortable: true, 
+      width: '120px', 
+      render: (v) => revealImages ? Helpers.formatCurrency(v) : '••••••' 
+    },
     { key: 'duration', label: 'Duración', sortable: true, width: '110px' },
     { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
   ].flat();

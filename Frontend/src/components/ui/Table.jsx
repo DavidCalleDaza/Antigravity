@@ -201,7 +201,7 @@ const Table = ({
                     onClick={() => col.sortable !== false && handleSort(col.key)}
                     style={isDataCol && enableDragAndDrop ? { cursor: 'grab' } : {}}
                   >
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '4px', width: '100%' }}>
                       {enableDragAndDrop && isDataCol && (
                         <GripVertical width="12" height="12" style={{ opacity: 0.4 }} />
                       )}
@@ -249,9 +249,9 @@ const Table = ({
                     </td>
                   )}
                   {colOrder.map((col, cIdx) => (
-                    <td key={cIdx}>{col.render ? col.render(row[col.key], row) : (row[col.key] ?? '-')}</td>
+                    <td key={cIdx} style={{ textAlign: 'center' }}>{col.render ? col.render(row[col.key], row) : (row[col.key] ?? '-')}</td>
                   ))}
-                  {actions && <td>{actions(row)}</td>}
+                  {actions && <td style={{ textAlign: 'center' }}>{actions(row)}</td>}
                 </tr>
               );
             })}

@@ -98,7 +98,7 @@
 /* --- 6. Tabla Compacta (Reducción de altura de filas) --- */
 .products-table-wrapper .table th{
   padding: 8px 16px !important;
-  text-align: left;
+  text-align: center !important;
   font-family: 'Verdana', sans-serif;
   font-size: 12px;
   letter-spacing: 0.05em;
@@ -110,6 +110,7 @@
 .products-table-wrapper .table td {
   padding: 4px 16px !important; /* Reduce el relleno vertical a 6px para achicar las filas */
   font-size: 12px !important;    /* Ajuste de tamaño de fuente para mejorar la armonía visual */
+  text-align: center !important;
   width: 100% !important;
   color: var(--text-primary);
   vertical-align: middle;

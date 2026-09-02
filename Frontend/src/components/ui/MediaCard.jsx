@@ -182,8 +182,15 @@ export default function MediaCard({
           </span>
         </div>
       )}
-      <div className="media-card-media">
+      <div className="media-card-media" style={{ position: 'relative', overflow: 'hidden' }}>
         {renderMedia()}
+
+        {/* Cortina blanca desplegable lentamente de arriba hacia abajo con el logo en el centro */}
+        <div className={`media-card-curtain ${!revealImages ? 'is-closed' : 'is-open'}`}>
+          <div className="media-card-curtain-content">
+            <DonAppLogo width={64} height={64} variant="dark" />
+          </div>
+        </div>
       </div>
 
       <div className="media-card-body">
@@ -303,6 +310,47 @@ export default function MediaCard({
         .media-card:hover .media-gallery-viewer-img {
           transform: scale(1.05);
           opacity: 1;
+        }
+
+        .media-card-curtain {
+          position: absolute;
+          inset: 0;
+          z-index: 8;
+          background: #ffffff !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+          transform: translateY(-100%);
+          pointer-events: none;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .media-card-curtain.is-closed {
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+
+        .media-card-curtain.is-open {
+          transform: translateY(-100%);
+          pointer-events: none;
+        }
+
+        .media-card-curtain-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.5s ease, opacity 0.5s ease;
+        }
+
+        .media-card-curtain.is-closed .media-card-curtain-content {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        .media-card-curtain.is-open .media-card-curtain-content {
+          transform: scale(0.85);
+          opacity: 0;
         }
 
         .media-card-video-wrapper {

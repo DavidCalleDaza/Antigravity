@@ -88,11 +88,11 @@ export default function ProductsToolbar({
           <Grid3X3 width="18" height="18" />
         </button>
         <button
-          className={`view-toggle-btn ${revealImages ? 'active' : ''}`}
+          className={`view-toggle-btn ${!revealImages ? 'active' : ''}`}
           onClick={() => setRevealImages(!revealImages)}
-          title={revealImages ? 'Ocultar imágenes reales' : 'Mostrar imágenes reales'}
+          title={revealImages ? 'Ocultar imágenes y precios' : 'Mostrar imágenes y precios'}
         >
-          {revealImages ? <EyeOff width="18" height="18" /> : <Eye width="18" height="18" />}
+          {revealImages ? <Eye width="18" height="18" /> : <EyeOff width="18" height="18" />}
         </button>
       </div>
     </div>

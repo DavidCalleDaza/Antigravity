@@ -25,7 +25,7 @@ export default function Services() {
   const navigate = useNavigate();
 
   const [view, setView] = useState('grid');
-  const [revealImages, setRevealImages] = useState(false);
+  const [revealImages, setRevealImages] = useState(true);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -502,6 +502,7 @@ export default function Services() {
           onToggleRequest={setToggleTarget}
           onDeleteRequest={handleDeleteRequest}
           navigate={navigate}
+          revealImages={revealImages}
         />
       )}
 

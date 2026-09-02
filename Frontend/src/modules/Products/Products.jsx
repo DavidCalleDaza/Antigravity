@@ -25,7 +25,7 @@ export default function Products() {
   const navigate = useNavigate();
 
   const [view, setView] = useState('grid');
-  const [revealImages, setRevealImages] = useState(false);
+  const [revealImages, setRevealImages] = useState(true);
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
@@ -487,6 +487,7 @@ export default function Products() {
           onToggleRequest={setToggleTarget}
           onDeleteRequest={handleDeleteRequest}
           navigate={navigate}
+          revealImages={revealImages}
         />
       )}
 

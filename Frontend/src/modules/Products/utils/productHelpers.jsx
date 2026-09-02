@@ -27,7 +27,7 @@ export function filterProducts(products, categoryFilter, statusFilter, dbCategor
     }));
 }
 
-export function buildProductColumns(isClient) {
+export function buildProductColumns(isClient, revealImages = false) {
   return [
     { key: 'name', label: 'Producto', sortable: true, width: '180px' },
     ...(isClient ? [
@@ -36,7 +36,13 @@ export function buildProductColumns(isClient) {
       { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
     ] : []),
     { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
-    { key: 'price', label: 'Precio', sortable: true, width: '120px', render: (v) => Helpers.formatCurrency(v) },
+    { 
+      key: 'price', 
+      label: 'Precio', 
+      sortable: true, 
+      width: '120px', 
+      render: (v) => revealImages ? Helpers.formatCurrency(v) : '••••••' 
+    },
     { key: 'stock', label: 'Stock', sortable: true, width: '90px' },
     { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
   ].flat();

@@ -7,7 +7,7 @@
 .services-table-wrapper .table th{
   padding: 8px 16px ;
   font-family: 'Verdana', sans-serif;
-  text-align: left;
+  text-align: center !important;
   font-size: 12px;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
@@ -21,6 +21,7 @@
   border-bottom: 1px solid var(--border);
   font-size: 12px;
   color: var(--text-primary);
+  text-align: center !important;
   vertical-align: middle;
   white-space: nowrap;
   font-weight: none !important;

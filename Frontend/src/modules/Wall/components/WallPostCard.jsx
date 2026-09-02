@@ -5,6 +5,8 @@ import {
   Image as ImageIcon, Video, Mic, X
 } from 'lucide-react';
 import Helpers from '../../../utils/helpers';
+import SquareAudioPlayer from '../../../components/ui/SquareAudioPlayer';
+import SquareVideoPlayer from '../../../components/ui/SquareVideoPlayer';
 
 export default function WallPostCard({ post, feed, utils, currentUser }) {
   const {
@@ -140,9 +142,9 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
                       {m.media_type?.startsWith('image/') ? (
                         <img src={Helpers.resolveMediaUrl(m.media_url)} alt="" />
                       ) : m.media_type?.startsWith('video/') ? (
-                        <video src={Helpers.resolveMediaUrl(m.media_url)} muted disablePictureInPicture />
+                        <SquareVideoPlayer src={Helpers.resolveMediaUrl(m.media_url)} compact />
                       ) : m.media_type?.startsWith('audio/') ? (
-                        <audio src={Helpers.resolveMediaUrl(m.media_url)} controls />
+                        <SquareAudioPlayer src={Helpers.resolveMediaUrl(m.media_url)} compact />
                       ) : (
                         <Paperclip size="18" />
                       )}
@@ -246,9 +248,9 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
                   m.media_type?.startsWith('image/') ? (
                     <img key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} alt="Media" />
                   ) : m.media_type?.startsWith('video/') ? (
-                    <video key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} controls disablePictureInPicture />
+                    <SquareVideoPlayer key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} />
                   ) : m.media_type?.startsWith('audio/') ? (
-                    <audio key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} controls />
+                    <SquareAudioPlayer key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} />
                   ) : (
                     <a key={m.id} href={Helpers.resolveMediaUrl(m.media_url)} target="_blank" rel="noreferrer" className="wall-post-media-attach">
                       <Paperclip size="20" />
@@ -262,9 +264,9 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
                 {post.media_type?.startsWith('image/') ? (
                   <img src={Helpers.resolveMediaUrl(post.media_url)} alt="Impact" />
                 ) : post.media_type?.startsWith('video/') ? (
-                  <video src={Helpers.resolveMediaUrl(post.media_url)} controls disablePictureInPicture style={{ width: '100%', maxHeight: '500px' }} />
+                  <SquareVideoPlayer src={Helpers.resolveMediaUrl(post.media_url)} isSingle />
                 ) : post.media_type?.startsWith('audio/') ? (
-                  <audio src={Helpers.resolveMediaUrl(post.media_url)} controls />
+                  <SquareAudioPlayer src={Helpers.resolveMediaUrl(post.media_url)} />
                 ) : (
                   <a href={Helpers.resolveMediaUrl(post.media_url)} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-4 bg-surface rounded-xl text-primary no-underline border border-dashed border-primary/20">
                     <Paperclip size={20} />

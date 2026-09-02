@@ -81,9 +81,13 @@ export default function Sidebar({ isOpen, closeMobile }) {
   return (
     <>
       <aside className={`sidebar`} id="sidebar">
-        <div className="sidebar-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <button className="btn btn-ghost btn-icon-only sidebar-toggle-btn" onClick={toggleSidebar} title="Alternar menú">
-            <LucideIcons.Menu width="20" height="20" />
+        <div className="sidebar-header" style={{ display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-end', alignItems: 'center', width: '100%' }}>
+          <button className="btn btn-ghost btn-icon-only sidebar-toggle-btn" onClick={toggleSidebar} aria-label="Alternar menú">
+            {sidebarCollapsed ? (
+              <LucideIcons.ChevronRight width="20" height="20" />
+            ) : (
+              <LucideIcons.ChevronLeft width="20" height="20" />
+            )}
           </button>
         </div>
 

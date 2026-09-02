@@ -3,6 +3,7 @@ import { Sparkles, Mic, Video, AlertCircle } from 'lucide-react';
 import Drawer from '../../../components/ui/Drawer';
 import Helpers from '../../../utils/helpers';
 import { aiClient } from '../../../utils/apiClient';
+import SquareAudioPlayer from '../../../components/ui/SquareAudioPlayer';
 
 const POLL_INTERVAL_MS = 4000;
 
@@ -175,7 +176,11 @@ export default function WallMediaEnhancePanel({ item, kind, onApply, onTextGener
       return <img src={afterUrl} alt="Después" className="wall-enhance-media-img" />;
     }
     if (kind === 'audio') {
-      return <audio src={afterUrl} controls className="wall-enhance-media-player" />;
+      return (
+        <div style={{ width: '100%', maxWidth: '200px', margin: '0 auto' }}>
+          <SquareAudioPlayer src={afterUrl} />
+        </div>
+      );
     }
     return <video src={afterUrl} controls className="wall-enhance-media-player" />;
   };

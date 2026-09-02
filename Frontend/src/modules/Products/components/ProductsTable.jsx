@@ -52,7 +52,7 @@ export default function ProductsTable({
   ] : baseColumns;
 
   const tableActions = (row) => (
-    <div className="d-flex gap-2">
+    <div className="d-flex items-center justify-center gap-2" style={{ justifyContent: 'center', alignItems: 'center', width: '100%' }}>
       {onView && (
         <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => onView(row)} title="Ver detalle">
           <Eye width="14" height="14" />
@@ -60,9 +60,6 @@ export default function ProductsTable({
       )}
       {canManage && (
         <>
-          <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">
-            <PencilIcon />
-          </button>
           <button 
             className={`btn btn-ghost btn-sm btn-icon-only ${row.status === 'active' ? 'text-danger' : 'text-success'}`} 
             onClick={() => onToggleRequest(row)}

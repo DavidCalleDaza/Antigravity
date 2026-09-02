@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Grid3X3, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { List, Grid3X3, Eye, EyeOff, Trash2, Download, UploadCloud } from 'lucide-react';
 import Dropdown from '../../../components/ui/Dropdown';
 
 export default function ProductsToolbar({
@@ -22,6 +22,8 @@ export default function ProductsToolbar({
   onSelectAll,
   selectedCount = 0,
   onBulkDeleteClick,
+  onExportExcel,
+  onImportExcel,
   hasItems = false,
 }) {
   return (
@@ -48,19 +50,42 @@ export default function ProductsToolbar({
           value={statusFilter}
           onChange={setStatusFilter}
         />
-        <Dropdown
-          options={[
-            { value: 'delete', label: 'Eliminar' }
-          ]}
-          value=""
-          placeholder="Acciones generales"
-          disabled={selectedCount === 0}
-          onChange={(val) => {
-            if (val === 'delete' && onBulkDeleteClick) {
-              onBulkDeleteClick();
-            }
-          }}
-        />
+        <div className="d-flex items-center gap-1" style={{ marginLeft: 'var(--space-1)' }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-icon-only"
+            onClick={onBulkDeleteClick}
+            disabled={selectedCount === 0}
+            title={selectedCount > 0 ? `Eliminar (${selectedCount}) seleccionados` : 'Eliminar (selecciona al menos un registro)'}
+            style={{
+              color: selectedCount > 0 ? '#ef4444' : 'var(--text-secondary)',
+              opacity: selectedCount > 0 ? 1 : 0.45,
+              cursor: selectedCount > 0 ? 'pointer' : 'not-allowed',
+            }}
+          >
+            <Trash2 width="16" height="16" />
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-icon-only"
+            onClick={onExportExcel}
+            title="Exportar a Excel"
+            style={{ color: 'var(--gold, #d4af37)' }}
+          >
+            <Download width="16" height="16" />
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm btn-icon-only"
+            onClick={onImportExcel}
+            title="Importar desde Excel"
+            style={{ color: '#22c55e' }}
+          >
+            <UploadCloud width="16" height="16" />
+          </button>
+        </div>
       </div>
       <div className="view-toggle">
         <button

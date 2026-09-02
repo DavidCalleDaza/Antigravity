@@ -12,6 +12,8 @@ import ProductsGrid from './components/ProductsGrid';
 import ProductsTable from './components/ProductsTable';
 import ProductFormDrawer from './components/ProductFormDrawer';
 import ProductModals from './components/ProductModals';
+import ItemImportModal from '../../components/ui/ItemImportModal';
+import { exportItemsToExcel } from '../../utils/excelUtils';
 import { filterProducts } from './utils/productHelpers';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
@@ -39,6 +41,7 @@ export default function Products() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -251,6 +254,31 @@ export default function Products() {
       toast.error('Error al realizar la eliminación masiva.');
     } finally {
       setIsBulkDeleting(false);
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const itemsToExport = selectedIds.length > 0
+        ? products.filter(p => selectedIds.includes(p.id))
+        : (filteredProducts.length > 0 ? filteredProducts : products);
+
+      if (!itemsToExport.length) {
+        toast.error('No hay productos para exportar.');
+        return;
+      }
+
+      exportItemsToExcel({
+        items: itemsToExport,
+        type: 'product',
+        filename: `Productos_${new Date().toISOString().slice(0, 10)}`,
+        categories: dbCategories,
+        storeLocations,
+      });
+      toast.success(`Se exportaron ${itemsToExport.length} producto${itemsToExport.length > 1 ? 's' : ''} a Excel.`);
+    } catch (err) {
+      console.error('Error al exportar productos a Excel:', err);
+      toast.error('Error al exportar los productos a Excel.');
     }
   };
 
@@ -472,6 +500,8 @@ export default function Products() {
         onSelectAll={handleSelectAll}
         selectedCount={selectedIds.length}
         onBulkDeleteClick={() => setIsBulkConfirmOpen(true)}
+        onExportExcel={handleExportExcel}
+        onImportExcel={() => setIsImportModalOpen(true)}
         hasItems={filteredProducts.length > 0}
       />
 
@@ -575,6 +605,15 @@ export default function Products() {
           setProducts((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
           loadProducts();
         }}
+      />
+
+      <ItemImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        type="product"
+        categories={dbCategories}
+        storeLocations={storeLocations}
+        onSuccess={loadProducts}
       />
     </div>
   );

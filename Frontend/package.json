@@ -25,6 +25,7 @@
     "recharts": "^3.10.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
+    "xlsx": "^0.18.5",
     "zustand": "^4.5.7"
   },
   "devDependencies": {

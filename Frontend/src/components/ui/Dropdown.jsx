@@ -84,17 +84,35 @@ export default function Dropdown({
 
       {open && !disabled && (
         <div className="custom-dropdown-menu" role="listbox">
-          {options.map((opt) => (
-            <div
-              key={opt.value}
-              className={`custom-dropdown-option ${opt.value === value ? 'selected' : ''}`}
-              role="option"
-              aria-selected={opt.value === value}
-              onClick={() => handleSelect(opt.value)}
-            >
-              <span>{opt.label}</span>
-            </div>
-          ))}
+          {options.map((opt) => {
+            const isOptDisabled = !!opt.disabled;
+            return (
+              <div
+                key={opt.value}
+                className={`custom-dropdown-option ${opt.value === value ? 'selected' : ''} ${isOptDisabled ? 'disabled' : ''}`}
+                role="option"
+                aria-selected={opt.value === value}
+                aria-disabled={isOptDisabled}
+                onClick={() => {
+                  if (!isOptDisabled) handleSelect(opt.value);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  ...(isOptDisabled ? { opacity: 0.4, cursor: 'not-allowed', pointerEvents: 'none' } : {}),
+                  ...(opt.style || {})
+                }}
+              >
+                {opt.icon && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, color: opt.iconColor || 'inherit' }}>
+                    {opt.icon}
+                  </span>
+                )}
+                <span style={{ color: opt.color || 'inherit' }}>{opt.label}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

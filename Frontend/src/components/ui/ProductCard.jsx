@@ -96,13 +96,6 @@ export default function ProductCard({
                 </button>
                 <button
                   className="btn btn-ghost btn-sm btn-icon-only"
-                  onClick={() => onEdit?.(product)}
-                  title="Editar"
-                >
-                  <Pencil width="16" height="16" />
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm btn-icon-only"
                   style={{ color: 'var(--danger)' }}
                   onClick={() => onDelete?.(product)}
                   title="Eliminar"

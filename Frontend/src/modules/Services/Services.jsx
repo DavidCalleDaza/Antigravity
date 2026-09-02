@@ -12,6 +12,8 @@ import ServicesGrid from './components/ServicesGrid';
 import ServicesTable from './components/ServicesTable';
 import ServiceFormDrawer from './components/ServiceFormDrawer';
 import ServiceModals from './components/ServiceModals';
+import ItemImportModal from '../../components/ui/ItemImportModal';
+import { exportItemsToExcel } from '../../utils/excelUtils';
 import { filterServices } from './utils/serviceHelpers';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
@@ -35,6 +37,7 @@ export default function Services() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isBulkConfirmOpen, setIsBulkConfirmOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   
   // Estados de Main (Borrado duro y filtros)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -226,6 +229,31 @@ export default function Services() {
       toast.error('Error al realizar la eliminación masiva.');
     } finally {
       setIsBulkDeleting(false);
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const itemsToExport = selectedIds.length > 0
+        ? services.filter(s => selectedIds.includes(s.id))
+        : (filteredServices.length > 0 ? filteredServices : services);
+
+      if (!itemsToExport.length) {
+        toast.error('No hay servicios para exportar.');
+        return;
+      }
+
+      exportItemsToExcel({
+        items: itemsToExport,
+        type: 'service',
+        filename: `Servicios_${new Date().toISOString().slice(0, 10)}`,
+        categories: dbCategories,
+        storeLocations,
+      });
+      toast.success(`Se exportaron ${itemsToExport.length} servicio${itemsToExport.length > 1 ? 's' : ''} a Excel.`);
+    } catch (err) {
+      console.error('Error al exportar servicios a Excel:', err);
+      toast.error('Error al exportar los servicios a Excel.');
     }
   };
 
@@ -487,6 +515,8 @@ export default function Services() {
         onSelectAll={handleSelectAll}
         selectedCount={selectedIds.length}
         onBulkDeleteClick={() => setIsBulkConfirmOpen(true)}
+        onExportExcel={handleExportExcel}
+        onImportExcel={() => setIsImportModalOpen(true)}
         hasItems={filteredServices.length > 0}
       />
 
@@ -590,6 +620,15 @@ export default function Services() {
           setServices((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)));
           loadServices();
         }}
+      />
+
+      <ItemImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        type="service"
+        categories={dbCategories}
+        storeLocations={storeLocations}
+        onSuccess={loadServices}
       />
     </div>
   );

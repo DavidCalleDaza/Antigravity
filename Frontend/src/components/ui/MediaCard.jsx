@@ -242,13 +242,6 @@ export default function MediaCard({
                 </button>
                 <button
                   className="btn btn-ghost btn-sm btn-icon-only"
-                  onClick={() => onEdit?.(item)}
-                  title="Editar"
-                >
-                  <Pencil width="16" height="16" />
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm btn-icon-only"
                   style={{ color: 'var(--danger)' }}
                   onClick={() => onDelete?.(item)}
                   title="Eliminar"

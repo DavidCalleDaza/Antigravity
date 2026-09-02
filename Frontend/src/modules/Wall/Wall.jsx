@@ -8,7 +8,6 @@ import { useStore } from '../../store/useStore';
 import { useToast } from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
-import ShareModal from '../../components/ShareModal';
 
 import WallComposer from './components/WallComposer';
 import WallFeed from './components/WallFeed';
@@ -72,8 +71,7 @@ export default function Wall() {
     handleDeleteComment, createPost
   } = postManager;
 
-  const [sharePost, setSharePost] = useState(null);
-  const composerProps = useWallComposer({ createPost, setPosts, setSharePost, toast, showConfirm });
+  const composerProps = useWallComposer({ createPost, setPosts, toast, showConfirm });
 
   const [postViewModes, setPostViewModes] = useState({});
   const [viewModeMenuOpen, setViewModeMenuOpen] = useState(null);
@@ -323,7 +321,7 @@ export default function Wall() {
     handleDeleteComment,
     viewModeMenuOpen, setViewModeMenuOpen,
     postViewModes, setPostViewModes,
-    postRefsMap, setSharePost, editFileInputRef,
+    postRefsMap, editFileInputRef,
     onOpenEnhanceModal: handleOpenEnhanceModal
   };
 
@@ -468,18 +466,6 @@ export default function Wall() {
           ))}
         </div>
       </Drawer>
-
-      <ShareModal
-        isOpen={Boolean(sharePost)}
-        onClose={() => setSharePost(null)}
-        mode="wallPost"
-        item={sharePost ? {
-          id: sharePost.id,
-          description: sharePost.content,
-          imageUrl: (sharePost.media && sharePost.media.length > 0 ? sharePost.media[0].media_url : null) || sharePost.media_url,
-          linkedItem: sharePost.linked_item ? { id: sharePost.linked_item.id, kind: sharePost.linked_item.kind } : null
-        } : null}
-      />
 
       {composerProps.enhanceTarget && (
         <WallMediaEnhancePanel

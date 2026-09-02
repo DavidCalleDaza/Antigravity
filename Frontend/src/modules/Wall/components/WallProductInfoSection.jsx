@@ -1,5 +1,5 @@
-import React from 'react';
-import { Package, Wrench, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Boxes, Package, Wrench, Search, Plus, X } from 'lucide-react';
 import AccordionSection from '../../../components/ui/AccordionSection';
 import MediaUploader from '../../../components/ui/MediaUploader';
 import CategorySelect from '../../../components/ui/CategorySelect';
@@ -32,78 +32,240 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
     setLinkSearchActive,
   } = entity;
 
+  // Mode: null (initial state) | 'search' | 'create'
+  const [activeMode, setActiveMode] = useState(() => {
+    if (linkSearchActive) return 'search';
+    if (entityKind) return 'create';
+    return null;
+  });
+
+  // Filtro de búsqueda por tipo: 'all' | 'product' | 'service'
+  const [searchTypeFilter, setSearchTypeFilter] = useState('all');
+
+  useEffect(() => {
+    if (linkedItem) {
+      setActiveMode(null);
+      setSearchTypeFilter('all');
+    } else if (linkSearchActive) {
+      setActiveMode('search');
+    } else if (entityKind) {
+      setActiveMode('create');
+    } else if (!entityFormData.name?.trim()) {
+      setActiveMode(null);
+      setSearchTypeFilter('all');
+    }
+  }, [linkedItem, linkSearchActive, entityKind, entityFormData.name]);
+
+  const handleSelectSearchMode = () => {
+    if (activeMode === 'search') {
+      setActiveMode(null);
+      setLinkSearchActive(false);
+      setSearchTypeFilter('all');
+    } else {
+      setActiveMode('search');
+      setLinkSearchActive(true);
+      setEntityKind(null);
+      setSearchTypeFilter('all');
+    }
+  };
+
+  const handleSelectCreateMode = () => {
+    if (activeMode === 'create') {
+      setActiveMode(null);
+      setLinkSearchActive(false);
+      setEntityKind(null);
+    } else {
+      setActiveMode('create');
+      setLinkSearchActive(false);
+      setSearchTypeFilter('all');
+      setEntityKind((prev) => prev || 'product');
+    }
+  };
+
+  const handleSelectKind = (kind) => {
+    setActiveMode('create');
+    setLinkSearchActive(false);
+    setEntityKind(kind);
+  };
+
+  const handleUnlink = () => {
+    setLinkedItem(null);
+    setActiveMode(null);
+    setEntityKind(null);
+    setLinkSearchActive(false);
+    setSearchTypeFilter('all');
+  };
+
   const summary =
-    entityMode === 'edit'
+    entityMode === 'edit' && linkedItem
       ? `Vinculado: ${linkedItem?.name || ''}`
       : entityFormData.name?.trim()
-      ? 'Nuevo producto/servicio'
+      ? `Nuevo ${entityKind === 'service' ? 'servicio' : 'producto'}: ${entityFormData.name}`
       : 'Sin datos';
+
+  // Filtrado de resultados en modo búsqueda
+  const displayedOptions = linkOptions.filter((opt) => {
+    if (activeMode === 'search') {
+      if (searchTypeFilter === 'product') return opt.kind === 'product';
+      if (searchTypeFilter === 'service') return opt.kind === 'service';
+    }
+    return true;
+  });
 
   return (
     <AccordionSection
-      icon={<Package width={16} height={16} />}
-      title="INFORMACIÓN DEL PRODUCTO"
+      icon={<Boxes width={16} height={16} />}
+      title="INFORMACIÓN DE PRODUCTOS Y SERVICIOS"
       isOpen={isOpen}
       onToggle={onToggle}
       summary={summary}
     >
+      {/* 1. Item vinculado previamente */}
       {linkedItem && (
         <div className="wall-linked-card">
           <div className="wall-linked-card-media">
             {linkedItem.image_url ? (
               <img src={Helpers.resolveMediaUrl(linkedItem.image_url)} alt="" />
+            ) : linkedItem.kind === 'service' ? (
+              <Wrench size={18} />
             ) : (
-              <Package size="18" />
+              <Package size={18} />
             )}
           </div>
           <div className="wall-linked-card-info">
-            <span className="wall-linked-card-kind">{linkedItem.kind === 'product' ? 'Producto' : 'Servicio'}</span>
+            <span className="wall-linked-card-kind">
+              {linkedItem.kind === 'product' ? 'Producto vinculado' : 'Servicio vinculado'}
+            </span>
             <span className="wall-linked-card-name">{linkedItem.name}</span>
+            {linkedItem.price != null && (
+              <span className="wall-picker-item-price">${Number(linkedItem.price).toLocaleString('es-CO')}</span>
+            )}
           </div>
-          <button type="button" className="btn-icon-only text-tertiary hover:text-danger" onClick={() => setLinkedItem(null)} title="Quitar vínculo">
-            <X size="14" />
+          <button
+            type="button"
+            className="btn btn-outline btn-sm wall-unlink-btn"
+            onClick={handleUnlink}
+            title="Quitar vínculo"
+          >
+            <X size={14} />
+            <span>Quitar</span>
           </button>
         </div>
       )}
 
+      {/* 2. Barra de acciones: BUSCAR, CREAR y fila de íconos (Producto / Servicio) ubicada abajo */}
       {!linkedItem && (
-        <div className="d-flex gap-2 mb-2">
-          <button
-            type="button"
-            className={`btn btn-sm ${linkSearchActive ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setLinkSearchActive(true)}
-          >
-            Buscar existente
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${!linkSearchActive ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setLinkSearchActive(false)}
-          >
-            Crear nuevo
-          </button>
+        <div className="wall-product-action-container">
+          <div className="wall-product-action-bar">
+            <button
+              type="button"
+              className={`wall-action-pill ${activeMode === 'search' ? 'active' : ''}`}
+              onClick={handleSelectSearchMode}
+            >
+              <Search size={14} className="wall-action-icon" />
+              <span>BUSCAR</span>
+            </button>
+
+            <button
+              type="button"
+              className={`wall-action-pill ${activeMode === 'create' ? 'active' : ''}`}
+              onClick={handleSelectCreateMode}
+            >
+              <Plus size={15} className="wall-action-icon" />
+              <span>CREAR</span>
+            </button>
+          </div>
+
+          {/* Íconos de producto y servicio abajo de los botones:
+              - En modo BUSCAR: funcionan como filtros de tipo (Producto / Servicio)
+              - En modo CREAR / Inicial: funcionan para seleccionar el tipo a crear */}
+          <div className="wall-product-type-bar">
+            <button
+              type="button"
+              className={`wall-icon-pill ${
+                activeMode === 'search'
+                  ? searchTypeFilter === 'product' ? 'active' : ''
+                  : activeMode === 'create' && entityKind === 'product' ? 'active' : ''
+              }`}
+              onClick={() => {
+                if (activeMode === 'search') {
+                  setSearchTypeFilter((prev) => (prev === 'product' ? 'all' : 'product'));
+                } else {
+                  handleSelectKind('product');
+                }
+              }}
+              title={activeMode === 'search' ? (searchTypeFilter === 'product' ? 'Quitar filtro de Producto' : 'Filtrar solo Productos') : 'Crear Producto'}
+              aria-label="Producto"
+            >
+              <Package size={15} />
+            </button>
+            <button
+              type="button"
+              className={`wall-icon-pill ${
+                activeMode === 'search'
+                  ? searchTypeFilter === 'service' ? 'active' : ''
+                  : activeMode === 'create' && entityKind === 'service' ? 'active' : ''
+              }`}
+              onClick={() => {
+                if (activeMode === 'search') {
+                  setSearchTypeFilter((prev) => (prev === 'service' ? 'all' : 'service'));
+                } else {
+                  handleSelectKind('service');
+                }
+              }}
+              title={activeMode === 'search' ? (searchTypeFilter === 'service' ? 'Quitar filtro de Servicio' : 'Filtrar solo Servicios') : 'Crear Servicio'}
+              aria-label="Servicio"
+            >
+              <Wrench size={15} />
+            </button>
+          </div>
         </div>
       )}
 
-      {!linkedItem && linkSearchActive && (
+      {/* 3. Panel de Búsqueda (cuando activeMode === 'search') */}
+      {!linkedItem && activeMode === 'search' && (
         <div className="wall-picker-panel">
           <div className="wall-picker-toolbar">
-            <span className="wall-picker-title"><Package width="14" height="14" /> Vincular producto o servicio</span>
+            <Search size={15} className="text-secondary ml-1" />
             <input
               className="form-input wall-picker-search"
-              placeholder="Buscar..."
+              placeholder={
+                searchTypeFilter === 'product'
+                  ? 'Buscar producto por nombre...'
+                  : searchTypeFilter === 'service'
+                  ? 'Buscar servicio por nombre...'
+                  : 'Buscar producto o servicio por nombre...'
+              }
               value={linkQuery}
               onChange={(e) => setLinkQuery(e.target.value)}
               autoFocus
             />
+            {linkQuery && (
+              <button
+                type="button"
+                className="btn-icon-only text-tertiary hover:text-primary"
+                onClick={() => setLinkQuery('')}
+                title="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
           <div className="wall-picker-list">
             {linkLoading ? (
-              <div className="wall-picker-empty">Buscando...</div>
-            ) : linkOptions.length === 0 ? (
-              <div className="wall-picker-empty">Sin resultados</div>
+              <div className="wall-picker-empty">Buscando elementos...</div>
+            ) : displayedOptions.length === 0 ? (
+              <div className="wall-picker-empty">
+                {searchTypeFilter === 'product'
+                  ? 'No se encontraron productos.'
+                  : searchTypeFilter === 'service'
+                  ? 'No se encontraron servicios.'
+                  : linkQuery.trim()
+                  ? 'No se encontraron resultados.'
+                  : 'Escribe para buscar productos o servicios.'}
+              </div>
             ) : (
-              linkOptions.map((opt) => (
+              displayedOptions.map((opt) => (
                 <button
                   key={`${opt.kind}-${opt.id}`}
                   type="button"
@@ -112,10 +274,18 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
                     setLinkedItem(opt);
                     setLinkSearchActive(false);
                     setLinkQuery('');
+                    setActiveMode(null);
+                    setSearchTypeFilter('all');
                   }}
                 >
                   <div className="wall-picker-item-media">
-                    {opt.image_url ? <img src={Helpers.resolveMediaUrl(opt.image_url)} alt="" /> : <Package width="16" height="16" />}
+                    {opt.image_url ? (
+                      <img src={Helpers.resolveMediaUrl(opt.image_url)} alt="" />
+                    ) : opt.kind === 'service' ? (
+                      <Wrench width="16" height="16" />
+                    ) : (
+                      <Package width="16" height="16" />
+                    )}
                   </div>
                   <div className="wall-picker-item-info">
                     <span className="wall-picker-item-kind">{opt.kind === 'product' ? 'Producto' : 'Servicio'}</span>
@@ -124,6 +294,7 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
                       <span className="wall-picker-item-price">${Number(opt.price).toLocaleString('es-CO')}</span>
                     )}
                   </div>
+                  <span className="wall-picker-item-action">Vincular →</span>
                 </button>
               ))
             )}
@@ -131,27 +302,11 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
         </div>
       )}
 
-      {!linkedItem && !linkSearchActive && (
-        <div className="d-flex gap-2 mb-2">
-          <button
-            type="button"
-            className={`btn btn-sm ${entityKind === 'product' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setEntityKind('product')}
-          >
-            <Package width={14} height={14} /> Producto
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${entityKind === 'service' ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setEntityKind('service')}
-          >
-            <Wrench width={14} height={14} /> Servicio
-          </button>
-        </div>
-      )}
+      {/* 4. Formulario de creación (cuando activeMode === 'create' y se tiene seleccionado tipo de entidad) */}
+      {!linkedItem && activeMode === 'create' && entityKind && (
+        <div className="wall-create-form-body">
+          <div className="wall-form-divider" />
 
-      {entityKind && (
-        <>
           <MediaUploader
             preview={entityPreview || Helpers.resolveMediaUrl(entityFormData.image_url)}
             uploading={entityUploading}
@@ -162,16 +317,16 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
             error={entityMediaError}
           />
 
-          <div className="form-group">
+          <div className="form-group mt-3">
             <label className="form-label">
-              Nombre <span className="required">*</span>
+              Nombre del {entityKind === 'service' ? 'Servicio' : 'Producto'} <span className="required">*</span>
             </label>
             <input
               type="text"
               className="form-input"
               value={entityFormData.name || ''}
               onChange={(e) => setEntityField('name', e.target.value)}
-              placeholder={entityKind === 'service' ? 'Ej: Corte de cabello' : 'Ej: Camiseta de Algodón'}
+              placeholder={entityKind === 'service' ? 'Ej: Corte de cabello o Taller' : 'Ej: Camiseta de Algodón o Vestido'}
             />
           </div>
 
@@ -185,7 +340,7 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
 
           <div className="d-flex gap-3">
             <div className="form-group flex-1">
-              <label className="form-label">Precio</label>
+              <label className="form-label">Precio ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -242,7 +397,7 @@ export default function WallProductInfoSection({ entity, isOpen, onToggle }) {
               onChange={(val) => setEntityField('description', val)}
             />
           </div>
-        </>
+        </div>
       )}
     </AccordionSection>
   );

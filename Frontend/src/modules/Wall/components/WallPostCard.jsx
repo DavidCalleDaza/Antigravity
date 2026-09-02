@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Sparkles, Package, Paperclip, Edit2, Trash2, LayoutGrid, Share2,
+  Sparkles, Package, Paperclip, Edit2, Trash2, LayoutGrid,
   Image as ImageIcon, Video, Mic, X
 } from 'lucide-react';
 import Helpers from '../../../utils/helpers';
@@ -26,7 +26,6 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
     handleComment,
     handleUpdateComment,
     handleDeleteComment,
-    setSharePost,
     editFileInputRef,
     postViewModes,
     setPostViewModes,
@@ -277,13 +276,6 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
             ) : null}
           </>
         )}
-      </div>
-
-      <div className="wall-post-actions">
-        <button type="button" className="wall-share-btn" onClick={() => setSharePost(post)}>
-          <Share2 width="14" height="14" />
-          Compartir en redes →
-        </button>
       </div>
 
       {/* Comments Section */}

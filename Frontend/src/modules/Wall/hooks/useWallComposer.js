@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { apiClient, socialClient } from '../../../utils/apiClient';
 import { useWallComposerEntity } from './useWallComposerEntity';
 
-export function useWallComposer({ createPost, setPosts, setSharePost, toast, showConfirm }) {
+export function useWallComposer({ createPost, setPosts, toast, showConfirm }) {
   const [additionalImages, setAdditionalImages] = useState([]); // [{ blob, previewUrl }]
   const [additionalAudios, setAdditionalAudios] = useState([]); // [{ id, file, name, size, previewUrl }]
   const [additionalVideos, setAdditionalVideos] = useState([]); // [{ id, file, name, size, previewUrl }]
@@ -220,9 +220,6 @@ export function useWallComposer({ createPost, setPosts, setSharePost, toast, sho
           if (additionalVideos.length > 0) {
             await uploadFilesToPost(post.id, additionalVideos, (v) => v.file, 'Un video adicional no se pudo subir.');
           }
-        }
-        if (shareOnSave.length > 0) {
-          setSharePost(post);
         }
         form.reset();
         clearAdditionalMedia();

@@ -664,10 +664,19 @@
 
 .wall-picker-panel {
   margin-top: var(--space-3);
-  border: var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xl);
-  background: var(--surface);
+  background: rgba(28, 25, 36, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+}
+
+[data-theme="light"] .wall-picker-panel {
+  background: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .wall-picker-toolbar {
@@ -675,7 +684,12 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+}
+
+[data-theme="light"] .wall-picker-toolbar {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
 }
 
 .wall-picker-title {
@@ -690,6 +704,30 @@
 
 .wall-picker-search {
   flex: 1;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .wall-picker-search {
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: #000000 !important;
+}
+
+[data-theme="light"] .wall-picker-search:focus {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="dark"] .wall-picker-search:focus {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) !important;
 }
 
 /* Picker Type Filter Pills */
@@ -748,6 +786,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  background: transparent;
 }
 
 .wall-picker-item {
@@ -757,28 +796,40 @@
   width: 100%;
   text-align: left;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-3);
   cursor: pointer;
-  transition: background var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .wall-picker-item:hover {
-  background: var(--primary-50);
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+[data-theme="light"] .wall-picker-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .wall-picker-item-media {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: var(--surface-raised);
+  background: rgba(28, 25, 36, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
+}
+
+[data-theme="light"] .wall-picker-item-media {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .wall-picker-item-media img {
@@ -829,6 +880,315 @@
   font-size: var(--text-xs);
   color: var(--text-tertiary);
   margin: 0;
+}
+
+/* ── Compact Wall Product/Service Action Bar ── */
+.wall-product-action-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+}
+
+.wall-product-action-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.wall-product-type-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wall-action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  width: auto;
+  min-height: 32px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(28, 25, 36, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.wall-action-pill .wall-action-icon,
+.wall-action-pill svg {
+  color: inherit;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+.wall-action-pill:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: var(--text-primary);
+  background: rgba(28, 25, 36, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.wall-action-pill.active {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(0, 0, 0, 0.9);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.wall-action-pill.active .wall-action-icon,
+.wall-action-pill.active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+[data-theme="dark"] .wall-action-pill.active {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .wall-action-pill.active .wall-action-icon,
+[data-theme="dark"] .wall-action-pill.active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+[data-theme="light"] .wall-action-pill {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .wall-action-pill .wall-action-icon,
+[data-theme="light"] .wall-action-pill svg {
+  color: var(--text-secondary);
+  stroke: currentColor;
+}
+
+[data-theme="light"] .wall-action-pill:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .wall-action-pill:hover .wall-action-icon,
+[data-theme="light"] .wall-action-pill:hover svg {
+  color: #000000;
+  stroke: #000000;
+}
+
+[data-theme="light"] .wall-action-pill.active {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .wall-action-pill.active .wall-action-icon,
+[data-theme="light"] .wall-action-pill.active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* ── Sub-Options / Type Pills (PRODUCTO / SERVICIO) ── */
+.wall-create-inline-options,
+.wall-product-type-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wall-icon-pill,
+.wall-sub-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(28, 25, 36, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.wall-icon-pill svg,
+.wall-sub-pill svg {
+  color: inherit;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+.wall-icon-pill:hover,
+.wall-sub-pill:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: var(--text-primary);
+  background: rgba(28, 25, 36, 0.75);
+  transform: translateY(-1px);
+}
+
+.wall-icon-pill.active,
+.wall-sub-pill.active {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: #000000;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.wall-icon-pill.active svg,
+.wall-sub-pill.active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+[data-theme="light"] .wall-icon-pill,
+[data-theme="light"] .wall-sub-pill {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: var(--text-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .wall-icon-pill svg,
+[data-theme="light"] .wall-sub-pill svg {
+  color: var(--text-secondary);
+  stroke: currentColor;
+}
+
+[data-theme="light"] .wall-icon-pill:hover,
+[data-theme="light"] .wall-sub-pill:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .wall-icon-pill:hover svg,
+[data-theme="light"] .wall-sub-pill:hover svg {
+  color: #000000;
+  stroke: #000000;
+}
+
+[data-theme="light"] .wall-icon-pill.active,
+[data-theme="light"] .wall-sub-pill.active {
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .wall-icon-pill.active svg,
+[data-theme="light"] .wall-sub-pill.active svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.wall-create-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: wallFadeIn 0.3s ease;
+}
+
+.wall-form-divider {
+  border-top: 1px solid var(--border-color);
+  margin: var(--space-1) 0;
+}
+
+.wall-unlink-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.wall-picker-item-action {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-left: auto;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.2s ease;
+}
+
+.wall-picker-item:hover .wall-picker-item-action {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@keyframes wallSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes wallFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wallPopIn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Post media grid + actions */

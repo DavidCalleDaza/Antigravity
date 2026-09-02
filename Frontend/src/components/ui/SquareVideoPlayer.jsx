@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Video } from 'lucide-react';
+import { Play, Pause, Video, Maximize2, PictureInPicture2 } from 'lucide-react';
 
 /**
  * SquareVideoPlayer
  * 
  * Renderiza un reproductor de video compacto con el diseño IDÉNTICO al del audio:
  * - Fondo blanco transparente translúcido con efecto glassmorphism
- * - Etiqueta superior verde "Video" y ondas ecualizadoras animadas
+ * - Etiqueta superior verde "Video" y botones de ventana flotante (PiP) y expandir a pantalla completa
  * - Botón central de Play / Pause con fondo y borde verde
  * - Barra de progreso verde y contadores de tiempo idénticos al audio
  */
@@ -80,6 +80,43 @@ export default function SquareVideoPlayer({
     }
   };
 
+  const handleTogglePiP = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (document.pictureInPictureElement === video) {
+        await document.exitPictureInPicture();
+      } else if (document.pictureInPictureEnabled) {
+        if (video.paused) await video.play();
+        await video.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.log('Error Picture-in-Picture:', err);
+    }
+  };
+
+  const handleToggleFullscreen = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (video.requestFullscreen) {
+        await video.requestFullscreen();
+      } else if (video.webkitRequestFullscreen) {
+        await video.webkitRequestFullscreen();
+      }
+    } catch (err) {
+      console.log('Error Fullscreen:', err);
+    }
+  };
+
   const handleSeek = (e) => {
     e.stopPropagation();
     const video = videoRef.current;
@@ -111,22 +148,36 @@ export default function SquareVideoPlayer({
         src={src}
         preload="metadata"
         playsInline
-        disablePictureInPicture
       />
 
       {/* Capa de Controles Overlay con Fondo Blanco Translúcido Idéntico al Audio */}
       <div className="square-video-overlay">
-        {/* Cabecera / Badge "Video" Verde */}
+        {/* Cabecera / Badge "Video" Verde + Acciones PiP y Fullscreen */}
         <div className="square-audio-top">
           <div className="square-audio-badge">
             <Video size={11} />
             <span>Video</span>
           </div>
-          <div className="square-audio-soundwave">
-            <span className="wave-bar bar-1"></span>
-            <span className="wave-bar bar-2"></span>
-            <span className="wave-bar bar-3"></span>
-            <span className="wave-bar bar-4"></span>
+
+          <div className="square-video-actions">
+            <button
+              type="button"
+              className="square-video-action-btn"
+              onClick={handleTogglePiP}
+              title="Ventana flotante (Picture-in-Picture)"
+              aria-label="Ventana flotante"
+            >
+              <PictureInPicture2 size={11} />
+            </button>
+            <button
+              type="button"
+              className="square-video-action-btn"
+              onClick={handleToggleFullscreen}
+              title="Expandir a pantalla completa"
+              aria-label="Expandir a pantalla completa"
+            >
+              <Maximize2 size={11} />
+            </button>
           </div>
         </div>
 

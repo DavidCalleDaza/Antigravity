@@ -861,7 +861,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 96px;
+  aspect-ratio: 1 / 1;
   background: rgba(30, 41, 59, 0.45);
   backdrop-filter: blur(14px) saturate(180%);
   -webkit-backdrop-filter: blur(14px) saturate(180%);
@@ -1020,6 +1020,9 @@
 .square-audio-time {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
   font-weight: 600;
@@ -1042,7 +1045,7 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 96px;
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -1103,6 +1106,40 @@
 
 [data-theme="dark"] .square-video-overlay {
   background: rgba(15, 23, 42, 0.45);
+}
+
+.square-video-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.square-video-action-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(62, 180, 137, 0.18);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(62, 180, 137, 0.35);
+  color: #1a7a58;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+[data-theme="dark"] .square-video-action-btn {
+  color: #3eb489;
+  border-color: rgba(62, 180, 137, 0.4);
+}
+
+.square-video-action-btn:hover {
+  background: #3eb489;
+  border-color: #3eb489;
+  color: #ffffff;
+  transform: scale(1.1);
 }
 
 .square-video-card.is-playing .square-video-overlay {
@@ -1632,7 +1669,8 @@
 
 /* --- Ícono pequeño --- */
 .wall-post--icon-sm .wall-post-media-grid {
-  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  grid-template-columns: repeat(auto-fill, 56px);
+  gap: var(--space-2);
 }
 
 .wall-post--icon-sm .wall-post-media-grid img,
@@ -1640,7 +1678,92 @@
 .wall-post--icon-sm .wall-post-media-grid .square-audio-card,
 .wall-post--icon-sm .wall-post-media-grid .square-video-card,
 .wall-post--icon-sm .wall-post-media-thumb {
-  height: 56px;
+  width: 56px !important;
+  height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: var(--radius-md) !important;
+  box-sizing: border-box !important;
+}
+
+/* Reglas compactas para audios y videos en modo Ícono pequeño (56px) */
+.wall-post--icon-sm .square-audio-card,
+.wall-post--icon-sm .square-video-card {
+  padding: 3px !important;
+  gap: 1px !important;
+}
+
+.wall-post--icon-sm .square-video-overlay {
+  padding: 3px !important;
+}
+
+.wall-post--icon-sm .square-audio-top {
+  height: 12px;
+}
+
+.wall-post--icon-sm .square-audio-badge {
+  font-size: 7.5px !important;
+  padding: 0 3px !important;
+  gap: 2px !important;
+  height: 12px !important;
+}
+
+.wall-post--icon-sm .square-audio-badge svg {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.wall-post--icon-sm .square-audio-soundwave {
+  display: none !important;
+}
+
+.wall-post--icon-sm .square-video-actions {
+  gap: 2px !important;
+}
+
+.wall-post--icon-sm .square-video-action-btn {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 2px !important;
+  border-width: 0.5px !important;
+}
+
+.wall-post--icon-sm .square-video-action-btn svg {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.wall-post--icon-sm .square-audio-center {
+  margin: auto 0 !important;
+}
+
+.wall-post--icon-sm .square-audio-play-btn {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+}
+
+.wall-post--icon-sm .square-audio-play-btn svg {
+  width: 9px !important;
+  height: 9px !important;
+}
+
+.wall-post--icon-sm .square-audio-bottom {
+  gap: 1px !important;
+}
+
+.wall-post--icon-sm .square-audio-progress-bar {
+  height: 2px !important;
+}
+
+.wall-post--icon-sm .square-audio-time {
+  font-size: 7px !important;
+  line-height: 1 !important;
+  letter-spacing: -0.4px !important;
 }
 
 .wall-post--icon-sm .wall-post-media img,

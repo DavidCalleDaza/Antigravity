@@ -662,6 +662,183 @@
   padding: 0;
 }
 
+/* ── Wall Multimedia Layout Toolbar & Dropdown ── */
+.wall-multimedia-toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.wall-layout-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.wall-layout-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  min-height: 28px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(28, 25, 36, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.wall-layout-toggle-btn:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: var(--text-primary);
+  background: rgba(28, 25, 36, 0.75);
+}
+
+.wall-layout-toggle-btn.active {
+  border-color: rgba(212, 175, 55, 0.5);
+  color: var(--text-primary);
+}
+
+.wall-layout-chevron {
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+.wall-layout-chevron.open {
+  transform: rotate(180deg);
+}
+
+[data-theme="light"] .wall-layout-toggle-btn {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: var(--text-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .wall-layout-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000000;
+}
+
+.wall-layout-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  min-width: 130px;
+  background: rgba(28, 25, 36, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md, 8px);
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: wallFadeIn 0.15s ease;
+}
+
+[data-theme="light"] .wall-layout-dropdown-menu {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.wall-layout-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 6px);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.wall-layout-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .wall-layout-option:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
+}
+
+.wall-layout-option.selected {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+[data-theme="light"] .wall-layout-option.selected {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000000;
+}
+
+/* ── Wall Multimedia Horizontal Layout (3 columns side by side) ── */
+.wall-multimedia-horizontal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Wall Multimedia Vertical Layout (Stacked rows) ── */
+.wall-multimedia-vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wall-multimedia-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-lg, 12px);
+  padding: 8px 10px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-sizing: border-box;
+}
+
+.wall-multimedia-vertical-list .wall-multimedia-column {
+  width: 100%;
+  padding: 10px 14px;
+}
+
+[data-theme="dark"] .wall-multimedia-column {
+  background: rgba(28, 25, 36, 0.4);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 820px) {
+  .wall-multimedia-horizontal-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
 .wall-picker-panel {
   margin-top: var(--space-3);
   border: 1px solid rgba(255, 255, 255, 0.12);

@@ -23,6 +23,7 @@ export default function MediaCarousel({
   onAddFile,
   onItemClick,
   multiple = false,
+  compact = false,
 }) {
   const fileInputRef = useRef(null);
   const trackRef = useRef(null);
@@ -59,7 +60,7 @@ export default function MediaCarousel({
 
     if (items.length > 0 && clientWidth > 0) {
       // Estimar item index basado en la posición de scroll
-      const itemWidth = 120 + 8; // min-width 120px + gap 8px
+      const itemWidth = compact ? 56 + 6 : 120 + 8;
       const idx = Math.min(
         Math.max(0, Math.round(scrollLeft / itemWidth)),
         items.length - 1
@@ -81,17 +82,17 @@ export default function MediaCarousel({
       if (track) track.removeEventListener('scroll', updateScrollState);
       window.removeEventListener('resize', updateScrollState);
     };
-  }, [items.length]);
+  }, [items.length, compact]);
 
   const scrollLeft = () => {
     if (trackRef.current) {
-      trackRef.current.scrollBy({ left: -140, behavior: 'smooth' });
+      trackRef.current.scrollBy({ left: compact ? -80 : -140, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (trackRef.current) {
-      trackRef.current.scrollBy({ left: 140, behavior: 'smooth' });
+      trackRef.current.scrollBy({ left: compact ? 80 : 140, behavior: 'smooth' });
     }
   };
 
@@ -114,7 +115,7 @@ export default function MediaCarousel({
   };
 
   return (
-    <div className="media-carousel">
+    <div className={`media-carousel ${compact ? 'media-carousel--compact' : ''}`}>
       {/* Encabezado con etiqueta, contador de posición e indicador total */}
       <div className="media-carousel-header">
         <label className="form-label media-carousel-label">{label}</label>
@@ -142,7 +143,7 @@ export default function MediaCarousel({
             title="Anterior"
             aria-label="Imagen anterior"
           >
-            <ChevronLeft width={16} height={16} />
+            <ChevronLeft width={compact ? 12 : 16} height={compact ? 12 : 16} />
           </button>
         )}
 
@@ -169,7 +170,11 @@ export default function MediaCarousel({
                 />
               ) : (
                 <div className="media-carousel-file">
-                  {kind === 'audio' ? <Mic width={20} height={20} /> : <Video width={20} height={20} />}
+                  {kind === 'audio' ? (
+                    <Mic width={compact ? 15 : 20} height={compact ? 15 : 20} />
+                  ) : (
+                    <Video width={compact ? 15 : 20} height={compact ? 15 : 20} />
+                  )}
                   <span className="media-carousel-file-name">{item.name}</span>
                 </div>
               )}
@@ -184,7 +189,7 @@ export default function MediaCarousel({
                   title="Quitar"
                   aria-label="Quitar"
                 >
-                  <X width={12} height={12} />
+                  <X width={compact ? 9 : 12} height={compact ? 9 : 12} />
                 </button>
               )}
             </div>
@@ -195,9 +200,9 @@ export default function MediaCarousel({
             type="button"
             className="media-carousel-add-tile"
             onClick={() => fileInputRef.current?.click()}
-            title="Agregar imagen adicional"
+            title={`Agregar ${kind === 'audio' ? 'audio' : kind === 'video' ? 'video' : 'imagen'}`}
           >
-            <Plus width={18} height={18} />
+            <Plus width={compact ? 14 : 18} height={compact ? 14 : 18} />
             <span className="media-carousel-add-text">Agregar</span>
           </button>
 
@@ -219,7 +224,7 @@ export default function MediaCarousel({
             title="Siguiente"
             aria-label="Imagen siguiente"
           >
-            <ChevronRight width={16} height={16} />
+            <ChevronRight width={compact ? 12 : 16} height={compact ? 12 : 16} />
           </button>
         )}
       </div>
@@ -454,6 +459,92 @@ export default function MediaCarousel({
 
         .media-carousel-nav--next {
           right: -8px;
+        }
+
+        /* ── Compact Mode (3 visible slots) ── */
+        .media-carousel--compact {
+          gap: var(--space-1);
+        }
+
+        .media-carousel--compact .media-carousel-header {
+          gap: 4px;
+        }
+
+        .media-carousel--compact .media-carousel-label {
+          font-size: 0.72rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .media-carousel--compact .media-carousel-position-badge {
+          font-size: 9px;
+          padding: 1px 5px;
+        }
+
+        .media-carousel--compact .media-carousel-count {
+          font-size: 9px;
+        }
+
+        .media-carousel--compact .media-carousel-track {
+          gap: 6px;
+          padding: 2px;
+          max-height: 56px;
+        }
+
+        .media-carousel--compact .media-carousel-item,
+        .media-carousel--compact .media-carousel-add-tile {
+          flex: 0 0 calc((100% - 12px) / 3);
+          min-width: 44px;
+          height: 48px;
+          aspect-ratio: auto;
+          border-radius: var(--radius-sm, 6px);
+        }
+
+        .media-carousel--compact .media-carousel-item--file {
+          padding: 4px 2px;
+          gap: 2px;
+        }
+
+        .media-carousel--compact .media-carousel-file {
+          gap: 2px;
+        }
+
+        .media-carousel--compact .media-carousel-file-name {
+          font-size: 8px;
+          line-height: 1.1;
+        }
+
+        .media-carousel--compact .media-carousel-add-tile {
+          gap: 1px;
+          border-width: 1.5px;
+        }
+
+        .media-carousel--compact .media-carousel-add-text {
+          font-size: 8.5px;
+        }
+
+        .media-carousel--compact .media-carousel-remove {
+          width: 15px;
+          height: 15px;
+          top: 2px;
+          right: 2px;
+        }
+
+        .media-carousel--compact .media-carousel-nav {
+          width: 18px;
+          height: 18px;
+          top: 50%;
+        }
+
+        .media-carousel--compact .media-carousel-nav--prev {
+          left: -4px;
+        }
+
+        .media-carousel--compact .media-carousel-nav--next {
+          right: -4px;
         }
       `}</style>
     </div>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  Image as ImageIcon, ChevronDown, ChevronUp
+  Image as ImageIcon, ChevronDown, ChevronUp, LayoutGrid, LayoutList, Check
 } from 'lucide-react';
 import AccordionSection from '../../../components/ui/AccordionSection';
 import MediaCarousel from '../../../components/ui/MediaCarousel';
@@ -12,6 +12,26 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
   const [activeSection, setActiveSection] = useState(null); // 'multimedia' | 'product' | 'social' | null
   const toggleSection = (key) => setActiveSection((prev) => (prev === key ? null : key));
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+  
+  // Layout switch state: 'columns' | 'rows'
+  const [multimediaLayout, setMultimediaLayout] = useState('columns');
+  const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false);
+  const layoutDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (layoutDropdownRef.current && !layoutDropdownRef.current.contains(e.target)) {
+        setIsLayoutMenuOpen(false);
+      }
+    };
+    if (isLayoutMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isLayoutMenuOpen]);
+
   const {
     additionalImages,
     additionalAudios,
@@ -99,46 +119,107 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
               onToggle={() => toggleSection('multimedia')}
               summary={multimediaSummary}
             >
-              {/* Galería de imágenes adicionales */}
-              <MediaCarousel
-                existingUrls={[]}
-                primaryUrl=""
-                newImages={additionalImages}
-                onRemoveNew={handleRemoveAdditionalImage}
-                onAddFile={handleAddAdditionalImage}
-                onItemClick={(item) =>
-                  openEnhanceModal('image', { ...additionalImages[item.newIndex], newIndex: item.newIndex })
-                }
-                multiple
-              />
+              {/* Barra de opciones de visualización (Columnas / Filas) */}
+              <div className="wall-multimedia-toolbar">
+                <div className="wall-layout-dropdown-container" ref={layoutDropdownRef}>
+                  <button
+                    type="button"
+                    className={`wall-layout-toggle-btn ${isLayoutMenuOpen ? 'active' : ''}`}
+                    onClick={() => setIsLayoutMenuOpen(!isLayoutMenuOpen)}
+                    title="Cambiar disposición (Columnas o Filas)"
+                    aria-label="Cambiar disposición de multimedia"
+                  >
+                    {multimediaLayout === 'columns' ? <LayoutGrid size={13} /> : <LayoutList size={13} />}
+                    <span className="wall-layout-label">
+                      {multimediaLayout === 'columns' ? 'Columnas' : 'Filas'}
+                    </span>
+                    <ChevronDown size={12} className={`wall-layout-chevron ${isLayoutMenuOpen ? 'open' : ''}`} />
+                  </button>
 
-              {/* Audios adicionales */}
-              <MediaCarousel
-                label="Audios adicionales"
-                kind="audio"
-                accept="audio/*"
-                items={audioItems}
-                onAddFile={handleAddAudio}
-                onItemClick={(item) =>
-                  openEnhanceModal('audio', additionalAudios.find((a) => a.id === item.id))
-                }
-                multiple
-              />
-              {audioError && <div className="text-xs text-danger mt-1">{audioError}</div>}
+                  {isLayoutMenuOpen && (
+                    <div className="wall-layout-dropdown-menu">
+                      <button
+                        type="button"
+                        className={`wall-layout-option ${multimediaLayout === 'columns' ? 'selected' : ''}`}
+                        onClick={() => {
+                          setMultimediaLayout('columns');
+                          setIsLayoutMenuOpen(false);
+                        }}
+                      >
+                        <LayoutGrid size={13} />
+                        <span>Columnas</span>
+                        {multimediaLayout === 'columns' && <Check size={13} className="ml-auto" />}
+                      </button>
+                      <button
+                        type="button"
+                        className={`wall-layout-option ${multimediaLayout === 'rows' ? 'selected' : ''}`}
+                        onClick={() => {
+                          setMultimediaLayout('rows');
+                          setIsLayoutMenuOpen(false);
+                        }}
+                      >
+                        <LayoutList size={13} />
+                        <span>Filas</span>
+                        {multimediaLayout === 'rows' && <Check size={13} className="ml-auto" />}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-              {/* Videos adicionales */}
-              <MediaCarousel
-                label="Videos adicionales"
-                kind="video"
-                accept="video/*"
-                items={videoItems}
-                onAddFile={handleAddVideo}
-                onItemClick={(item) =>
-                  openEnhanceModal('video', additionalVideos.find((v) => v.id === item.id))
-                }
-                multiple
-              />
-              {videoError && <div className="text-xs text-danger mt-1">{videoError}</div>}
+              {/* Despliegue según opción elegida: Columnas o Filas */}
+              <div className={multimediaLayout === 'columns' ? 'wall-multimedia-horizontal-grid' : 'wall-multimedia-vertical-list'}>
+                {/* Galería de imágenes adicionales */}
+                <div className="wall-multimedia-column">
+                  <MediaCarousel
+                    label="Imágenes adicionales"
+                    existingUrls={[]}
+                    primaryUrl=""
+                    newImages={additionalImages}
+                    onRemoveNew={handleRemoveAdditionalImage}
+                    onAddFile={handleAddAdditionalImage}
+                    onItemClick={(item) =>
+                      openEnhanceModal('image', { ...additionalImages[item.newIndex], newIndex: item.newIndex })
+                    }
+                    multiple
+                    compact={multimediaLayout === 'columns'}
+                  />
+                </div>
+
+                {/* Audios adicionales */}
+                <div className="wall-multimedia-column">
+                  <MediaCarousel
+                    label="Audios adicionales"
+                    kind="audio"
+                    accept="audio/*"
+                    items={audioItems}
+                    onAddFile={handleAddAudio}
+                    onItemClick={(item) =>
+                      openEnhanceModal('audio', additionalAudios.find((a) => a.id === item.id))
+                    }
+                    multiple
+                    compact={multimediaLayout === 'columns'}
+                  />
+                  {audioError && <div className="text-xs text-danger mt-1">{audioError}</div>}
+                </div>
+
+                {/* Videos adicionales */}
+                <div className="wall-multimedia-column">
+                  <MediaCarousel
+                    label="Videos adicionales"
+                    kind="video"
+                    accept="video/*"
+                    items={videoItems}
+                    onAddFile={handleAddVideo}
+                    onItemClick={(item) =>
+                      openEnhanceModal('video', additionalVideos.find((v) => v.id === item.id))
+                    }
+                    multiple
+                    compact={multimediaLayout === 'columns'}
+                  />
+                  {videoError && <div className="text-xs text-danger mt-1">{videoError}</div>}
+                </div>
+              </div>
             </AccordionSection>
 
             <WallProductInfoSection
@@ -158,26 +239,31 @@ export default function WallComposer({ composer, renderAvatarContent, currentUse
         )}
 
         <div className="post-composer-actions">
-          <button type="submit" className="btn btn-primary btn-sm">
-            Publicar
-          </button>
+          <div className="post-composer-buttons">
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm wall-btn-publish"
+              disabled={composer.isSubmitting}
+            >
+              {composer.isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true" />
+                  Publicando...
+                </>
+              ) : (
+                'PUBLICAR'
+              )}
+            </button>
+          </div>
         </div>
-
-        <p className="text-xs text-tertiary mt-2">
-          Publica evidencia solo si cuentas con el consentimiento de las personas que aparecen en ella.
-        </p>
       </form>
 
       {enhanceTarget && (
         <WallMediaEnhancePanel
-          item={enhanceTarget.item}
-          kind={enhanceTarget.kind}
-          onApply={(file) => {
-            applyEnhancedItem(enhanceTarget.kind, enhanceTarget.item, file);
-            closeEnhanceModal();
-          }}
-          onTextGenerated={insertGeneratedText}
+          target={enhanceTarget}
           onClose={closeEnhanceModal}
+          onApply={applyEnhancedItem}
+          onInsertText={insertGeneratedText}
         />
       )}
     </>

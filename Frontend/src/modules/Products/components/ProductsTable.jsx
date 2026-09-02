@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Power, Calendar } from 'lucide-react';
+import { Eye, Power, Calendar } from 'lucide-react';
 import Table from '../../../components/ui/Table';
 import { PencilIcon, TrashIcon, ShareIcon, CartIcon } from '../../../components/ui/icons';
 import { buildProductColumns } from '../utils/productHelpers';
@@ -13,6 +13,7 @@ export default function ProductsTable({
   onToggleSelect,
   onSelectAll,
   isAllSelected = false,
+  onView,
   openEditModal,
   onToggleRequest,
   onShare,
@@ -29,7 +30,7 @@ export default function ProductsTable({
           type="checkbox"
           checked={isAllSelected}
           onChange={onSelectAll}
-          style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '16px', height: '16px' }}
+          style={{ cursor: 'pointer', accentColor: '#000000', width: '16px', height: '16px' }}
           title="Seleccionar todo"
         />
       ),
@@ -43,7 +44,7 @@ export default function ProductsTable({
             e.stopPropagation();
             onToggleSelect?.(row.id);
           }}
-          style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '16px', height: '16px' }}
+          style={{ cursor: 'pointer', accentColor: '#000000', width: '16px', height: '16px' }}
         />
       )
     },
@@ -52,6 +53,11 @@ export default function ProductsTable({
 
   const tableActions = (row) => (
     <div className="d-flex gap-2">
+      {onView && (
+        <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => onView(row)} title="Ver detalle">
+          <Eye width="14" height="14" />
+        </button>
+      )}
       {canManage && (
         <>
           <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => openEditModal(row)} title="Editar">

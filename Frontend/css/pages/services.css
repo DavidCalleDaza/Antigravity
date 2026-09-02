@@ -10,9 +10,9 @@
   text-align: center !important;
   font-size: 12px;
   letter-spacing: 0.05em;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background: #000000 !important;
   white-space: nowrap;
 }
 .services-table-wrapper .table td {

@@ -24,7 +24,7 @@ export default function Services() {
   const isClient = userRole === 'client';
   const navigate = useNavigate();
 
-  const [view, setView] = useState('grid');
+  const [view, setView] = useState('table');
   const [revealImages, setRevealImages] = useState(true);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +49,10 @@ export default function Services() {
   // Estado para el control de activación/desactivación
   const [toggleTarget, setToggleTarget] = useState(null);
   const [toggling, setToggling] = useState(false);
+
+  // Estados para Modal de Detalle / Ver
+  const [detailItem, setDetailItem] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -416,6 +420,25 @@ export default function Services() {
 
 
 
+  const handleViewService = (service) => {
+    setDetailItem(service);
+    setIsDetailOpen(true);
+  };
+
+  const handleToggleServiceStatus = async (service, newStatus) => {
+    const status = newStatus || (service.status === 'active' ? 'inactive' : 'active');
+    try {
+      const updated = await serviceClient.update(service.id, { status });
+      setServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, ...updated } : s)));
+      setDetailItem((prev) => (prev && prev.id === service.id ? { ...prev, ...updated } : prev));
+      toast.success(status === 'active' ? 'Servicio activado.' : 'Servicio desactivado.');
+      return updated;
+    } catch (err) {
+      toast.error('Error al cambiar el estado del servicio.');
+      throw err;
+    }
+  };
+
   const handleOpenNew = () => {
     setEditingService(null);
     setFormData({ 
@@ -483,6 +506,7 @@ export default function Services() {
           isAdmin={isAdmin}
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
+          onView={handleViewService}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
           navigate={navigate}
@@ -498,6 +522,7 @@ export default function Services() {
           onToggleSelect={handleToggleSelect}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
+          onView={handleViewService}
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
           onDeleteRequest={handleDeleteRequest}
@@ -543,6 +568,17 @@ export default function Services() {
         setToggleTarget={setToggleTarget}
         onConfirmToggle={handleConfirmToggle}
         toggling={toggling}
+        isDetailOpen={isDetailOpen}
+        setIsDetailOpen={setIsDetailOpen}
+        detailItem={detailItem}
+        setDetailItem={setDetailItem}
+        onToggleStatus={handleToggleServiceStatus}
+        onEditFromDetail={(srv) => {
+          setIsDetailOpen(false);
+          openEditModal(srv);
+        }}
+        canManage={canManage}
+        storeLocations={storeLocations}
         shareModal={shareModal}
         setShareModal={setShareModal}
         onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}

@@ -27,29 +27,6 @@ export default function ProductsToolbar({
   return (
     <div className="products-toolbar">
       <div className="products-filters" style={{ flexWrap: 'wrap', gap: 'var(--space-3)', alignItems: 'center' }}>
-        {isAdmin && hasItems && (
-          <div className="d-flex items-center gap-3" style={{ paddingRight: 'var(--space-3)', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-            <label className="d-flex items-center gap-2 cursor-pointer" style={{ userSelect: 'none', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                onChange={onSelectAll}
-                style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '16px', height: '16px' }}
-              />
-              <span>Seleccionar todo</span>
-            </label>
-            {selectedCount > 0 && (
-              <button
-                className="btn btn-danger btn-sm d-flex items-center gap-2"
-                onClick={onBulkDeleteClick}
-                style={{ padding: '6px 12px', fontSize: 'var(--text-xs)', fontWeight: 600 }}
-              >
-                <Trash2 width="14" height="14" />
-                <span>Eliminar ({selectedCount})</span>
-              </button>
-            )}
-          </div>
-        )}
         {isClient && (
           <select
             className="form-select"
@@ -70,6 +47,19 @@ export default function ProductsToolbar({
           options={statusOptions}
           value={statusFilter}
           onChange={setStatusFilter}
+        />
+        <Dropdown
+          options={[
+            { value: 'delete', label: 'Eliminar' }
+          ]}
+          value=""
+          placeholder="Acciones generales"
+          disabled={selectedCount === 0}
+          onChange={(val) => {
+            if (val === 'delete' && onBulkDeleteClick) {
+              onBulkDeleteClick();
+            }
+          }}
         />
       </div>
       <div className="view-toggle">

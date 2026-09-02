@@ -8,6 +8,7 @@ export default function ProductsGrid({
   isAdmin = false,
   selectedIds = [],
   onToggleSelect,
+  onView,
   openEditModal,
   onDeleteRequest,
   onShare,
@@ -32,6 +33,7 @@ export default function ProductsGrid({
             selectable={isAdmin}
             isSelected={selectedIds.includes(p.id)}
             onToggleSelect={onToggleSelect}
+            onView={onView}
             onEdit={openEditModal}
             onDelete={(item) => onDeleteRequest(item)}
             onAction={(product) => toast.success(`${product.name} añadido`)}

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Pencil, Trash2, ShoppingCart, Play } from 'lucide-react';
+import { Eye, Pencil, Trash2, ShoppingCart, Play } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 
 export default function ProductCard({
   product,
   canManage = false,
   canBuy = false,
+  onView,
   onEdit,
   onDelete,
   onAddToCart,
@@ -86,6 +87,13 @@ export default function ProductCard({
           <div className="product-card-actions">
             {canManage ? (
               <>
+                <button
+                  className="btn btn-ghost btn-sm btn-icon-only"
+                  onClick={() => onView?.(product)}
+                  title="Ver detalle"
+                >
+                  <Eye width="16" height="16" />
+                </button>
                 <button
                   className="btn btn-ghost btn-sm btn-icon-only"
                   onClick={() => onEdit?.(product)}

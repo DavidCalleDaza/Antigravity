@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Pencil, Trash2, CalendarPlus, Clock, Play } from 'lucide-react';
+import { Eye, Pencil, Trash2, CalendarPlus, Clock, Play } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 
 export default function ServiceCard({
   service,
   canManage = false,
   canBook = false,
+  onView,
   onEdit,
   onDelete,
   onBook,
@@ -88,6 +89,13 @@ export default function ServiceCard({
           <div className="service-card-actions">
             {canManage ? (
               <>
+                <button
+                  className="btn btn-ghost btn-sm btn-icon-only"
+                  onClick={() => onView?.(service)}
+                  title="Ver detalle"
+                >
+                  <Eye width="16" height="16" />
+                </button>
                 <button
                   className="btn btn-ghost btn-sm btn-icon-only"
                   onClick={() => onEdit?.(service)}

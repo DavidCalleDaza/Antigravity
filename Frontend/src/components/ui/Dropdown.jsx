@@ -18,7 +18,14 @@ import { ChevronDown, Check } from 'lucide-react';
  * - value: currently selected value
  * - onChange: (value) => void
  * - className: optional class for the wrapper (min-width control, etc.) */
-export default function Dropdown({ options, value, onChange, className = '' }) {
+export default function Dropdown({ 
+  options = [], 
+  value, 
+  onChange, 
+  className = '', 
+  disabled = false, 
+  placeholder = '' 
+}) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -40,6 +47,7 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
   }, []);
 
   const selected = options.find((o) => o.value === value);
+  const displayText = selected ? selected.label : (placeholder || (options[0]?.label || ''));
 
   const handleSelect = (optValue) => {
     onChange(optValue);
@@ -47,6 +55,7 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
   };
 
   const handleTriggerKeyDown = (e) => {
+    if (disabled) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       setOpen((o) => !o);
@@ -54,22 +63,26 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
   };
 
   return (
-    <div className={`custom-dropdown ${className}`} ref={wrapperRef}>
+    <div className={`custom-dropdown ${disabled ? 'disabled' : ''} ${className}`} ref={wrapperRef}>
       <div
-        className={`custom-dropdown-trigger ${open ? 'open' : ''}`}
+        className={`custom-dropdown-trigger ${open ? 'open' : ''} ${disabled ? 'disabled' : ''}`}
         role="button"
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        aria-disabled={disabled}
+        onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={handleTriggerKeyDown}
-        style={{ outline: 'none' }}
+        style={{ 
+          outline: 'none',
+          ...(disabled ? { opacity: 0.45, cursor: 'not-allowed' } : {})
+        }}
       >
-        <span className="custom-dropdown-value">{selected ? selected.label : ''}</span>
+        <span className="custom-dropdown-value">{displayText}</span>
         <ChevronDown className="custom-dropdown-chevron" width="14" height="14" />
       </div>
 
-      {open && (
+      {open && !disabled && (
         <div className="custom-dropdown-menu" role="listbox">
           {options.map((opt) => (
             <div
@@ -80,7 +93,6 @@ export default function Dropdown({ options, value, onChange, className = '' }) {
               onClick={() => handleSelect(opt.value)}
             >
               <span>{opt.label}</span>
-              
             </div>
           ))}
         </div>

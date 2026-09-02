@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from '../../../components/ui/Modal';
 import ConfirmModal from '../../../components/ui/ConfirmModal';
 import ShareModal from '../../../components/ShareModal';
+import ItemDetailDrawer from '../../../components/ui/ItemDetailDrawer';
 
 export default function ServiceModals({
   isConfirmOpen,
@@ -16,6 +17,14 @@ export default function ServiceModals({
   setToggleTarget,
   onConfirmToggle,
   toggling,
+  isDetailOpen,
+  setIsDetailOpen,
+  detailItem,
+  setDetailItem,
+  onToggleStatus,
+  onEditFromDetail,
+  canManage = true,
+  storeLocations = [],
   shareModal,
   setShareModal,
   onPublish,
@@ -71,6 +80,21 @@ export default function ServiceModals({
           <>¿Está seguro de que desea reactivar <strong>{toggleTarget?.name}</strong>? Este servicio volverá a estar disponible.</>
         )}
       </ConfirmModal>
+
+      <ItemDetailDrawer
+        isOpen={isDetailOpen}
+        onClose={() => {
+          setIsDetailOpen?.(false);
+          setDetailItem?.(null);
+        }}
+        item={detailItem}
+        variant="service"
+        canManage={canManage}
+        onEdit={onEditFromDetail}
+        onToggleStatus={onToggleStatus}
+        storeLocations={storeLocations}
+        dbCategories={dbCategories}
+      />
     </>
   );
 }

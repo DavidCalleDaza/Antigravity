@@ -24,7 +24,7 @@ export default function Products() {
   const isClient = userRole === CLIENT;
   const navigate = useNavigate();
 
-  const [view, setView] = useState('grid');
+  const [view, setView] = useState('table');
   const [revealImages, setRevealImages] = useState(true);
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
@@ -50,6 +50,10 @@ export default function Products() {
   // Estados de Test (Alternancia de estado activo/inactivo)
   const [toggleTarget, setToggleTarget] = useState(null);
   const [toggling, setToggling] = useState(false);
+
+  // Estados para Modal de Detalle / Ver
+  const [detailItem, setDetailItem] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -405,6 +409,25 @@ export default function Products() {
 
 
 
+  const handleViewProduct = (product) => {
+    setDetailItem(product);
+    setIsDetailOpen(true);
+  };
+
+  const handleToggleProductStatus = async (product, newStatus) => {
+    const status = newStatus || (product.status === 'active' ? 'inactive' : 'active');
+    try {
+      const updated = await productClient.update(product.id, { status });
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, ...updated } : p)));
+      setDetailItem((prev) => (prev && prev.id === product.id ? { ...prev, ...updated } : prev));
+      toast.success(status === 'active' ? 'Producto activado.' : 'Producto desactivado.');
+      return updated;
+    } catch (err) {
+      toast.error('Error al cambiar el estado del producto.');
+      throw err;
+    }
+  };
+
   const handleOpenNew = () => {
     setEditingProduct(null);
     setFormData({ name: '', category_id: '', price: 0, stock: 0, status: 'active', description: '', store_location_id: '', additionalImages: [], media_urls: [] });
@@ -468,6 +491,7 @@ export default function Products() {
           isAdmin={isAdmin}
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
+          onView={handleViewProduct}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
           toast={toast}
@@ -483,6 +507,7 @@ export default function Products() {
           onToggleSelect={handleToggleSelect}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
+          onView={handleViewProduct}
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
           onDeleteRequest={handleDeleteRequest}
@@ -528,6 +553,17 @@ export default function Products() {
         setToggleTarget={setToggleTarget}
         onConfirmToggle={handleConfirmToggle}
         toggling={toggling}
+        isDetailOpen={isDetailOpen}
+        setIsDetailOpen={setIsDetailOpen}
+        detailItem={detailItem}
+        setDetailItem={setDetailItem}
+        onToggleStatus={handleToggleProductStatus}
+        onEditFromDetail={(prod) => {
+          setIsDetailOpen(false);
+          openEditModal(prod);
+        }}
+        canManage={canManage}
+        storeLocations={storeLocations}
         shareModal={shareModal}
         setShareModal={setShareModal}
         onPublish={() => toast.success('¡Publicado exitosamente en redes sociales!')}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Pencil, Trash2, ShoppingCart, CalendarPlus, Play, Share2 } from 'lucide-react';
+import { Eye, Pencil, Trash2, ShoppingCart, CalendarPlus, Play, Share2 } from 'lucide-react';
 import Helpers from '../../utils/helpers';
 import DonAppLogo from './DonAppLogo';
 import MediaGalleryViewer from './MediaGalleryViewer';
@@ -30,6 +30,7 @@ export default function MediaCard({
   selectable = false,
   isSelected = false,
   onToggleSelect,
+  onView,
   onEdit,
   onDelete,
   onAction,
@@ -132,13 +133,13 @@ export default function MediaCard({
       onMouseEnter={(e) => {
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         const color = isLight ? '62, 180, 137' : (variant === 'product' ? '212, 175, 55' : '196, 168, 224');
-        e.currentTarget.style.borderColor = isSelected ? 'var(--danger)' : `rgba(${color}, 0.4)`;
+        e.currentTarget.style.borderColor = isSelected ? '#000000' : `rgba(${color}, 0.4)`;
         e.currentTarget.style.boxShadow = `0 8px 32px rgba(0, 0, 0, 0.12)`;
         e.currentTarget.style.transform = 'translateY(-4px)';
         e.currentTarget.style.background = 'rgba(28, 25, 36, 0.65)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = isSelected ? 'var(--danger)' : 'rgba(255, 255, 255, 0.1)';
+        e.currentTarget.style.borderColor = isSelected ? '#000000' : 'rgba(255, 255, 255, 0.1)';
         e.currentTarget.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.08)';
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.background = 'rgba(28, 25, 36, 0.5)';
@@ -156,8 +157,8 @@ export default function MediaCard({
             top: 'var(--space-3)',
             left: 'var(--space-3)',
             zIndex: 10,
-            background: isSelected ? 'rgba(239, 68, 68, 0.35)' : 'rgba(0, 0, 0, 0.45)',
-            border: `1px solid ${isSelected ? 'rgba(239, 68, 68, 0.65)' : 'rgba(255, 255, 255, 0.25)'}`,
+            background: isSelected ? 'rgba(0, 0, 0, 0.75)' : 'rgba(0, 0, 0, 0.45)',
+            border: `1px solid ${isSelected ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.25)'}`,
             borderRadius: 'var(--radius-md)',
             padding: '4px 8px',
             display: 'flex',
@@ -166,7 +167,7 @@ export default function MediaCard({
             cursor: 'pointer',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
-            boxShadow: isSelected ? '0 4px 16px rgba(239, 68, 68, 0.25)' : 'none',
+            boxShadow: isSelected ? '0 4px 16px rgba(0, 0, 0, 0.35)' : 'none',
             transition: 'all 0.2s ease',
           }}
           title={isSelected ? 'Desmarcar' : 'Seleccionar'}
@@ -175,7 +176,7 @@ export default function MediaCard({
             type="checkbox"
             checked={isSelected}
             onChange={() => {}}
-            style={{ cursor: 'pointer', accentColor: 'var(--danger)', width: '15px', height: '15px' }}
+            style={{ cursor: 'pointer', accentColor: '#000000', width: '15px', height: '15px' }}
           />
           <span style={{ fontSize: '11px', color: '#fff', fontWeight: 600, userSelect: 'none' }}>
             {isSelected ? 'Seleccionado' : 'Seleccionar'}
@@ -234,6 +235,13 @@ export default function MediaCard({
               <>
                 <button
                   className="btn btn-ghost btn-sm btn-icon-only"
+                  onClick={() => onView?.(item)}
+                  title="Ver detalle"
+                >
+                  <Eye width="16" height="16" />
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm btn-icon-only"
                   onClick={() => onEdit?.(item)}
                   title="Editar"
                 >
@@ -258,13 +266,24 @@ export default function MediaCard({
                 )}
               </>
             ) : (
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => onAction?.(item)}
-              >
-                <ActionIcon width="16" height="16" />
-                {actionLabel}
-              </button>
+              <>
+                {onView && (
+                  <button
+                    className="btn btn-ghost btn-sm btn-icon-only"
+                    onClick={() => onView?.(item)}
+                    title="Ver detalle"
+                  >
+                    <Eye width="16" height="16" />
+                  </button>
+                )}
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => onAction?.(item)}
+                >
+                  <ActionIcon width="16" height="16" />
+                  {actionLabel}
+                </button>
+              </>
             )}
           </div>
         </div>

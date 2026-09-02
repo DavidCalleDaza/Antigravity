@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import './utils/formValidationTooltip.js'
+import './utils/customTooltip.js'
 
 // Global CSS Imports
 import '../css/variables.css'

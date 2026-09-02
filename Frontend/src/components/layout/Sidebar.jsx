@@ -100,7 +100,7 @@ export default function Sidebar({ isOpen, closeMobile }) {
                     key={item.id}
                     to={item.page}
                     className={`nav-item ${isActive ? 'active' : ''}`}
-                    data-tooltip={item.label}
+                    data-tooltip={sidebarCollapsed ? item.label : undefined}
                     onClick={closeMobile}
                   >
                     <span className="nav-item-icon">

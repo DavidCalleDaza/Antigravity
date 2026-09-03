@@ -1984,16 +1984,7 @@
 }
 
 /* ── Ajustes Exclusivos Tema Claro: Drawers & Formularios ── */
-[data-theme="light"] .drawer .media-uploader {
-  order: -3;
-}
-
-[data-theme="light"] .drawer .media-carousel {
-  order: -2;
-}
-
 [data-theme="light"] .drawer-form-actions--entity-top {
-  order: -1;
   justify-content: center;
   position: static;
   margin-top: 0;
@@ -2050,8 +2041,10 @@ main .btn-success svg,
   }
 }
 
-/* ── Accordion Section Component Styles ── */
 .accordion-section {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -2147,6 +2140,11 @@ main .btn-success svg,
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .accordion-section-body.is-open {
@@ -2155,6 +2153,10 @@ main .btn-success svg,
 
 .accordion-section-content {
   min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   padding: 0 16px;
   opacity: 0;
@@ -2167,7 +2169,7 @@ main .btn-success svg,
 .accordion-section-body.is-open .accordion-section-content {
   padding: 16px;
   opacity: 1;
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* Extra Media Blocks (Audio/Video) */

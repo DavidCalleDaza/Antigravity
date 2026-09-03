@@ -438,14 +438,21 @@ export function useShareModal({
   };
 
   const addAdditionalImage = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const blob = file;
-    const previewUrl = URL.createObjectURL(blob);
-    let type = 'image';
-    if (file.type.startsWith('video/')) type = 'video';
-    else if (file.type.startsWith('audio/')) type = 'audio';
-    setAdditionalImages((prev) => [...prev, { blob, previewUrl, type, name: file.name, uploadedUrl: null }]);
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const newItems = files.map((file) => {
+      let type = 'image';
+      if (file.type.startsWith('video/')) type = 'video';
+      else if (file.type.startsWith('audio/')) type = 'audio';
+      return {
+        blob: file,
+        previewUrl: URL.createObjectURL(file),
+        type,
+        name: file.name,
+        uploadedUrl: null,
+      };
+    });
+    setAdditionalImages((prev) => [...prev, ...newItems]);
     e.target.value = '';
   };
 

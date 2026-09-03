@@ -21,8 +21,9 @@ export default function MediaCarousel({
   onRemoveExisting,
   onRemoveNew,
   onAddFile,
+  onAddFiles,
   onItemClick,
-  multiple = false,
+  multiple = true,
   compact = false,
 }) {
   const fileInputRef = useRef(null);
@@ -99,7 +100,9 @@ export default function MediaCarousel({
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    if (onAddFile) {
+    if (onAddFiles) {
+      onAddFiles(files);
+    } else if (onAddFile) {
       files.forEach((file) => onAddFile(file));
     }
     e.target.value = '';
@@ -235,7 +238,10 @@ export default function MediaCarousel({
           flex-direction: column;
           gap: var(--space-2);
           width: 100%;
+          max-width: 100%;
+          min-width: 0;
           box-sizing: border-box;
+          overflow: hidden;
         }
 
         .media-carousel-header {
@@ -243,6 +249,9 @@ export default function MediaCarousel({
           align-items: center;
           justify-content: space-between;
           gap: var(--space-2);
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .media-carousel-label {
@@ -273,8 +282,12 @@ export default function MediaCarousel({
         .media-carousel-wrapper {
           position: relative;
           width: 100%;
+          max-width: 100%;
+          min-width: 0;
           display: flex;
           align-items: center;
+          box-sizing: border-box;
+          overflow: hidden;
         }
 
         .media-carousel-track {
@@ -286,6 +299,9 @@ export default function MediaCarousel({
           scroll-snap-type: x mandatory;
           padding: var(--space-1) 2px;
           width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
           max-height: 84px;
           scrollbar-width: thin;
           scrollbar-color: var(--border-color) transparent;

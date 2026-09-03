@@ -113,6 +113,8 @@ export default function MediaUploader({
           display: flex;
           flex-direction: column;
           gap: var(--space-2);
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .media-uploader-dropzone {
@@ -120,6 +122,9 @@ export default function MediaUploader({
           border-radius: var(--radius-lg);
           overflow: hidden;
           transition: all var(--transition-fast);
+          width: 100%;
+          box-sizing: border-box;
+          max-height: 220px;
         }
 
         .media-uploader-dropzone:hover {
@@ -169,22 +174,35 @@ export default function MediaUploader({
         .media-uploader-preview {
           position: relative;
           aspect-ratio: 16 / 9;
+          width: 100%;
+          max-height: 200px;
+          overflow: hidden;
+          background: var(--surface-raised, rgba(0, 0, 0, 0.04));
+          border-radius: var(--radius-lg);
+        }
+
+        [data-theme="dark"] .media-uploader-preview {
+          background: rgba(255, 255, 255, 0.03);
         }
 
         .media-uploader-image-preview,
         .media-uploader-video-preview {
+          position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
+          display: block;
         }
 
         .media-uploader-clear {
           position: absolute;
-          top: var(--space-2);
-          right: var(--space-2);
+          top: 8px;
+          right: 8px;
           width: 28px;
           height: 28px;
-          border-radius: var(--radius-full);
+          border-radius: var(--radius-full, 9999px);
           background: rgba(0, 0, 0, 0.7);
           color: white;
           border: none;
@@ -192,24 +210,27 @@ export default function MediaUploader({
           display: flex;
           align-items: center;
           justify-content: center;
+          z-index: 2;
           transition: background var(--transition-fast);
         }
 
         .media-uploader-clear:hover {
-          background: var(--danger);
+          background: var(--danger, #ef4444);
         }
 
         .media-uploader-badge {
           position: absolute;
-          bottom: var(--space-2);
-          left: var(--space-2);
-          background: var(--gold-soft);
-          color: var(--gold);
-          padding: var(--space-1) var(--space-2);
-          border-radius: var(--radius-sm);
+          bottom: 8px;
+          left: 8px;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(4px);
+          color: var(--mint-green, #3eb489);
+          padding: 3px 6px;
+          border-radius: var(--radius-sm, 4px);
           display: flex;
           align-items: center;
-          gap: var(--space-1);
+          gap: 4px;
+          z-index: 2;
         }
 
         .media-uploader-progress {

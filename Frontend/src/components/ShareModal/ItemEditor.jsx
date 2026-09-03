@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Pencil,
   Loader2,
@@ -17,6 +17,10 @@ import {
   Image as ImageIcon,
   Play,
   Volume2,
+  Mic,
+  Video as VideoIcon,
+  Plus,
+  X,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -55,7 +59,14 @@ export default function ItemEditor({
   const isOpen = openSection === 'product' || openSection === 'item';
   const isService = mode === 'service' || (item && item.duration !== undefined && item.stock === undefined);
   const accentColor = isService ? 'var(--purple, #a855f7)' : 'var(--gold, #3eb489)';
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  const [activeImgIndex, setActiveImgIndex] = useState(0);
+  const [activeAudioIndex, setActiveAudioIndex] = useState(0);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+
+  const imageInputRef = useRef(null);
+  const audioInputRef = useRef(null);
+  const videoInputRef = useRef(null);
 
   const categoryName =
     item?.category?.name ||
@@ -63,45 +74,96 @@ export default function ItemEditor({
     dbCategories?.find((c) => c.id === item?.category_id)?.name ||
     'Sin categoría';
 
-  // Construir lista unificada de medios para el carrusel (imágenes, audios y videos)
-  const mediaList = useMemo(() => {
+  // ── 1. Lista de Imágenes ────────────────────────────────────────────────────
+  const imageList = useMemo(() => {
     const list = [];
-    if (aiVideoUrl) {
-      list.push({ type: 'video', url: aiVideoUrl, isPrimary: true, name: 'Video con IA' });
-    } else if (previewUrl) {
-      const isVideo = previewUrl.includes('.mp4') || previewUrl.includes('.webm') || (item?.video_url && item.video_url === previewUrl);
-      const isAudio = previewUrl.includes('.mp3') || previewUrl.includes('.wav') || (item?.audio_url && item.audio_url === previewUrl);
-      list.push({
-        type: isVideo ? 'video' : isAudio ? 'audio' : 'image',
-        url: previewUrl,
-        isPrimary: true,
-        name: item?.name || 'Medio principal',
-      });
-    } else if (item?.video_url) {
-      list.push({ type: 'video', url: Helpers.resolveMediaUrl(item.video_url), isPrimary: true, name: item.name });
-    } else if (item?.audio_url) {
-      list.push({ type: 'audio', url: Helpers.resolveMediaUrl(item.audio_url), isPrimary: true, name: item.name });
+    const isSpecialUrl = previewUrl && (previewUrl.includes('.mp4') || previewUrl.includes('.webm') || previewUrl.includes('.mp3') || previewUrl.includes('.wav') || previewUrl.includes('.ogg'));
+    if (previewUrl && !isSpecialUrl) {
+      list.push({ type: 'image', url: previewUrl, isPrimary: true, name: item?.name || 'Imagen principal' });
     } else if (item?.image_url) {
-      list.push({ type: 'image', url: Helpers.resolveMediaUrl(item.image_url), isPrimary: true, name: item.name });
+      list.push({ type: 'image', url: Helpers.resolveMediaUrl(item.image_url), isPrimary: true, name: item?.name || 'Imagen principal' });
     }
 
     additionalImages.forEach((img, idx) => {
-      const isVid = img.type === 'video' || (img.previewUrl && (img.previewUrl.includes('video') || img.blob?.type?.startsWith('video/')));
-      const isAud = img.type === 'audio' || (img.previewUrl && (img.previewUrl.includes('audio') || img.blob?.type?.startsWith('audio/')));
-      list.push({
-        type: isVid ? 'video' : isAud ? 'audio' : 'image',
-        url: img.previewUrl,
-        isPrimary: false,
-        name: img.name || `Medio adicional ${idx + 1}`,
-        additionalIndex: idx,
-      });
+      const isVid = img.type === 'video' || (img.previewUrl && (img.previewUrl.includes('.mp4') || img.previewUrl.includes('.webm') || img.blob?.type?.startsWith('video/')));
+      const isAud = img.type === 'audio' || (img.previewUrl && (img.previewUrl.includes('.mp3') || img.previewUrl.includes('.wav') || img.previewUrl.includes('.ogg') || img.blob?.type?.startsWith('audio/')));
+      if (!isVid && !isAud) {
+        list.push({
+          type: 'image',
+          url: img.previewUrl,
+          isPrimary: false,
+          name: img.name || `Imagen ${list.length + 1}`,
+          additionalIndex: idx,
+        });
+      }
     });
-
     return list;
-  }, [aiVideoUrl, previewUrl, item, additionalImages]);
+  }, [previewUrl, item, additionalImages]);
 
-  const currentMedia = mediaList[activeMediaIndex] || mediaList[0];
-  const hasMultipleMedia = mediaList.length > 1;
+  // ── 2. Lista de Audios ──────────────────────────────────────────────────────
+  const audioList = useMemo(() => {
+    const list = [];
+    if (item?.audio_url) {
+      list.push({
+        type: 'audio',
+        url: Helpers.resolveMediaUrl(item.audio_url),
+        isPrimary: true,
+        name: item.audio_url.split('/').pop() || 'Audio principal',
+      });
+    }
+
+    additionalImages.forEach((img, idx) => {
+      const isAud = img.type === 'audio' || (img.previewUrl && (img.previewUrl.includes('.mp3') || img.previewUrl.includes('.wav') || img.previewUrl.includes('.ogg') || img.blob?.type?.startsWith('audio/')));
+      if (isAud) {
+        list.push({
+          type: 'audio',
+          url: img.previewUrl,
+          isPrimary: false,
+          name: img.name || `Pista ${list.length + 1}`,
+          additionalIndex: idx,
+        });
+      }
+    });
+    return list;
+  }, [item, additionalImages]);
+
+  // ── 3. Lista de Videos ──────────────────────────────────────────────────────
+  const videoList = useMemo(() => {
+    const list = [];
+    if (aiVideoUrl) {
+      list.push({ type: 'video', url: aiVideoUrl, isPrimary: true, name: 'Video con IA' });
+    } else if (item?.video_url) {
+      list.push({
+        type: 'video',
+        url: Helpers.resolveMediaUrl(item.video_url),
+        isPrimary: true,
+        name: item.video_url.split('/').pop() || 'Video principal',
+      });
+    }
+
+    additionalImages.forEach((img, idx) => {
+      const isVid = img.type === 'video' || (img.previewUrl && (img.previewUrl.includes('.mp4') || img.previewUrl.includes('.webm') || img.blob?.type?.startsWith('video/')));
+      if (isVid) {
+        list.push({
+          type: 'video',
+          url: img.previewUrl,
+          isPrimary: false,
+          name: img.name || `Video ${list.length + 1}`,
+          additionalIndex: idx,
+        });
+      }
+    });
+    return list;
+  }, [aiVideoUrl, item, additionalImages]);
+
+  const safeImgIdx = Math.min(activeImgIndex, Math.max(0, imageList.length - 1));
+  const currentImage = imageList[safeImgIdx];
+
+  const safeAudioIdx = Math.min(activeAudioIndex, Math.max(0, audioList.length - 1));
+  const currentAudio = audioList[safeAudioIdx];
+
+  const safeVideoIdx = Math.min(activeVideoIndex, Math.max(0, videoList.length - 1));
+  const currentVideo = videoList[safeVideoIdx];
 
   return (
     <div className={`share-step-card ${isOpen ? 'is-open' : ''}`}>
@@ -146,187 +208,381 @@ export default function ItemEditor({
       {isOpen && (
         <div className="share-step-content">
           <div className={`share-sec-grid ${isExpanded ? 'is-expanded-grid' : ''}`}>
-            {/* Columna Izquierda: Carrusel de Medios (Imágenes, Videos y Audios) */}
-            <div className="share-sec-col-main">
-              <div className="share-preview">
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <ImageIcon width={14} height={14} />
-                  Vista previa de referencia
-                </label>
-                <div className={isWallPost ? 'share-preview-card share-preview-card--wallpost' : 'share-preview-card'}>
-                  {loadingImage ? (
-                    <div className="share-preview-loading">
-                      <Loader2 width={32} height={32} className="spin" />
-                    </div>
-                  ) : currentMedia ? (
-                    currentMedia.type === 'video' ? (
-                      <div className="share-preview-media-wrapper" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
-                        <video
-                          src={currentMedia.url}
-                          className="share-preview-video"
-                          controls
-                          playsInline
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      </div>
-                    ) : currentMedia.type === 'audio' ? (
-                      <div className="share-audio-player-wrapper" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', gap: '8px', background: 'var(--surface-raised)' }}>
-                        <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                          <Volume2 width={20} height={20} />
-                        </div>
-                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {currentMedia.name || 'Pista de Audio'}
-                        </span>
-                        <audio src={currentMedia.url} controls style={{ width: '100%', maxWidth: '260px', height: '32px' }} />
-                      </div>
-                    ) : (
-                      <img
-                        src={currentMedia.url}
-                        alt="Vista previa"
-                        className="share-preview-image"
-                        onClick={() => setIsImagePreviewOpen(true)}
-                        style={{ cursor: 'pointer', width: '100%', height: '100%', objectFit: 'contain' }}
-                        title="Ampliar imagen"
-                      />
-                    )
-                  ) : (
-                    <div className="share-preview-placeholder">
-                      <Share2 width={40} height={40} style={{ opacity: 0.4 }} />
-                      <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Sin medios seleccionados</span>
-                    </div>
-                  )}
-
-                  {/* Flechas y Contador de Carrusel */}
-                  {hasMultipleMedia && (
-                    <>
-                      <button
-                        type="button"
-                        className="item-detail-nav-btn prev"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
-                        }}
-                        title="Anterior"
-                      >
-                        <ChevronLeft width={16} height={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="item-detail-nav-btn next"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMediaIndex((prev) => (prev + 1) % mediaList.length);
-                        }}
-                        title="Siguiente"
-                      >
-                        <ChevronRight width={16} height={16} />
-                      </button>
-                      <div className="item-detail-media-counter">
-                        {activeMediaIndex + 1} / {mediaList.length}
-                      </div>
-                    </>
-                  )}
-
-                  {!isWallPost && item && (
-                    <div className="share-preview-info">
-                      <span className="share-preview-name">{item.name}</span>
-                      <span className="share-preview-price" style={{ color: accentColor }}>
-                        {Helpers.formatCurrency(item.price)}
+            {/* Columna Principal: Carrusel(es) de Medios */}
+            <div className="share-sec-col-main" style={{ width: '100%' }}>
+              <div className={isExpanded ? "share-media-triple-grid" : "share-media-triple-grid--single"}>
+                
+                {/* ── 1. CARRUSEL DE IMÁGENES ── */}
+                <div className="share-media-column">
+                  <div className="share-media-column-header">
+                    <span className="share-media-column-title">
+                      <ImageIcon width={14} height={14} style={{ color: accentColor }} />
+                      Imágenes
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="share-media-column-count">
+                        {imageList.length} {imageList.length === 1 ? 'imagen' : 'imágenes'}
                       </span>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-xs text-primary"
+                        onClick={() => imageInputRef.current?.click()}
+                        title="Agregar imágenes"
+                        style={{ padding: '2px 6px', height: '22px' }}
+                      >
+                        <Plus width={12} height={12} className="mr-1" />
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="share-media-column-card">
+                    {loadingImage ? (
+                      <div className="share-preview-loading">
+                        <Loader2 width={28} height={28} className="spin" />
+                      </div>
+                    ) : currentImage ? (
+                      <>
+                        <img
+                          src={currentImage.url}
+                          alt="Vista previa"
+                          className="share-preview-image"
+                          onClick={() => setIsImagePreviewOpen(true)}
+                          style={{ cursor: 'pointer', width: '100%', height: '100%', objectFit: 'contain' }}
+                          title="Clic para ampliar imagen"
+                        />
+                        {imageList.length > 1 && (
+                          <>
+                            <button
+                              type="button"
+                              className="item-detail-nav-btn prev"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveImgIndex((prev) => (prev - 1 + imageList.length) % imageList.length);
+                              }}
+                              title="Imagen anterior"
+                            >
+                              <ChevronLeft width={14} height={14} />
+                            </button>
+                            <button
+                              type="button"
+                              className="item-detail-nav-btn next"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveImgIndex((prev) => (prev + 1) % imageList.length);
+                              }}
+                              title="Imagen siguiente"
+                            >
+                              <ChevronRight width={14} height={14} />
+                            </button>
+                            <div className="item-detail-media-counter">
+                              {safeImgIdx + 1} / {imageList.length}
+                            </div>
+                          </>
+                        )}
+                        {!isWallPost && item && (
+                          <div className="share-preview-info">
+                            <span className="share-preview-name">{item.name}</span>
+                            <span className="share-preview-price" style={{ color: accentColor }}>
+                              {Helpers.formatCurrency(item.price)}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="share-media-empty" onClick={() => imageInputRef.current?.click()}>
+                        <ImageIcon width={32} height={32} style={{ opacity: 0.35 }} />
+                        <span style={{ fontSize: '11px' }}>Sin imágenes</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tira de miniaturas de imágenes */}
+                  {imageList.length > 0 && (
+                    <div className="share-media-column-strip">
+                      {imageList.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className={`share-multi-img-thumb ${idx === safeImgIdx ? 'share-multi-img-thumb--active' : ''} ${img.isPrimary ? 'share-multi-img-thumb--primary' : 'share-multi-img-thumb--interchangeable'}`}
+                          onClick={() => {
+                            setActiveImgIndex(idx);
+                            if (!img.isPrimary && img.additionalIndex !== undefined) {
+                              handleSwapImage?.(img.additionalIndex);
+                            }
+                          }}
+                          style={{ borderColor: idx === safeImgIdx ? accentColor : undefined }}
+                          title={img.isPrimary ? 'Imagen principal' : 'Clic para seleccionar / intercambiar'}
+                        >
+                          <img src={img.url} alt={`Thumb ${idx + 1}`} />
+                          {!img.isPrimary && img.additionalIndex !== undefined && (
+                            <button
+                              type="button"
+                              className="share-multi-img-remove"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeAdditionalImage(img.additionalIndex);
+                                if (safeImgIdx >= imageList.length - 1) {
+                                  setActiveImgIndex(Math.max(0, imageList.length - 2));
+                                }
+                              }}
+                              title="Quitar imagen"
+                            >
+                              ×
+                            </button>
+                          )}
+                          <span className="share-multi-img-thumb-badge" style={{ background: img.isPrimary ? accentColor : undefined }}>
+                            {idx + 1}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
+
+                {/* ── 2. CARRUSEL DE AUDIOS (Visible solo al expandir) ── */}
+                {isExpanded && (
+                  <div className="share-media-column">
+                    <div className="share-media-column-header">
+                      <span className="share-media-column-title">
+                        <Volume2 width={14} height={14} style={{ color: '#a855f7' }} />
+                        Audios
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="share-media-column-count">
+                          {audioList.length} {audioList.length === 1 ? 'audio' : 'audios'}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs text-primary"
+                          onClick={() => audioInputRef.current?.click()}
+                          title="Agregar audios"
+                          style={{ padding: '2px 6px', height: '22px' }}
+                        >
+                          <Plus width={12} height={12} className="mr-1" />
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="share-media-column-card">
+                      {currentAudio ? (
+                        <div className="share-audio-player-wrapper">
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                            <Volume2 width={20} height={20} />
+                          </div>
+                          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {currentAudio.name || 'Pista de audio'}
+                          </span>
+                          <audio src={currentAudio.url} controls style={{ width: '100%', maxWidth: '240px', height: '32px' }} />
+
+                          {audioList.length > 1 && (
+                            <>
+                              <button
+                                type="button"
+                                className="item-detail-nav-btn prev"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveAudioIndex((prev) => (prev - 1 + audioList.length) % audioList.length);
+                                }}
+                                title="Audio anterior"
+                              >
+                                <ChevronLeft width={14} height={14} />
+                              </button>
+                              <button
+                                type="button"
+                                className="item-detail-nav-btn next"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveAudioIndex((prev) => (prev + 1) % audioList.length);
+                                }}
+                                title="Audio siguiente"
+                              >
+                                <ChevronRight width={14} height={14} />
+                              </button>
+                              <div className="item-detail-media-counter">
+                                {safeAudioIdx + 1} / {audioList.length}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="share-media-empty" onClick={() => audioInputRef.current?.click()}>
+                          <Mic width={32} height={32} style={{ opacity: 0.35 }} />
+                          <span style={{ fontSize: '11px' }}>Sin audios</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tira de pistas de audios */}
+                    {audioList.length > 0 && (
+                      <div className="share-media-column-strip">
+                        {audioList.map((aud, idx) => (
+                          <div
+                            key={idx}
+                            className={`share-media-audio-tile ${idx === safeAudioIdx ? 'is-active' : ''}`}
+                            onClick={() => setActiveAudioIndex(idx)}
+                            title={aud.name || `Pista ${idx + 1}`}
+                          >
+                            <Volume2 width={18} height={18} color="#a855f7" />
+                            {!aud.isPrimary && aud.additionalIndex !== undefined && (
+                              <button
+                                type="button"
+                                className="share-multi-img-remove"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeAdditionalImage(aud.additionalIndex);
+                                  if (safeAudioIdx >= audioList.length - 1) {
+                                    setActiveAudioIndex(Math.max(0, audioList.length - 2));
+                                  }
+                                }}
+                                title="Quitar audio"
+                              >
+                                ×
+                              </button>
+                            )}
+                            <span className="share-media-audio-badge">{idx + 1}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── 3. CARRUSEL DE VIDEOS (Visible solo al expandir) ── */}
+                {isExpanded && (
+                  <div className="share-media-column">
+                    <div className="share-media-column-header">
+                      <span className="share-media-column-title">
+                        <Play width={14} height={14} style={{ color: '#ef4444' }} />
+                        Videos
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="share-media-column-count">
+                          {videoList.length} {videoList.length === 1 ? 'video' : 'videos'}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs text-primary"
+                          onClick={() => videoInputRef.current?.click()}
+                          title="Agregar videos"
+                          style={{ padding: '2px 6px', height: '22px' }}
+                        >
+                          <Plus width={12} height={12} className="mr-1" />
+                          Agregar
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="share-media-column-card">
+                      {currentVideo ? (
+                        <div className="share-preview-media-wrapper">
+                          <video
+                            src={currentVideo.url}
+                            className="share-preview-video"
+                            controls
+                            playsInline
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
+                          {videoList.length > 1 && (
+                            <>
+                              <button
+                                type="button"
+                                className="item-detail-nav-btn prev"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveVideoIndex((prev) => (prev - 1 + videoList.length) % videoList.length);
+                                }}
+                                title="Video anterior"
+                              >
+                                <ChevronLeft width={14} height={14} />
+                              </button>
+                              <button
+                                type="button"
+                                className="item-detail-nav-btn next"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveVideoIndex((prev) => (prev + 1) % videoList.length);
+                                }}
+                                title="Video siguiente"
+                              >
+                                <ChevronRight width={14} height={14} />
+                              </button>
+                              <div className="item-detail-media-counter">
+                                {safeVideoIdx + 1} / {videoList.length}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="share-media-empty" onClick={() => videoInputRef.current?.click()}>
+                          <VideoIcon width={32} height={32} style={{ opacity: 0.35 }} />
+                          <span style={{ fontSize: '11px' }}>Sin videos</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tira de miniaturas de videos */}
+                    {videoList.length > 0 && (
+                      <div className="share-media-column-strip">
+                        {videoList.map((vid, idx) => (
+                          <div
+                            key={idx}
+                            className={`share-media-video-tile ${idx === safeVideoIdx ? 'is-active' : ''}`}
+                            onClick={() => setActiveVideoIndex(idx)}
+                            title={vid.name || `Video ${idx + 1}`}
+                          >
+                            <Play width={16} height={16} color="#fff" />
+                            {!vid.isPrimary && vid.additionalIndex !== undefined && (
+                              <button
+                                type="button"
+                                className="share-multi-img-remove"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeAdditionalImage(vid.additionalIndex);
+                                  if (safeVideoIdx >= videoList.length - 1) {
+                                    setActiveVideoIndex(Math.max(0, videoList.length - 2));
+                                  }
+                                }}
+                                title="Quitar video"
+                              >
+                                ×
+                              </button>
+                            )}
+                            <span className="share-media-video-badge">{idx + 1}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
               </div>
 
-              {/* Tira de Carrusel y Selector de Medios */}
-              {!isWallPost && (
-                <div className="share-multi-img mt-3">
-                  <div className="share-multi-img-header">
-                    <label className="form-label" style={{ marginBottom: 0 }}>
-                      Medios del carrusel
-                    </label>
-                    {hasTikTokSelected ? (
-                      <span className="share-multi-img-tiktok-warn">⚠️ TikTok solo permite 1 imagen</span>
-                    ) : (
-                      <span className="share-multi-img-count">
-                        {mediaList.length > 0 ? `${mediaList.length} medio${mediaList.length === 1 ? '' : 's'}` : 'Agrega hasta 9'}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="share-multi-img-strip">
-                    {mediaList.map((media, idx) => (
-                      <div
-                        key={idx}
-                        className={`share-multi-img-thumb ${idx === activeMediaIndex ? 'share-multi-img-thumb--active' : ''} ${media.isPrimary ? 'share-multi-img-thumb--primary' : 'share-multi-img-thumb--interchangeable'}`}
-                        onClick={() => {
-                          setActiveMediaIndex(idx);
-                          if (!media.isPrimary && media.additionalIndex !== undefined) {
-                            handleSwapImage?.(media.additionalIndex);
-                          }
-                        }}
-                        style={{
-                          borderColor: idx === activeMediaIndex ? accentColor : undefined,
-                        }}
-                        title={media.isPrimary ? 'Medio principal activo' : 'Clic para seleccionar e intercambiar'}
-                      >
-                        {media.type === 'video' ? (
-                          <div className="item-detail-thumb-video" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111' }}>
-                            <Play width={14} height={14} color="#fff" />
-                          </div>
-                        ) : media.type === 'audio' ? (
-                          <div className="item-detail-thumb-audio" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(168, 85, 247, 0.25)' }}>
-                            <Volume2 width={14} height={14} color={accentColor} />
-                          </div>
-                        ) : (
-                          <img src={media.url} alt={`Medio ${idx + 1}`} />
-                        )}
-
-                        {!media.isPrimary && media.additionalIndex !== undefined && (
-                          <button
-                            type="button"
-                            className="share-multi-img-remove"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeAdditionalImage(media.additionalIndex);
-                              if (activeMediaIndex >= mediaList.length - 1) {
-                                setActiveMediaIndex(Math.max(0, mediaList.length - 2));
-                              }
-                            }}
-                            title="Quitar medio"
-                          >
-                            ×
-                          </button>
-                        )}
-                        <span className="share-multi-img-thumb-badge" style={{ background: media.isPrimary ? accentColor : undefined }}>
-                          {idx + 1}
-                        </span>
-                      </div>
-                    ))}
-
-                    {/* Botón de subida */}
-                    {!hasTikTokSelected && additionalImages.length < 9 && (
-                      <button
-                        type="button"
-                        className="share-multi-img-add"
-                        onClick={() => additionalImageInputRef.current?.click()}
-                        title="Agregar imagen, video o audio al carrusel"
-                      >
-                        <span className="share-multi-img-add-plus">+</span>
-                        <span className="share-multi-img-add-label">Agregar</span>
-                      </button>
-                    )}
-                  </div>
-
-                  <input
-                    ref={additionalImageInputRef}
-                    type="file"
-                    accept="image/*,video/*,audio/*"
-                    style={{ display: 'none' }}
-                    onChange={addAdditionalImage}
-                  />
-                </div>
-              )}
+              {/* Inputs Ocultos de Archivos para Cada Tipo */}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={addAdditionalImage}
+              />
+              <input
+                ref={audioInputRef}
+                type="file"
+                accept="audio/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={addAdditionalImage}
+              />
+              <input
+                ref={videoInputRef}
+                type="file"
+                accept="video/*"
+                multiple
+                style={{ display: 'none' }}
+                onChange={addAdditionalImage}
+              />
             </div>
 
             {/* Columna Derecha: Ficha técnica / Formulario de edición */}

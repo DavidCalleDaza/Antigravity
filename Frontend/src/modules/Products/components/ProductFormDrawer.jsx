@@ -96,28 +96,38 @@ export default function ProductFormDrawer({
 
   // ── Audio Handler ──────────────────────────────────────────────────────────
   const handleAddAudio = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setAudioError('');
 
-    if (file.size > 5 * 1024 * 1024) {
-      setAudioError('El archivo de audio supera el límite de 5MB');
-      return;
+    const newAudios = [];
+    const errors = [];
+
+    files.forEach((file) => {
+      if (file.size > 15 * 1024 * 1024) {
+        errors.push(`${file.name} supera el límite de 15MB`);
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      newAudios.push({
+        id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+        file,
+        name: file.name,
+        size: file.size,
+        previewUrl,
+      });
+    });
+
+    if (errors.length > 0) {
+      setAudioError(errors.join(', '));
     }
 
-    const previewUrl = URL.createObjectURL(file);
-    const newAudio = {
-      id: Date.now() + Math.random().toString(),
-      file,
-      name: file.name,
-      size: file.size,
-      previewUrl,
-    };
-
-    setFormData({
-      ...formData,
-      additionalAudios: [...(formData.additionalAudios || []), newAudio],
-    });
+    if (newAudios.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        additionalAudios: [...(prev.additionalAudios || []), ...newAudios],
+      }));
+    }
     e.target.value = '';
   };
 
@@ -127,33 +137,43 @@ export default function ProductFormDrawer({
       URL.revokeObjectURL(item.previewUrl);
     }
     const newAudios = (formData.additionalAudios || []).filter((a) => a.id !== id);
-    setFormData({ ...formData, additionalAudios: newAudios });
+    setFormData((prev) => ({ ...prev, additionalAudios: newAudios }));
   };
 
   // ── Video Handler ──────────────────────────────────────────────────────────
   const handleAddVideo = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setVideoError('');
 
-    if (file.size > 25 * 1024 * 1024) {
-      setVideoError('El archivo de video supera el límite de 25MB');
-      return;
+    const newVideos = [];
+    const errors = [];
+
+    files.forEach((file) => {
+      if (file.size > 25 * 1024 * 1024) {
+        errors.push(`${file.name} supera el límite de 25MB`);
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      newVideos.push({
+        id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+        file,
+        name: file.name,
+        size: file.size,
+        previewUrl,
+      });
+    });
+
+    if (errors.length > 0) {
+      setVideoError(errors.join(', '));
     }
 
-    const previewUrl = URL.createObjectURL(file);
-    const newVideo = {
-      id: Date.now() + Math.random().toString(),
-      file,
-      name: file.name,
-      size: file.size,
-      previewUrl,
-    };
-
-    setFormData({
-      ...formData,
-      additionalVideos: [...(formData.additionalVideos || []), newVideo],
-    });
+    if (newVideos.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        additionalVideos: [...(prev.additionalVideos || []), ...newVideos],
+      }));
+    }
     e.target.value = '';
   };
 
@@ -163,7 +183,7 @@ export default function ProductFormDrawer({
       URL.revokeObjectURL(item.previewUrl);
     }
     const newVideos = (formData.additionalVideos || []).filter((v) => v.id !== id);
-    setFormData({ ...formData, additionalVideos: newVideos });
+    setFormData((prev) => ({ ...prev, additionalVideos: newVideos }));
   };
 
   // ── Summaries Calculation ──────────────────────────────────────────────────
@@ -239,12 +259,13 @@ export default function ProductFormDrawer({
 
           {/* Galería de imágenes adicionales */}
           <MediaCarousel
+            multiple={true}
             existingUrls={formData.media_urls}
             primaryUrl={formData.image_url || editingProduct?.image_url}
             newImages={formData.additionalImages}
             onRemoveExisting={(url) => {
               const newMediaUrls = (formData.media_urls || []).filter((u) => u !== url);
-              setFormData({ ...formData, media_urls: newMediaUrls });
+              setFormData((prev) => ({ ...prev, media_urls: newMediaUrls }));
             }}
             onRemoveNew={(idx) => {
               const img = formData.additionalImages?.[idx];
@@ -252,14 +273,24 @@ export default function ProductFormDrawer({
                 URL.revokeObjectURL(img.previewUrl);
               }
               const newImages = (formData.additionalImages || []).filter((_, i) => i !== idx);
-              setFormData({ ...formData, additionalImages: newImages });
+              setFormData((prev) => ({ ...prev, additionalImages: newImages }));
+            }}
+            onAddFiles={(files) => {
+              const newImgs = files.map((file) => ({
+                blob: file,
+                previewUrl: URL.createObjectURL(file),
+              }));
+              setFormData((prev) => ({
+                ...prev,
+                additionalImages: [...(prev.additionalImages || []), ...newImgs],
+              }));
             }}
             onAddFile={(file) => {
               const previewUrl = URL.createObjectURL(file);
-              setFormData({
-                ...formData,
-                additionalImages: [...(formData.additionalImages || []), { blob: file, previewUrl }],
-              });
+              setFormData((prev) => ({
+                ...prev,
+                additionalImages: [...(prev.additionalImages || []), { blob: file, previewUrl }],
+              }));
             }}
           />
 
@@ -274,7 +305,7 @@ export default function ProductFormDrawer({
                 type="button"
                 className="btn btn-ghost btn-sm btn-icon-only"
                 onClick={() => audioInputRef.current?.click()}
-                title="Agregar audio (máx 15MB)"
+                title="Agregar audios (máx 15MB c/u)"
               >
                 <Plus width={16} height={16} />
               </button>
@@ -282,6 +313,7 @@ export default function ProductFormDrawer({
                 type="file"
                 ref={audioInputRef}
                 accept="audio/*"
+                multiple
                 onChange={handleAddAudio}
                 style={{ display: 'none' }}
               />
@@ -314,7 +346,7 @@ export default function ProductFormDrawer({
                 type="button"
                 className="btn btn-ghost btn-sm btn-icon-only"
                 onClick={() => videoInputRef.current?.click()}
-                title="Agregar video (máx 25MB)"
+                title="Agregar videos (máx 25MB c/u)"
               >
                 <Plus width={16} height={16} />
               </button>
@@ -322,6 +354,7 @@ export default function ProductFormDrawer({
                 type="file"
                 ref={videoInputRef}
                 accept="video/*"
+                multiple
                 onChange={handleAddVideo}
                 style={{ display: 'none' }}
               />

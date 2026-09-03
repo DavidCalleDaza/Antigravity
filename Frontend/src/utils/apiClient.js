@@ -279,6 +279,7 @@ export const socialClient = {
   renewAccountToken: (accountId, access_token) => apiClient.patch(`/social/accounts/${accountId}/token`, { access_token }),
   connectManualValidate: (data) => apiClient.post('/social/accounts/manual/validate', data),
   connectManualConfirm: (data) => apiClient.post('/social/accounts/manual/confirm', data),
+  authorizeManualTikTok: (data) => apiClient.post('/social/accounts/manual/authorize-tiktok', data),
   getAppCredentials: (platformGroup) => apiClient.get(`/social/accounts/app-credentials/${platformGroup}`),
   revealAppCredentials: (platformGroup, password) => apiClient.post(`/social/accounts/app-credentials/${platformGroup}/reveal`, { password }),
   reconcileTikTokPosts: () => apiClient.post('/social/posts/reconcile-tiktok', {}),

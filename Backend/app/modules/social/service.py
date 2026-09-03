@@ -86,15 +86,18 @@ async def extend_meta_token(
 
 
 
-async def exchange_tiktok_code(code: str, redirect_uri: str) -> dict:
+async def exchange_tiktok_code(code: str, redirect_uri: str, client_key: str | None = None, client_secret: str | None = None) -> dict:
     """Exchange a TikTok OAuth code for an access token."""
+    ckey = client_key or settings.TIKTOK_CLIENT_KEY
+    csecret = client_secret or settings.TIKTOK_CLIENT_SECRET
+    
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
             "https://open.tiktokapis.com/v2/oauth/token/",
             headers={"Content-Type": "application/x-www-form-urlencoded"},
             data={
-                "client_key": settings.TIKTOK_CLIENT_KEY,
-                "client_secret": settings.TIKTOK_CLIENT_SECRET,
+                "client_key": ckey,
+                "client_secret": csecret,
                 "code": code,
                 "grant_type": "authorization_code",
                 "redirect_uri": redirect_uri,

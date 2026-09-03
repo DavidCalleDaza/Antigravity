@@ -199,7 +199,7 @@ export default function SocialSettings() {
       const res = await socialClient.connectManualValidate({
         platform_group: activeForm,
         app_id: formData.app_id,
-        app_secret: usingSavedCredential ? undefined : formData.app_secret,
+        app_secret: formData.app_secret || undefined,
         access_token: formData.access_token,
       });
       setAvailableAccounts(res.accounts || []);
@@ -223,6 +223,23 @@ export default function SocialSettings() {
     } catch (err) {
       toast.error(err.message || 'Error al validar credenciales', 'Error');
     } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleTikTokAuthorize = async (e) => {
+    e.preventDefault();
+    setValidating(true);
+    try {
+      const res = await socialClient.authorizeManualTikTok({
+        app_id: formData.app_id,
+        app_secret: formData.app_secret || undefined,
+      });
+      if (res.url) {
+        window.location.href = res.url;
+      }
+    } catch (err) {
+      toast.error(err.message || 'Error al iniciar conexión con TikTok', 'Error');
       setValidating(false);
     }
   };
@@ -391,7 +408,7 @@ export default function SocialSettings() {
     const labels = PLATFORM_LABELS[activeForm] || PLATFORM_LABELS.meta;
 
     return (
-      <form onSubmit={handleValidate} className="sns-cred-form flex flex-col gap-6" autoComplete="off" style={{ gap: '1.75rem' }}>
+      <form onSubmit={activeForm === 'tiktok' ? handleTikTokAuthorize : handleValidate} className="sns-cred-form flex flex-col gap-6" autoComplete="off" style={{ gap: '1.75rem' }}>
         <div className="sns-form-group flex flex-col gap-2">
           <label className="sns-field-label" style={{ marginBottom: '6px' }}>{labels.appId}</label>
           <input
@@ -420,36 +437,38 @@ export default function SocialSettings() {
           />
         </div>
 
-        <div className="sns-form-group flex flex-col gap-2">
-          <div className="flex justify-between items-center flex-wrap gap-2 mb-2">
-            <label className="sns-field-label" style={{ margin: 0 }}>{labels.accessToken}</label>
-            {activeForm === 'meta' && (
-              <a href={REGEN_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="sns-regen-btn">
-                <RefreshCw width={12} height={12} /> Generar token en Graph API Explorer
-              </a>
-            )}
+        {activeForm !== 'tiktok' && (
+          <div className="sns-form-group flex flex-col gap-2">
+            <div className="flex justify-between items-center flex-wrap gap-2 mb-2">
+              <label className="sns-field-label" style={{ margin: 0 }}>{labels.accessToken}</label>
+              {activeForm === 'meta' && (
+                <a href={REGEN_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="sns-regen-btn">
+                  <RefreshCw width={12} height={12} /> Generar token en Graph API Explorer
+                </a>
+              )}
+            </div>
+            <div className="sns-input-wrapper">
+              <input
+                required
+                type={showAccessToken ? 'text' : 'password'}
+                className="form-input"
+                placeholder={`Ingresa tu ${labels.accessToken}`}
+                value={formData.access_token}
+                onChange={e => setFormData({ ...formData, access_token: e.target.value })}
+                autoComplete="new-password"
+                name="social_access_token_new"
+              />
+              <button type="button" className="sns-input-eye" onClick={() => setShowAccessToken(v => !v)}>
+                {showAccessToken ? <EyeOff width={16} /> : <Eye width={16} />}
+              </button>
+            </div>
           </div>
-          <div className="sns-input-wrapper">
-            <input
-              required
-              type={showAccessToken ? 'text' : 'password'}
-              className="form-input"
-              placeholder={`Ingresa tu ${labels.accessToken}`}
-              value={formData.access_token}
-              onChange={e => setFormData({ ...formData, access_token: e.target.value })}
-              autoComplete="new-password"
-              name="social_access_token_new"
-            />
-            <button type="button" className="sns-input-eye" onClick={() => setShowAccessToken(v => !v)}>
-              {showAccessToken ? <EyeOff width={16} /> : <Eye width={16} />}
-            </button>
-          </div>
-        </div>
+        )}
 
         <div className="flex justify-end gap-3 mt-4 pt-2">
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveForm(null)}>Cancelar</button>
           <button type="submit" className="btn btn-primary btn-sm" disabled={validating}>
-            {validating ? <Loader2 className="spin" width={16} /> : 'Validar'}
+            {validating ? <Loader2 className="spin" width={16} /> : (activeForm === 'tiktok' ? 'Conectar con TikTok' : 'Validar')}
           </button>
         </div>
       </form>

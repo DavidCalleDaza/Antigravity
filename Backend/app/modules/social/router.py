@@ -156,7 +156,30 @@ async def callback_platform(
             refresh_token = None  # Meta long-lived tokens don't have refresh_token
 
         elif target == "tiktok":
-            token_data = await service.exchange_tiktok_code(code, settings.TIKTOK_REDIRECT_URI)
+            is_manual = state_data.get("is_manual", False)
+            client_key = None
+            client_secret = None
+            
+            if is_manual:
+                app_cred_result = await db.execute(
+                    select(SocialAppCredential).where(
+                        SocialAppCredential.user_id == user_id,
+                        SocialAppCredential.platform_group == "tiktok"
+                    )
+                )
+                app_cred = app_cred_result.scalar_one_or_none()
+                if not app_cred or not app_cred.app_id or not app_cred.app_secret:
+                    return _frontend_redirect("error", origin=origin, detail="missing_app_credentials", platform=requested_platform)
+                
+                client_key = app_cred.app_id
+                client_secret = app_cred.app_secret
+
+            token_data = await service.exchange_tiktok_code(
+                code, 
+                settings.TIKTOK_REDIRECT_URI,
+                client_key=client_key,
+                client_secret=client_secret
+            )
             tiktok_data = token_data.get("data", token_data)
             access_token = tiktok_data.get("access_token")
             expires_in = tiktok_data.get("expires_in")
@@ -277,6 +300,74 @@ from app.modules.social.manual_credentials_service import (
     validate_tiktok_token,
 )
 
+
+@router.post("/accounts/manual/authorize-tiktok")
+async def manual_authorize_tiktok(
+    req: schemas.ManualAuthorizeRequest,
+    current_user=Depends(require_seller),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Saves the user's custom TikTok App credentials and returns the OAuth URL.
+    This enables a multi-tenant dynamic OAuth flow.
+    """
+    app_secret = req.app_secret
+    if not app_secret:
+        existing_cred_result = await db.execute(
+            select(SocialAppCredential).where(
+                SocialAppCredential.user_id == current_user.id,
+                SocialAppCredential.platform_group == "tiktok",
+            )
+        )
+        existing_cred = existing_cred_result.scalar_one_or_none()
+        if not existing_cred:
+            raise HTTPException(
+                status_code=400,
+                detail="Debes ingresar el App Secret la primera vez que conectas esta plataforma."
+            )
+        app_secret = existing_cred.app_secret
+
+    # Save/Update credentials
+    result = await db.execute(
+        select(SocialAppCredential).where(
+            SocialAppCredential.user_id == current_user.id,
+            SocialAppCredential.platform_group == "tiktok"
+        )
+    )
+    app_cred = result.scalar_one_or_none()
+    
+    if app_cred:
+        app_cred.app_id = req.app_id
+        app_cred.app_secret = app_secret
+        app_cred.last_modified_by = current_user.id
+    else:
+        app_cred = SocialAppCredential(
+            user_id=current_user.id,
+            platform_group="tiktok",
+            app_id=req.app_id,
+            app_secret=app_secret,
+            last_modified_by=current_user.id
+        )
+        db.add(app_cred)
+    await db.commit()
+
+    # Generate OAuth URL
+    state_data = {
+        "user_id": str(current_user.id),
+        "platform": "tiktok",
+        "is_manual": True
+    }
+    signed_state = _state_serializer.dumps(state_data)
+    
+    url = (
+        f"https://www.tiktok.com/v2/auth/authorize/?"
+        f"client_key={req.app_id}&"
+        f"response_type=code&"
+        f"scope=user.info.basic,video.publish,video.upload&"
+        f"redirect_uri={settings.TIKTOK_REDIRECT_URI}&"
+        f"state={signed_state}"
+    )
+    return {"url": url}
 
 @router.post("/accounts/manual/validate")
 async def manual_validate(

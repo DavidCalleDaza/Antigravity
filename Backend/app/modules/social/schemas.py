@@ -64,11 +64,14 @@ class SocialAccountResponse(SocialAccountBase):
 # ── Manual credential flow ──────────────────────────────────────────────────
 
 class ManualValidateRequest(BaseModel):
-    platform_group: str
+    platform_group: str  # "meta" o "tiktok"
     app_id: str
-    app_secret: Optional[str] = None  # omitido => reusa el guardado
+    app_secret: Optional[str] = None
     access_token: str
 
+class ManualAuthorizeRequest(BaseModel):
+    app_id: str
+    app_secret: Optional[str] = None
 
 class ManualConfirmRequest(BaseModel):
     """Shared with /admin/social/* — only OPTIONAL fields added to avoid breaking

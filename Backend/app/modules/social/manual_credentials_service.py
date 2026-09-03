@@ -30,9 +30,24 @@ async def validate_meta_token(access_token: str, app_id: str | None = None, app_
         )
         debug_data = debug_resp.json()
         if "error" in debug_data:
+            err = debug_data["error"]
+            err_msg = err.get("message", "")
+            err_code = err.get("code", 0)
+            # Error 190 / "Invalid OAuth access token signature" means the App Token
+            # (app_id|app_secret) is wrong — not the user's Access Token.
+            if err_code == 190 or "OAuth" in err_msg or "signature" in err_msg.lower():
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "App ID o App Secret incorrectos: Meta rechazó las credenciales de la aplicación. "
+                        "Verifica que el App ID y App Secret sean correctos en Meta for Developers "
+                        "(Settings → Basic). "
+                        f"Detalle: {err_msg}"
+                    )
+                )
             raise HTTPException(
                 status_code=400,
-                detail=f"Meta Token Validation Error: {debug_data['error'].get('message', 'Invalid App ID or Secret')}"
+                detail=f"Meta Token Validation Error: {err_msg or 'Invalid App ID or Secret'}"
             )
 
         token_info = debug_data.get("data", {})

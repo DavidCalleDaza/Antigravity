@@ -266,6 +266,378 @@
   flex-wrap: wrap;
 }
 
+/* ── SHARE TEXT EDITOR TOOLBAR ── */
+.share-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.share-text-header-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.share-text-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-text-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+}
+
+.share-text-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+[data-theme="dark"] .share-action-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-action-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--primary, #3eb489);
+  background: var(--bg-hover);
+  transform: translateY(-1px);
+}
+
+.share-ai-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+[data-theme="dark"] .share-ai-toggle-btn {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.share-ai-toggle-btn:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.share-ai-toggle-btn.is-active {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* ── HASHTAG BAR & CHAR COUNTER ── */
+.share-hashtag-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.share-hashtag-input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 340px;
+  border: 1px solid var(--border, #000000);
+  border-radius: 8px;
+  background: var(--bg-primary, #ffffff);
+  padding: 4px 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="light"] .share-hashtag-input-wrap {
+  border: 1px solid #000000 !important;
+  background: #ffffff;
+}
+
+[data-theme="dark"] .share-hashtag-input-wrap {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.share-hashtag-input-wrap:focus-within {
+  border-color: var(--primary, #3eb489) !important;
+  box-shadow: 0 0 0 2px rgba(62, 180, 137, 0.2);
+}
+
+.share-hashtag-symbol {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--primary, #3eb489);
+  margin-right: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.share-hashtag-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  min-width: 0;
+  padding: 2px 2px;
+}
+
+.share-hashtag-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.share-hashtag-submit-btn:hover {
+  background: var(--bg-hover);
+  color: var(--primary, #3eb489);
+}
+
+.share-char-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--border, #000000);
+  white-space: nowrap;
+}
+
+[data-theme="light"] .share-char-pill {
+  border: 1px solid #000000;
+  background: #ffffff;
+}
+
+[data-theme="dark"] .share-char-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-char-pill--warn {
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* ── SOCIAL ACCOUNT SELECTION CARDS ── */
+.share-accounts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.share-accounts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.share-accounts-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-accounts-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  user-select: none;
+  transition: color var(--transition-fast);
+}
+
+.share-accounts-select-all:hover {
+  color: var(--primary, #3eb489);
+}
+
+.share-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.share-account-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary, #f8f9fa);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .share-account-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-account-card:hover {
+  border-color: var(--primary, #3eb489);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.share-account-card.is-selected {
+  border-color: var(--primary, #3eb489);
+  background: rgba(62, 180, 137, 0.06);
+  box-shadow: 0 0 0 1px rgba(62, 180, 137, 0.3);
+}
+
+[data-theme="dark"] .share-account-card.is-selected {
+  background: rgba(62, 180, 137, 0.12);
+  border-color: var(--primary, #3eb489);
+}
+
+.share-account-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary, #ffffff);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .share-account-checkbox {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.share-account-card.is-selected .share-account-checkbox {
+  background: var(--primary, #3eb489);
+  border-color: var(--primary, #3eb489);
+  color: #ffffff;
+}
+
+.share-account-brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.share-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.share-account-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-account-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+}
+
+.share-account-platform-badge {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+}
+
+.share-account-type-badge {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-secondary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .share-account-type-badge {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.share-account-default-badge {
+  color: #f59e0b;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
 .share-network-option {
   display: flex;
   align-items: center;

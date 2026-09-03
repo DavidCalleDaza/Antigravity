@@ -17,22 +17,40 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  FileText,
+  Sparkles,
 } from 'lucide-react';
 import AccordionSection from '../ui/AccordionSection';
 import AiCopyGenerator from '../AI/AiCopyGenerator';
 import MarkdownEditor from '../ui/MarkdownEditor';
 import { buildShareText } from './hooks/useShareModal';
+import { FacebookBrandIcon, InstagramBrandIcon, TikTokBrandIcon } from '../ui/SocialBrandIcons';
 
-const NETWORK_ICONS = {
-  facebook: Facebook,
-  instagram: Instagram,
-  tiktok: Video,
+const BRAND_ICONS = {
+  facebook: FacebookBrandIcon,
+  instagram: InstagramBrandIcon,
+  tiktok: TikTokBrandIcon,
 };
 
-const NETWORK_LABELS = {
+const BRAND_NAMES = {
   facebook: 'Facebook',
   instagram: 'Instagram',
   tiktok: 'TikTok',
+};
+
+const BRAND_THEMES = {
+  facebook: {
+    badgeBg: 'rgba(24, 119, 242, 0.12)',
+    badgeColor: '#1877F2',
+  },
+  instagram: {
+    badgeBg: 'rgba(225, 48, 108, 0.12)',
+    badgeColor: '#E1306C',
+  },
+  tiktok: {
+    badgeBg: 'rgba(37, 244, 238, 0.12)',
+    badgeColor: '#25F4EE',
+  },
 };
 
 export default function SocialPublisher({
@@ -72,38 +90,45 @@ export default function SocialPublisher({
   const isOpen = openSection === 'social';
 
   const renderTextEditor = () => (
-    <div className="form-group">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-        <label className="form-label" style={{ marginBottom: 0 }}>Texto para publicar</label>
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-          <label className="share-checkbox-label" style={{ fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <input
-              type="checkbox"
-              className="form-checkbox"
-              onChange={(e) => {
-                if (e.target.checked && item) {
-                  setShareText(buildShareText(item, mode));
-                }
-              }}
-            />
-            <span>Auto-rellenar detalles</span>
-          </label>
-          <label className="share-checkbox-label" style={{ fontSize: '0.75rem', cursor: 'pointer', color: 'var(--gold)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <input
-              type="checkbox"
-              className="form-checkbox"
-              checked={stepAiOptimizing}
-              onChange={(e) => setStepAiOptimizing(e.target.checked)}
-            />
-            <span><Wand2 width={12} height={12} className="inline mr-1" />Optimizar con IA</span>
-          </label>
+    <div className="share-text-group">
+      <div className="share-text-header-toolbar">
+        <div className="share-text-title-wrap">
+          <FileText width={14} height={14} className="text-primary" />
+          <span className="share-text-title">Texto para publicar</span>
+        </div>
+
+        <div className="share-text-actions-wrap">
+          {item && (
+            <button
+              type="button"
+              className="share-action-btn"
+              onClick={() => setShareText(buildShareText(item, mode))}
+              title="Cargar automáticamente datos y precio del producto/servicio"
+            >
+              <Sparkles width={12} height={12} />
+              <span>Auto-rellenar</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`share-ai-toggle-btn ${stepAiOptimizing ? 'is-active' : ''}`}
+            onClick={() => setStepAiOptimizing(!stepAiOptimizing)}
+            title="Abrir generador inteligente de copy con IA"
+          >
+            <Wand2 width={12} height={12} />
+            <span>{stepAiOptimizing ? 'Cerrar IA' : 'Optimizar con IA'}</span>
+          </button>
         </div>
       </div>
 
       {stepAiOptimizing ? (
         <div className="share-step-ai-panel">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-semibold uppercase text-gold">Generador de Copy IA</span>
+            <div className="flex items-center gap-1 text-xs font-semibold uppercase text-gold">
+              <Wand2 width={14} height={14} />
+              <span>Generador de Copy IA</span>
+            </div>
             <button
               type="button"
               className="btn btn-ghost btn-sm btn-icon-only"
@@ -128,34 +153,36 @@ export default function SocialPublisher({
             onChange={(val) => setShareText(val)}
             rows={isExpanded ? 6 : 4}
           />
-          <div className="share-hashtag-row mt-2">
-            <span className="share-hashtag-label">#</span>
-            <input
-              type="text"
-              className="share-hashtag-input"
-              placeholder="agrega una etiqueta y presiona Enter"
-              value={hashtagInput}
-              onChange={(e) => setHashtagInput(e.target.value.replace(/\s/g, ''))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+          <div className="share-hashtag-bar">
+            <div className="share-hashtag-input-wrap">
+              <span className="share-hashtag-symbol">#</span>
+              <input
+                type="text"
+                className="share-hashtag-field"
+                placeholder="agrega una etiqueta y presiona Enter"
+                value={hashtagInput}
+                onChange={(e) => setHashtagInput(e.target.value.replace(/\s/g, ''))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addHashtag();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="share-hashtag-submit-btn"
+                onClick={(e) => {
                   e.preventDefault();
                   addHashtag();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="share-hashtag-add-btn"
-              onClick={(e) => {
-                e.preventDefault();
-                addHashtag();
-              }}
-            >
-              <Plus width="14" height="14" />
-            </button>
-            <div style={{ flex: 1 }} />
-            <span className={`share-char-counter ${shareText.length > 2200 ? 'share-char-counter--warn' : ''}`}>
-              {shareText.length}/2200
+                }}
+                title="Añadir hashtag"
+              >
+                <Plus width={13} height={13} />
+              </button>
+            </div>
+            <span className={`share-char-pill ${shareText.length > 2200 ? 'share-char-pill--warn' : ''}`}>
+              {shareText.length} / 2200
             </span>
           </div>
         </>
@@ -183,23 +210,32 @@ export default function SocialPublisher({
             {renderTextEditor()}
           </div>
           <div>
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label className="form-label" style={{ marginBottom: 0 }}>
+            <div className="share-accounts-section">
+              <div className="share-accounts-header">
+                <span className="share-accounts-title">
+                  <Share2 width={13} height={13} className="text-primary" />
                   Selecciona las cuentas
-                </label>
-                <label className="share-network-option" style={{ padding: '0', border: 'none', background: 'transparent' }}>
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={handleSelectAll}
-                    disabled={activeAccounts.length === 0}
-                    className="form-checkbox"
-                  />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Seleccionar todas</span>
-                </label>
+                  {activeAccounts.length > 0 && (
+                    <span className="text-xs text-secondary font-normal ml-1">
+                      ({selectedAccounts.length} de {activeAccounts.length})
+                    </span>
+                  )}
+                </span>
+                {activeAccounts.length > 0 && (
+                  <label className="share-accounts-select-all">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      disabled={activeAccounts.length === 0}
+                      className="form-checkbox"
+                    />
+                    <span>Seleccionar todas</span>
+                  </label>
+                )}
               </div>
-              <div className="share-networks">
+
+              <div className="share-accounts-list">
                 {activeAccounts.length === 0 ? (
                   <div className="text-sm text-secondary p-3 border border-dashed border-neutral-700 rounded-lg w-full text-center">
                     No hay cuentas conectadas y activas.
@@ -209,39 +245,73 @@ export default function SocialPublisher({
                   </div>
                 ) : (
                   activeAccounts.map((account) => {
-                    const Icon = NETWORK_ICONS[account.platform] || Share2;
-                    const label = account.display_label || account.platform_username || account.platform_user_id;
-                    const platformName = NETWORK_LABELS[account.platform] || account.platform;
+                    const isSelected = selectedAccounts.includes(account.id);
+                    const Icon = BRAND_ICONS[account.platform] || Share2;
+                    const brandTheme = BRAND_THEMES[account.platform] || {
+                      badgeBg: 'rgba(62, 180, 137, 0.12)',
+                      badgeColor: 'var(--primary)',
+                    };
+                    const platformName = BRAND_NAMES[account.platform] || account.platform;
+                    const rawName =
+                      account.display_label ||
+                      account.platform_username ||
+                      account.platform_user_id ||
+                      'Cuenta conectada';
+
                     return (
                       <div
                         key={account.id}
-                        className="share-network-container"
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}
+                        className={`share-account-card ${isSelected ? 'is-selected' : ''}`}
+                        onClick={() => toggleAccount(account.id)}
+                        role="button"
+                        tabIndex={0}
                       >
-                        <label className="share-network-option" style={{ flex: 1 }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedAccounts.includes(account.id)}
-                            onChange={() => toggleAccount(account.id)}
-                            className="form-checkbox"
-                          />
-                          <span className="share-network-icon">
-                            <Icon width="18" height="18" />
+                        <div className="share-account-checkbox">
+                          {isSelected && <Check width={12} height={12} strokeWidth={3} />}
+                        </div>
+
+                        <div className="share-account-brand-icon" style={{ background: brandTheme.badgeBg }}>
+                          <Icon size={18} />
+                        </div>
+
+                        <div className="share-account-info">
+                          <span className="share-account-name" title={rawName}>
+                            {rawName}
                           </span>
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '0.875rem' }}>{label}</span>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                              {platformName} {account.account_type === 'business' ? '(Business)' : ''}{' '}
-                              {account.is_default ? '⭐' : ''}
+                          <div className="share-account-meta">
+                            <span className="share-account-platform-badge" style={{ color: brandTheme.badgeColor }}>
+                              {platformName}
                             </span>
+                            {account.account_type && (
+                              <span className="share-account-type-badge">
+                                {account.account_type === 'business' ? 'Business' : account.account_type}
+                              </span>
+                            )}
+                            {account.is_default && (
+                              <span className="share-account-default-badge" title="Cuenta principal">
+                                ⭐ Principal
+                              </span>
+                            )}
                           </div>
-                        </label>
+                        </div>
                       </div>
                     );
                   })
                 )}
               </div>
+
+              {activeAccounts.length > 0 && (
+                <Link
+                  to="/profile?tab=social"
+                  className="share-on-save-profile-btn mt-2"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <ExternalLink width={13} height={13} />
+                  <span>Gestionar cuentas en Mi Perfil &rarr; Redes sociales</span>
+                </Link>
+              )}
             </div>
+          </div>
 
             {showInstagramPanel && (
               <div className="share-instagram-panel">
@@ -265,7 +335,6 @@ export default function SocialPublisher({
             )}
           </div>
         </div>
-      </div>
       )}
     </div>
   );

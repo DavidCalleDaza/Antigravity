@@ -304,42 +304,78 @@ export default function Products() {
         category_id: formData.category_id || null,
         store_location_id: formData.store_location_id || null 
       };
+      const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+      const token = useStore.getState().currentUser?.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-      // Upload additional images first
-      let extraUrls = [];
-      if (formData.additionalImages && formData.additionalImages.length > 0) {
-        const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
-        const token = useStore.getState().currentUser?.token;
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      // 1. Subir imágenes adicionales
+      const imageUploadPromises = (formData.additionalImages || []).map(img => {
+        const form = new FormData();
+        form.append('file', img.blob, `product_gallery_${Date.now()}.png`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+          .then(r => r.json())
+          .then(data => data.url || null)
+          .catch(() => null);
+      });
 
-        const uploadPromises = formData.additionalImages.map(img => {
-          const form = new FormData();
-          form.append('file', img.blob, `product_gallery_${Date.now()}.png`);
-          return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
-            .then(r => r.json())
-            .then(data => data.url || null);
-        });
-        const uploaded = await Promise.all(uploadPromises);
-        extraUrls = uploaded.filter(Boolean);
+      // 2. Subir audios adicionales
+      const audioUploadPromises = (formData.additionalAudios || []).map(aud => {
+        if (!aud.file) return Promise.resolve(aud.url || null);
+        const form = new FormData();
+        form.append('file', aud.file, aud.name || `audio_${Date.now()}.mp3`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+          .then(r => r.json())
+          .then(data => data.url || null)
+          .catch(() => null);
+      });
+
+      // 3. Subir videos adicionales
+      const videoUploadPromises = (formData.additionalVideos || []).map(vid => {
+        if (!vid.file) return Promise.resolve(vid.url || null);
+        const form = new FormData();
+        form.append('file', vid.file, vid.name || `video_${Date.now()}.mp4`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+          .then(r => r.json())
+          .then(data => data.url || null)
+          .catch(() => null);
+      });
+
+      const [uploadedImages, uploadedAudios, uploadedVideos] = await Promise.all([
+        Promise.all(imageUploadPromises),
+        Promise.all(audioUploadPromises),
+        Promise.all(videoUploadPromises),
+      ]);
+
+      const validImages = uploadedImages.filter(Boolean);
+      const validAudios = uploadedAudios.filter(Boolean);
+      const validVideos = uploadedVideos.filter(Boolean);
+
+      // Asignar video principal si existe alguno
+      const firstVideoUrl = validVideos[0] || formData.video_url || null;
+      if (firstVideoUrl) {
+        payload.video_url = firstVideoUrl;
       }
 
-      // Combine existing media_urls + extraUrls
-      // If there's an image_url or formData.image_url, it should be the first element,
-      // but only if we rely on the backend inferring it, or we explicitly build it.
+      // Combinar media_urls existentes + nuevos medios subidos
       const existingMedia = formData.media_urls || [];
       const primary = formData.image_url || (editingProduct ? editingProduct.image_url : null);
       
       const allUrlsSet = new Set();
       if (primary) allUrlsSet.add(primary);
       existingMedia.forEach(url => allUrlsSet.add(url));
-      extraUrls.forEach(url => allUrlsSet.add(url));
+      validImages.forEach(url => allUrlsSet.add(url));
+      validAudios.forEach(url => allUrlsSet.add(url));
+      validVideos.forEach(url => allUrlsSet.add(url));
 
       const allUrls = Array.from(allUrlsSet);
       if (allUrls.length > 0) {
         payload.media_urls = allUrls;
       }
       
-      delete payload.additionalImages; // don't send to backend
+      delete payload.additionalImages;
+      delete payload.additionalAudios;
+      delete payload.additionalVideos;
+
       let savedItem;
       if (editingProduct) {
         savedItem = await productClient.update(editingProduct.id, payload);
@@ -385,7 +421,7 @@ export default function Products() {
       const updated = await productClient.update(toggleTarget.id, { status: newStatus });
       
       setProducts(products.map(p => p.id === toggleTarget.id ? updated : p));
-      toast.success(newStatus === 'active' ? 'Producto reactivado.' : 'Producto desactivado.');
+      toast.success(newStatus === 'active' ? 'Producto activado.' : 'Producto desactivado.');
     } catch (err) {
       console.error(err);
       toast.error('No se pudo cambiar el estado del producto.');
@@ -405,8 +441,12 @@ export default function Products() {
       stock: 0,
       status: 'active',
       description: '',
+      image_url: null,
+      video_url: null,
       store_location_id: '',
       additionalImages: [],
+      additionalAudios: [],
+      additionalVideos: [],
       media_urls: [],
     });
     setEditingProduct(null);
@@ -416,6 +456,48 @@ export default function Products() {
 
   const openEditModal = (product) => {
     setEditingProduct(product);
+    const existingMedia = product.media_urls || [];
+    const existingAudios = [];
+    const existingVideos = [];
+
+    if (product.video_url) {
+      existingVideos.push({
+        id: 'existing-video-main',
+        name: product.video_url.split('/').pop() || 'Video principal',
+        url: product.video_url,
+        previewUrl: Helpers.resolveMediaUrl(product.video_url),
+        isExisting: true,
+      });
+    }
+
+    existingMedia.forEach((url, i) => {
+      if (!url) return;
+      const lower = url.toLowerCase();
+      const isVid = lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || url === product.video_url;
+      const isAud = lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.aac');
+      if (isVid) {
+        if (!existingVideos.some(v => v.url === url)) {
+          existingVideos.push({
+            id: `existing-video-${i}`,
+            name: url.split('/').pop() || `Video ${existingVideos.length + 1}`,
+            url,
+            previewUrl: Helpers.resolveMediaUrl(url),
+            isExisting: true,
+          });
+        }
+      } else if (isAud) {
+        if (!existingAudios.some(a => a.url === url)) {
+          existingAudios.push({
+            id: `existing-audio-${i}`,
+            name: url.split('/').pop() || `Audio ${existingAudios.length + 1}`,
+            url,
+            previewUrl: Helpers.resolveMediaUrl(url),
+            isExisting: true,
+          });
+        }
+      }
+    });
+
     setFormData({
       name: product.name,
       category_id: product.category_id || '',
@@ -423,8 +505,12 @@ export default function Products() {
       stock: product.stock,
       status: product.status,
       description: product.description || '',
+      image_url: product.image_url || null,
+      video_url: product.video_url || null,
       store_location_id: product.store_location_id || '',
       additionalImages: [],
+      additionalAudios: existingAudios,
+      additionalVideos: existingVideos,
       media_urls: product.media_urls || [],
     });
     setIsModalOpen(true);

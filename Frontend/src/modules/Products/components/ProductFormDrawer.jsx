@@ -63,9 +63,7 @@ export default function ProductFormDrawer({
     }
   }, [isOpen, editingProduct]);
 
-  const saveActionTitle = editingProduct
-    ? shareOnSave.length > 0 ? 'Guardar y publicar' : 'Guardar Cambios'
-    : shareOnSave.length > 0 ? 'Crear y publicar' : 'Crear Producto';
+  const saveActionTitle = editingProduct ? 'Guardar Cambios' : 'Crear Producto';
 
   const handleDropItem = (data) => {
     if (!data) return;
@@ -190,12 +188,9 @@ export default function ProductFormDrawer({
   const metaAccounts = accounts.filter((a) => a.platform === 'facebook' || a.platform === 'instagram');
   const tikTokAccounts = accounts.filter((a) => a.platform === 'tiktok');
   const hasAccounts = accounts.length > 0;
-  const selectedCount = shareOnSave.length;
   const socialSummary = !hasAccounts
     ? 'Desconectado'
-    : selectedCount > 0
-    ? `${selectedCount} seleccionada${selectedCount > 1 ? 's' : ''}`
-    : `${accounts.length} cuenta${accounts.length > 1 ? 's' : ''} conectada${accounts.length > 1 ? 's' : ''}`;
+    : `${accounts.length} cuenta${accounts.length > 1 ? 's' : ''} configurada${accounts.length > 1 ? 's' : ''}`;
 
   const drawerHeaderActions = (
     <button
@@ -268,19 +263,18 @@ export default function ProductFormDrawer({
             }}
           />
 
-          {/* Audios adicionales (Prototipo UI) */}
+          {/* Audios adicionales */}
           <div className="extra-media-block">
             <div className="extra-media-header">
               <div className="extra-media-title">
                 <Mic width={16} height={16} />
                 <span>Audios adicionales</span>
-                <span className="badge-coming-soon">Próximamente</span>
               </div>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm btn-icon-only"
                 onClick={() => audioInputRef.current?.click()}
-                title="Agregar audio (máx 5MB)"
+                title="Agregar audio (máx 15MB)"
               >
                 <Plus width={16} height={16} />
               </button>
@@ -292,18 +286,16 @@ export default function ProductFormDrawer({
                 style={{ display: 'none' }}
               />
             </div>
-            <div className="extra-media-note">
-              Esta función está en desarrollo. Los audios se previsualizan de forma local pero aún no se guardan en el servidor.
-            </div>
             {audioError && <div className="text-xs text-danger mt-1">{audioError}</div>}
             {(formData.additionalAudios || []).map((audio) => (
               <div key={audio.id} className="extra-media-item">
                 <span className="truncate flex-1 mr-2">{audio.name}</span>
-                <audio controls src={audio.previewUrl} style={{ height: '24px', maxWidth: '140px' }} />
+                <audio controls src={audio.previewUrl} style={{ height: '28px', maxWidth: '160px' }} />
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm btn-icon-only text-danger ml-2"
                   onClick={() => handleRemoveAudio(audio.id)}
+                  title="Eliminar audio"
                 >
                   <Trash2 width={14} height={14} />
                 </button>
@@ -311,13 +303,12 @@ export default function ProductFormDrawer({
             ))}
           </div>
 
-          {/* Videos adicionales (Prototipo UI) */}
+          {/* Videos adicionales */}
           <div className="extra-media-block">
             <div className="extra-media-header">
               <div className="extra-media-title">
                 <Video width={16} height={16} />
                 <span>Videos adicionales</span>
-                <span className="badge-coming-soon">Próximamente</span>
               </div>
               <button
                 type="button"
@@ -335,17 +326,16 @@ export default function ProductFormDrawer({
                 style={{ display: 'none' }}
               />
             </div>
-            <div className="extra-media-note">
-              Esta función está en desarrollo. Los videos se previsualizan de forma local pero aún no se guardan en el servidor.
-            </div>
             {videoError && <div className="text-xs text-danger mt-1">{videoError}</div>}
             {(formData.additionalVideos || []).map((video) => (
               <div key={video.id} className="extra-media-item">
                 <span className="truncate flex-1 mr-2">{video.name}</span>
+                <video controls src={video.previewUrl} style={{ height: '36px', maxWidth: '140px', borderRadius: '4px', objectFit: 'cover' }} />
                 <button
                   type="button"
-                  className="btn btn-ghost btn-sm btn-icon-only text-danger"
+                  className="btn btn-ghost btn-sm btn-icon-only text-danger ml-2"
                   onClick={() => handleRemoveVideo(video.id)}
+                  title="Eliminar video"
                 >
                   <Trash2 width={14} height={14} />
                 </button>
@@ -504,11 +494,7 @@ export default function ProductFormDrawer({
 
           {/* Si hay cuentas conectadas (Meta o TikTok), mostrar ShareOnSaveSection */}
           {hasAccounts && (
-            <ShareOnSaveSection
-              accounts={accounts}
-              selectedNetworks={shareOnSave}
-              onChange={setShareOnSave}
-            />
+            <ShareOnSaveSection accounts={accounts} />
           )}
         </AccordionSection>
       </form>

@@ -50,10 +50,13 @@ export default function ItemDetailDrawer({
   const isProduct = variant === 'product';
   const accentColor = ACCENT_COLORS[variant] || 'var(--gold)';
 
-  // Construir lista de medios (imágenes y/o video)
+  // Construir lista de medios (imágenes, audios y videos)
   const mediaList = [];
   if (item.video_url) {
     mediaList.push({ type: 'video', url: item.video_url });
+  }
+  if (item.audio_url) {
+    mediaList.push({ type: 'audio', url: item.audio_url });
   }
   if (item.image_url) {
     mediaList.push({ type: 'image', url: item.image_url });
@@ -61,7 +64,13 @@ export default function ItemDetailDrawer({
   if (Array.isArray(item.media_urls)) {
     item.media_urls.forEach((url) => {
       if (url && !mediaList.some((m) => m.url === url)) {
-        mediaList.push({ type: 'image', url });
+        const lower = url.toLowerCase();
+        const isVid = lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || url === item.video_url;
+        const isAud = lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.aac') || url === item.audio_url;
+        mediaList.push({
+          type: isVid ? 'video' : isAud ? 'audio' : 'image',
+          url,
+        });
       }
     });
   }

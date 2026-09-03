@@ -286,20 +286,289 @@
   accent-color: var(--text-primary);
 }
 
-.share-multi-img-thumb {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform 0.2s;
-  object-fit: cover;
+/* ── PREVIEW CARD & MEDIA ── */
+.share-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 340px;
 }
 
-.share-multi-img-thumb:hover {
-  transform: scale(1.05);
+.share-preview-card {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 4 / 3;
+  max-height: 220px;
+  background: var(--surface-raised, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="dark"] .share-preview-card {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .share-preview-image {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.share-preview-media-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.share-preview-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.share-audio-player-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  gap: 8px;
+  background: var(--surface-raised, rgba(0, 0, 0, 0.03));
+}
+
+[data-theme="dark"] .share-audio-player-wrapper {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.share-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.share-preview-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.75) 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.share-preview-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-preview-price {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary, #3eb489);
+  flex-shrink: 0;
+}
+
+/* ── MULTI-IMAGE CAROUSEL STRIP ── */
+.share-multi-img-thumb--active {
+  box-shadow: 0 0 12px rgba(62, 180, 137, 0.4);
+}
+
+[data-theme="dark"] .share-multi-img-thumb--active {
+  box-shadow: 0 0 14px rgba(62, 180, 137, 0.5);
+}
+
+/* ── MULTI-IMAGE CAROUSEL STRIP ── */
+.share-multi-img {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 340px;
+}
+
+.share-multi-img-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.share-multi-img-count {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.share-multi-img-tiktok-warn {
+  font-size: 0.75rem;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.share-multi-img-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.share-multi-img-thumb {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 8px;
+  overflow: visible;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.share-multi-img-thumb--interchangeable {
+  cursor: pointer;
+}
+
+.share-multi-img-thumb--interchangeable:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary, #3eb489);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.share-multi-img-thumb--interchangeable:active {
+  transform: scale(0.95);
 }
 
 .share-multi-img-thumb--primary {
-  border-color: var(--text-primary);
+  border-color: var(--primary, #3eb489);
+}
+
+.share-multi-img-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.share-multi-img-thumb-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
+  background: var(--primary, #3eb489);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-secondary);
+}
+
+.share-multi-img-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  z-index: 2;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.share-multi-img-remove:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.share-multi-img-add {
+  width: 58px;
+  height: 58px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised, rgba(0, 0, 0, 0.02));
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.share-multi-img-add:hover {
+  border-color: var(--primary, #3eb489);
+  color: var(--primary, #3eb489);
+  background: rgba(62, 180, 137, 0.08);
+}
+
+.share-multi-img-add-plus {
+  font-size: 1.1rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.share-multi-img-add-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── FICHA TÉCNICA CARD & EDIT FORM ── */
+.share-product-details-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-theme="dark"] .share-product-details-card {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }

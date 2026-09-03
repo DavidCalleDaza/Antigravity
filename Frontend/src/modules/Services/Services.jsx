@@ -288,32 +288,68 @@ export default function Services() {
       if (formData.image_url) payload.image_url = formData.image_url;
       if (formData.video_url) payload.video_url = formData.video_url;
 
-      // Upload additional images first
-      let extraUrls = [];
-      if (formData.additionalImages && formData.additionalImages.length > 0) {
-        const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
-        const token = useStore.getState().currentUser?.token;
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+      const token = useStore.getState().currentUser?.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const uploadPromises = formData.additionalImages.map(img => {
-          const form = new FormData();
-          form.append('file', img.blob, `service_gallery_${Date.now()}.png`);
-          return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
-            .then(r => r.json())
-            .then(data => data.url || null);
-        });
-        const uploaded = await Promise.all(uploadPromises);
-        extraUrls = uploaded.filter(Boolean);
+      // 1. Subir imágenes adicionales
+      const imageUploadPromises = (formData.additionalImages || []).map(img => {
+        const form = new FormData();
+        form.append('file', img.blob, `service_gallery_${Date.now()}.png`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+          .then(r => r.json())
+          .then(data => data.url || null)
+          .catch(() => null);
+      });
+
+      // 2. Subir audios adicionales
+      const audioUploadPromises = (formData.additionalAudios || []).map(aud => {
+        if (!aud.file) return Promise.resolve(aud.url || null);
+        const form = new FormData();
+        form.append('file', aud.file, aud.name || `audio_${Date.now()}.mp3`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+          .then(r => r.json())
+          .then(data => data.url || null)
+          .catch(() => null);
+      });
+
+      // 3. Subir videos adicionales
+      const videoUploadPromises = (formData.additionalVideos || []).map(vid => {
+        if (!vid.file) return Promise.resolve(vid.url || null);
+        const form = new FormData();
+        form.append('file', vid.file, vid.name || `video_${Date.now()}.mp4`);
+        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: form })
+          .then(r => r.json())
+          .then(data => data.url || null)
+          .catch(() => null);
+      });
+
+      const [uploadedImages, uploadedAudios, uploadedVideos] = await Promise.all([
+        Promise.all(imageUploadPromises),
+        Promise.all(audioUploadPromises),
+        Promise.all(videoUploadPromises),
+      ]);
+
+      const validImages = uploadedImages.filter(Boolean);
+      const validAudios = uploadedAudios.filter(Boolean);
+      const validVideos = uploadedVideos.filter(Boolean);
+
+      // Asignar video principal si existe alguno
+      const firstVideoUrl = validVideos[0] || formData.video_url || null;
+      if (firstVideoUrl) {
+        payload.video_url = firstVideoUrl;
       }
 
-      // Combine existing media_urls + extraUrls
+      // Combinar media_urls existentes + nuevos medios subidos
       const existingMedia = formData.media_urls || [];
       const primary = formData.image_url || (editingService ? editingService.image_url : null);
       
       const allUrlsSet = new Set();
       if (primary) allUrlsSet.add(primary);
       existingMedia.forEach(url => allUrlsSet.add(url));
-      extraUrls.forEach(url => allUrlsSet.add(url));
+      validImages.forEach(url => allUrlsSet.add(url));
+      validAudios.forEach(url => allUrlsSet.add(url));
+      validVideos.forEach(url => allUrlsSet.add(url));
 
       const allUrls = Array.from(allUrlsSet);
       if (allUrls.length > 0) {
@@ -402,20 +438,33 @@ export default function Services() {
     }
   };
 
-  const resetForm = () => {
-    setIsModalOpen(false);
+  const handleCreate = () => {
     setEditingService(null);
+    reset();
+    setMediaError(null);
+    setShareOnSave([]);
+    setIsModalOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsModalOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
     setFormData({
       name: '',
-      category_id: '',
-      price: 0,
+      price: '',
       duration: '',
+      category_id: '',
       status: 'active',
       description: '',
-      image_url: '',
-      video_url: '',
+      image_url: null,
+      video_url: null,
       store_location_id: '',
       additionalImages: [],
+      additionalAudios: [],
+      additionalVideos: [],
       media_urls: [],
     });
     setEditingService(null);
@@ -425,6 +474,48 @@ export default function Services() {
 
   const openEditModal = (service) => {
     setEditingService(service);
+    const existingMedia = service.media_urls || [];
+    const existingAudios = [];
+    const existingVideos = [];
+
+    if (service.video_url) {
+      existingVideos.push({
+        id: 'existing-video-main',
+        name: service.video_url.split('/').pop() || 'Video principal',
+        url: service.video_url,
+        previewUrl: Helpers.resolveMediaUrl(service.video_url),
+        isExisting: true,
+      });
+    }
+
+    existingMedia.forEach((url, i) => {
+      if (!url) return;
+      const lower = url.toLowerCase();
+      const isVid = lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || url === service.video_url;
+      const isAud = lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.aac');
+      if (isVid) {
+        if (!existingVideos.some(v => v.url === url)) {
+          existingVideos.push({
+            id: `existing-video-${i}`,
+            name: url.split('/').pop() || `Video ${existingVideos.length + 1}`,
+            url,
+            previewUrl: Helpers.resolveMediaUrl(url),
+            isExisting: true,
+          });
+        }
+      } else if (isAud) {
+        if (!existingAudios.some(a => a.url === url)) {
+          existingAudios.push({
+            id: `existing-audio-${i}`,
+            name: url.split('/').pop() || `Audio ${existingAudios.length + 1}`,
+            url,
+            previewUrl: Helpers.resolveMediaUrl(url),
+            isExisting: true,
+          });
+        }
+      }
+    });
+
     setFormData({
       name: service.name || '',
       category_id: service.category_id || '',
@@ -436,6 +527,8 @@ export default function Services() {
       video_url: service.video_url || null,
       store_location_id: service.store_location_id || '',
       additionalImages: [],
+      additionalAudios: existingAudios,
+      additionalVideos: existingVideos,
       media_urls: service.media_urls || [],
     });
     setIsModalOpen(true);

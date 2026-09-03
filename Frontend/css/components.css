@@ -1570,28 +1570,247 @@
   color: var(--text-secondary);
 }
 
+/* ── REDES SOCIALES CONFIGURADAS (SHARE ON SAVE SECTION) ── */
 .share-on-save {
-  border-top: 1px solid var(--neutral-700);
-  padding-top: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.share-networks-inline {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3, 0.75rem);
+  margin-top: var(--space-3, 0.75rem);
   display: flex;
-  gap: var(--space-4);
-  margin-top: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
 }
 
-.share-checkbox-label {
+.share-on-save-header {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-on-save-title-wrap {
+  min-width: 0;
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  cursor: pointer;
-  font-size: var(--text-sm);
+  gap: 6px;
+  overflow: hidden;
 }
 
-.share-checkbox-label input {
-  accent-color: var(--gold);
+.share-on-save-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-on-save-count-pill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(62, 180, 137, 0.12);
+  color: var(--primary, #3eb489);
+  border: 1px solid rgba(62, 180, 137, 0.25);
+  flex-shrink: 0;
+}
+
+.share-on-save-cards-list {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-on-save-account-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+[data-theme="dark"] .share-on-save-account-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.share-on-save-account-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary, #3eb489);
+  transform: translateY(-1px);
+}
+
+.share-on-save-brand-icon-wrap {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm, 7px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.share-on-save-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.share-on-save-account-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.share-on-save-account-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.share-on-save-platform-badge {
+  font-weight: 600;
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+.share-on-save-type-badge {
+  color: var(--text-tertiary);
+  background: var(--surface-raised, rgba(0, 0, 0, 0.04));
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  flex-shrink: 0;
+}
+
+.share-on-save-card-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.share-on-save-card-action .status-dot-active {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary, #3eb489);
+  box-shadow: 0 0 6px rgba(62, 180, 137, 0.7);
+  flex-shrink: 0;
+}
+
+.share-on-save-chevron {
+  color: var(--text-tertiary);
+  transition: transform var(--transition-fast, 0.15s ease), color var(--transition-fast, 0.15s ease);
+}
+
+.share-on-save-account-card:hover .share-on-save-chevron {
+  color: var(--primary, #3eb489);
+  transform: translateX(2px);
+}
+
+.share-on-save-profile-btn {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-raised, rgba(0, 0, 0, 0.03));
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all var(--transition-fast, 0.15s ease);
+}
+
+.share-on-save-profile-btn:hover {
+  background: rgba(62, 180, 137, 0.08);
+  border-color: var(--primary, #3eb489);
+  color: var(--primary, #3eb489);
+}
+
+.share-on-save-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  gap: 8px;
+  text-align: center;
+}
+
+.share-on-save-connect-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-md, 6px);
+  background: var(--primary, #3eb489);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast, 0.15s ease);
+}
+
+.share-on-save-connect-btn:hover {
+  opacity: 0.9;
+}
+
+.share-on-save-connect-link {
+  color: var(--primary, #3eb489);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+}
+
+.share-on-save-connect-link:hover {
+  text-decoration: underline;
 }
 
 /* --- Dropdown custom (reemplazo del <select> nativo en filtros) --- */

@@ -67,11 +67,7 @@ export default function WallSocialSection({ accounts, shareOnSave, setShareOnSav
       ) : null}
 
       {hasAccounts && (
-        <ShareOnSaveSection
-          accounts={accounts}
-          selectedNetworks={shareOnSave}
-          onChange={setShareOnSave}
-        />
+        <ShareOnSaveSection accounts={accounts} />
       )}
     </AccordionSection>
   );

@@ -149,12 +149,53 @@ export function useShareModal({
       setAiVideoUrl(null);
       setEnhancedImageUrl(null);
       setIsAiGeneratedPost(false);
-      setActiveAiSection(null);
-      // Reset additional images
-      setAdditionalImages((prev) => {
-        prev.forEach((img) => img.previewUrl && URL.revokeObjectURL(img.previewUrl));
-        return [];
-      });
+      // Reset additional images and populate existing media from item
+      const existingExtras = [];
+      const primaryItemUrl = item.imageUrl || item.image_url;
+
+      if (item.video_url && item.video_url !== primaryItemUrl) {
+        existingExtras.push({
+          blob: null,
+          previewUrl: Helpers.resolveMediaUrl(item.video_url),
+          type: 'video',
+          name: item.video_url.split('/').pop() || 'Video',
+          uploadedUrl: item.video_url,
+        });
+      }
+
+      if (item.audio_url && item.audio_url !== primaryItemUrl) {
+        existingExtras.push({
+          blob: null,
+          previewUrl: Helpers.resolveMediaUrl(item.audio_url),
+          type: 'audio',
+          name: item.audio_url.split('/').pop() || 'Audio',
+          uploadedUrl: item.audio_url,
+        });
+      }
+
+      if (Array.isArray(item.media_urls)) {
+        item.media_urls.forEach((url, i) => {
+          if (!url) return;
+          const fullUrl = Helpers.resolveMediaUrl(url);
+          const alreadyAdded = existingExtras.some(
+            (e) => e.uploadedUrl === url || e.previewUrl === fullUrl
+          );
+          if (!alreadyAdded && url !== primaryItemUrl && fullUrl !== primaryItemUrl) {
+            const lower = url.toLowerCase();
+            const isVid = lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || url === item.video_url;
+            const isAud = lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.aac') || url === item.audio_url;
+            existingExtras.push({
+              blob: null,
+              previewUrl: fullUrl,
+              type: isVid ? 'video' : isAud ? 'audio' : 'image',
+              name: url.split('/').pop() || `Medio ${i + 1}`,
+              uploadedUrl: url,
+            });
+          }
+        });
+      }
+
+      setAdditionalImages(existingExtras);
       setHashtagInput('');
 
       if (mode === 'wallPost') {
@@ -401,7 +442,10 @@ export function useShareModal({
     if (!file) return;
     const blob = file;
     const previewUrl = URL.createObjectURL(blob);
-    setAdditionalImages((prev) => [...prev, { blob, previewUrl, uploadedUrl: null }]);
+    let type = 'image';
+    if (file.type.startsWith('video/')) type = 'video';
+    else if (file.type.startsWith('audio/')) type = 'audio';
+    setAdditionalImages((prev) => [...prev, { blob, previewUrl, type, name: file.name, uploadedUrl: null }]);
     e.target.value = '';
   };
 
@@ -411,6 +455,29 @@ export function useShareModal({
       return prev.filter((_, i) => i !== index);
     });
   };
+
+  const handleSwapImage = useCallback((indexToSwap) => {
+    if (indexToSwap < 0 || indexToSwap >= additionalImages.length) return;
+
+    const targetImage = additionalImages[indexToSwap];
+    if (!targetImage) return;
+
+    const oldPrimaryBlob = imageBlob;
+    const oldPrimaryUrl = previewUrl;
+
+    setPreviewUrl(targetImage.previewUrl);
+    setImageBlob(targetImage.blob);
+
+    setAdditionalImages((prev) => {
+      const updated = [...prev];
+      updated[indexToSwap] = {
+        blob: oldPrimaryBlob,
+        previewUrl: oldPrimaryUrl,
+        uploadedUrl: null,
+      };
+      return updated;
+    });
+  }, [additionalImages, imageBlob, previewUrl]);
 
   const hasSelected = selectedAccounts.length > 0;
 
@@ -486,5 +553,6 @@ export function useShareModal({
     handleSelectAll,
     addAdditionalImage,
     removeAdditionalImage,
+    handleSwapImage,
   };
 }

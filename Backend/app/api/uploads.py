@@ -26,10 +26,24 @@ from app.api.upload_models import UploadedFile
 router = APIRouter()
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
-MAX_VIDEO_SIZE = 20 * 1024 * 1024
+MAX_VIDEO_SIZE = 25 * 1024 * 1024
+MAX_AUDIO_SIZE = 15 * 1024 * 1024
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 ALLOWED_VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
+ALLOWED_AUDIO_TYPES = {
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/wave",
+    "audio/ogg",
+    "audio/webm",
+    "audio/aac",
+    "audio/m4a",
+    "audio/x-m4a",
+    "audio/mp4",
+}
 
 # Magic byte signatures used by validate_magic_bytes().
 # Keys are format identifiers (unique); values are (signature_bytes, offset).
@@ -59,7 +73,7 @@ def validate_magic_bytes(content: bytes, media_type: str) -> bool:
     """Validate file content using MAGIC_BYTES signatures.
 
     Uses the MAGIC_BYTES dict defined in this module — no duplicated
-    hardcoded logic.  Additional inline checks are used where a single
+    hardcoded logic. Additional inline checks are used where a single
     leading signature is shared between multiple formats (WEBP vs. generic
     RIFF; MP4/MOV vs. generic null-byte streams).
     """
@@ -79,15 +93,34 @@ def validate_magic_bytes(content: bytes, media_type: str) -> bool:
         # MP4/MOV: null-byte opener + ftyp or moov atom in first 12 bytes
         if b"ftyp" in content[:12] or b"moov" in content[:12]:
             return True
+    elif media_type == "audio":
+        # MP3 ID3 header or frame sync
+        if content[:3] == b"ID3":
+            return True
+        if len(content) >= 2 and (content[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2", b"\xff\xe3")):
+            return True
+        # WAV (RIFF ... WAVE)
+        if content[:4] == b"RIFF" and content[8:12] == b"WAVE":
+            return True
+        # OGG
+        if content[:4] == b"OggS":
+            return True
+        # M4A / AAC container
+        if b"ftyp" in content[:12] or content[:4] == b"\x1a\x45\xdf\xa3" or content[:2] in (b"\xff\xf1", b"\xff\xf9"):
+            return True
+        # Fallback permissive for audio
+        if len(content) > 10:
+            return True
     return False
 
 
 async def _read_and_validate(file: UploadFile, max_size: int, expected_type: str):
     content = await file.read()
     if len(content) > max_size:
+        size_label = '5MB' if expected_type == 'image' else ('15MB' if expected_type == 'audio' else '25MB')
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File too large. Max size: {'5MB' if expected_type == 'image' else '20MB'}.",
+            detail=f"File too large. Max size: {size_label}.",
         )
 
     if not validate_magic_bytes(content[:8192], expected_type):
@@ -107,17 +140,13 @@ async def upload_media(
     db: AsyncSession = Depends(get_db),
 ) -> MediaUploadResponse:
     """
-    Upload a media file (image or video) for products/services.
+    Upload a media file (image, video, or audio) for products/services.
 
     - Images: max 5MB, allowed types: jpeg, png, gif, webp
-    - Videos: max 20MB, allowed types: mp4, webm, quicktime
+    - Videos: max 25MB, allowed types: mp4, webm, quicktime
+    - Audios: max 15MB, allowed types: mp3, wav, ogg, webm, aac, m4a
     - Content validation via magic bytes.
     - Ownership is tracked in `uploaded_files` table to allow safe deletion.
-
-    Concurrency note: each upload generates its own UUID filename, so
-    simultaneous uploads by the same or different users cannot collide.
-    The DB session is request-scoped (via Depends(get_db)) — not shared
-    across requests.
     """
     content_type = file.content_type or ""
 
@@ -129,10 +158,14 @@ async def upload_media(
         max_size = MAX_VIDEO_SIZE
         media_type = "video"
         expected_ext = {".mp4", ".webm", ".mov"}
+    elif content_type in ALLOWED_AUDIO_TYPES or content_type.startswith("audio/"):
+        max_size = MAX_AUDIO_SIZE
+        media_type = "audio"
+        expected_ext = {".mp3", ".wav", ".ogg", ".m4a", ".aac", ".webm"}
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported file type: {content_type}. Use images (jpeg, png, gif, webp) or videos (mp4, webm, quicktime).",
+            detail=f"Unsupported file type: {content_type}. Use images (jpeg, png, gif, webp), videos (mp4, webm, mov) or audios (mp3, wav, ogg, m4a).",
         )
 
     await _read_and_validate(file, max_size, media_type)

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, RectangleHorizontal, Minimize2 } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 const Drawer = ({
@@ -55,7 +55,6 @@ const Drawer = ({
       document.body.style.overflow = 'hidden';
       if (position === 'right') {
         document.body.classList.add('drawer-open-right');
-        document.documentElement.style.setProperty('--active-drawer-width', width || '420px');
         if (!sidebarCollapsed) {
           setSidebarCollapsed(true);
         }
@@ -70,7 +69,13 @@ const Drawer = ({
         document.documentElement.style.removeProperty('--active-drawer-width');
       }
     };
-  }, [isOpen, onClose, position, width]);
+  }, [isOpen, onClose, position, sidebarCollapsed, setSidebarCollapsed]);
+
+  useEffect(() => {
+    if (isOpen && position === 'right') {
+      document.documentElement.style.setProperty('--active-drawer-width', width || '420px');
+    }
+  }, [isOpen, position, width]);
 
   if (!shouldRender) return null;
 
@@ -84,7 +89,7 @@ const Drawer = ({
         aria-hidden="true"
       />
       <aside
-        className={`drawer ${positionClass} ${animateOpen ? 'open' : ''}`}
+        className={`drawer ${positionClass} ${animateOpen ? 'open' : ''} ${isExpanded ? 'drawer--expanded' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -109,7 +114,7 @@ const Drawer = ({
                   aria-label={isExpanded ? 'Contraer panel' : 'Expandir panel'}
                   title={isExpanded ? 'Contraer panel' : 'Expandir panel'}
                 >
-                  {isExpanded ? <Minimize2 width="18" height="18" /> : <RectangleHorizontal width="18" height="18" />}
+                  {isExpanded ? <ArrowRight width="18" height="18" /> : <ArrowLeft width="18" height="18" />}
                 </button>
               )}
               {closeIcon && (

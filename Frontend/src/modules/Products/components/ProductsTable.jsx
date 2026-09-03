@@ -67,6 +67,11 @@ export default function ProductsTable({
           >
             <Power width="14" height="14" />
           </button>
+          {onShare && (
+            <button className="btn btn-ghost btn-sm btn-icon-only" onClick={() => onShare(row)} title="Compartir">
+              <ShareIcon />
+            </button>
+          )}
           <button className="btn btn-ghost btn-sm btn-icon-only" style={{ color: 'var(--danger)' }} onClick={() => onDeleteRequest(row)}>
             <TrashIcon />
           </button>

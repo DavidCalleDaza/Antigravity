@@ -462,6 +462,10 @@ export default function Products() {
     setIsModalOpen(true);
   };
 
+  const handleShareRequest = (product) => {
+    setShareModal({ isOpen: true, item: { ...product, imageUrl: product.image_url, type: 'producto' } });
+  };
+
   return (
     <div className="page-content">
       <div className="page-header">
@@ -524,6 +528,7 @@ export default function Products() {
           onView={handleViewProduct}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
+          onShare={handleShareRequest}
           toast={toast}
           revealImages={revealImages}
         />
@@ -541,6 +546,7 @@ export default function Products() {
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
           onDeleteRequest={handleDeleteRequest}
+          onShare={handleShareRequest}
           navigate={navigate}
           revealImages={revealImages}
         />

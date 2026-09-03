@@ -866,7 +866,9 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-xl);
-  transition: transform var(--transition-base);
+  transition: transform var(--transition-base),
+              max-width var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1),
+              width var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .drawer-right {
@@ -876,6 +878,18 @@
 
 .drawer-right.open {
   transform: translateX(0);
+}
+
+.drawer--expanded.drawer-right {
+  max-width: calc(100vw - var(--sidebar-collapsed, 72px)) !important;
+  width: calc(100vw - var(--sidebar-collapsed, 72px)) !important;
+}
+
+@media (max-width: 768px) {
+  .drawer--expanded.drawer-right {
+    max-width: 100vw !important;
+    width: 100vw !important;
+  }
 }
 
 .drawer-left {

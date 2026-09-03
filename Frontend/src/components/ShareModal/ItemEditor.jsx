@@ -1,6 +1,5 @@
 import React from 'react';
-import { Pencil, Loader2, Share2, Save, Info, Package } from 'lucide-react';
-import AccordionSection from '../ui/AccordionSection';
+import { Pencil, Loader2, Share2, Save, Info, Package, Wrench, ChevronDown, ChevronUp } from 'lucide-react';
 import CategorySelect from '../ui/CategorySelect';
 import MarkdownEditor from '../ui/MarkdownEditor';
 
@@ -29,14 +28,22 @@ export default function ItemEditor({
   itemSaveError,
   savingItem,
   handleSaveItemChanges,
+  mode,
 }) {
+  const isOpen = openSection === 'product' || openSection === 'item';
+
   return (
-    <AccordionSection
-      icon={<Pencil width={18} height={18} />}
-      title={
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <span>{isWallPost ? '1. EDITAR PUBLICACIÓN' : '1. EDITAR PRODUCTO'}</span>
-          {!isWallPost && (
+    <div className={`share-step-card ${isOpen ? 'is-open' : ''}`}>
+      <div 
+        className="share-step-header" 
+        style={{ cursor: 'pointer', marginBottom: isOpen ? '1.25rem' : '0', borderBottom: isOpen ? '1px solid var(--border)' : 'none', paddingBottom: isOpen ? '1rem' : '0' }}
+        onClick={() => setOpenSection(isOpen ? null : 'product')}
+      >
+        {mode === 'service' ? <Wrench width={18} height={18} /> : <Package width={18} height={18} />}
+        <h3 className="share-step-title">{isWallPost ? 'EDITAR PUBLICACIÓN' : (mode === 'service' ? 'EDITAR SERVICIO' : 'EDITAR PRODUCTO')}</h3>
+        
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {!isWallPost && isOpen && (
             <button
               type="button"
               className={`btn btn-ghost btn-xs ${isEditingItem ? 'text-gold' : ''}`}
@@ -58,15 +65,15 @@ export default function ItemEditor({
               title={isEditingItem ? 'Cancelar edición' : 'Editar información del producto/servicio'}
             >
               <Pencil width={14} height={14} className="mr-1 inline" />
-              {isEditingItem ? 'Cancelar edición' : 'Editar'}
+              {isEditingItem ? 'Cancelar' : 'Editar'}
             </button>
           )}
+          {isOpen ? <ChevronUp width={20} height={20} /> : <ChevronDown width={20} height={20} />}
         </div>
-      }
-      isOpen={openSection === 'product'}
-      onToggle={() => setOpenSection(openSection === 'product' ? null : 'product')}
-      summary={productSummary}
-    >
+      </div>
+
+      {isOpen && (
+      <div className="share-step-content">
       <div className={`share-sec-grid ${isExpanded ? 'is-expanded-grid' : ''}`}>
         <div className="share-sec-col-main">
           <div className="share-preview">
@@ -342,6 +349,8 @@ export default function ItemEditor({
           </div>
         )}
       </div>
-    </AccordionSection>
+      </div>
+      )}
+    </div>
   );
 }

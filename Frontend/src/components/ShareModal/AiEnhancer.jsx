@@ -1,6 +1,5 @@
 import React from 'react';
-import { Sparkles, Image as ImageIcon, Video, ArrowLeft } from 'lucide-react';
-import AccordionSection from '../ui/AccordionSection';
+import { Sparkles, Image as ImageIcon, Video, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import AiCopyGenerator from '../AI/AiCopyGenerator';
 import AiImageEnhancer from '../AI/AiImageEnhancer';
 import AiVideoGenerator from '../AI/AiVideoGenerator';
@@ -21,15 +20,24 @@ export default function AiEnhancer({
   handleEnhancedImage,
   setAiVideoUrl,
 }) {
+  const isOpen = openSection === 'ai';
+
   return (
-    <AccordionSection
-      icon={<Sparkles width={18} height={18} />}
-      title="2. MEJORAR CON IA"
-      isOpen={openSection === 'ai'}
-      onToggle={() => setOpenSection(openSection === 'ai' ? null : 'ai')}
-      summary={aiSummary}
-    >
-      {activeAiSection === null ? (
+    <div className={`share-step-card ${isOpen ? 'is-open' : ''}`}>
+      <div 
+        className="share-step-header"
+        style={{ cursor: 'pointer', marginBottom: isOpen ? '1.25rem' : '0', borderBottom: isOpen ? '1px solid var(--border)' : 'none', paddingBottom: isOpen ? '1rem' : '0' }}
+        onClick={() => setOpenSection(isOpen ? null : 'ai')}
+      >
+        <Sparkles width={18} height={18} />
+        <h3 className="share-step-title">MEJORAR CON IA</h3>
+        <div style={{ marginLeft: 'auto' }}>
+          {isOpen ? <ChevronUp width={20} height={20} /> : <ChevronDown width={20} height={20} />}
+        </div>
+      </div>
+      {isOpen && (
+      <div className="share-step-content">
+        {activeAiSection === null ? (
         <div className={`ai-cards-grid ${isExpanded ? 'is-expanded' : ''}`}>
           {/* Tarjeta 1: Generar Texto (Activa) */}
           <button
@@ -143,6 +151,8 @@ export default function AiEnhancer({
           )}
         </div>
       )}
-    </AccordionSection>
+      </div>
+      )}
+    </div>
   );
 }

@@ -477,6 +477,10 @@ export default function Services() {
     setIsModalOpen(true);
   };
 
+  const handleShareRequest = (service) => {
+    setShareModal({ isOpen: true, item: { ...service, imageUrl: service.image_url, type: 'servicio' } });
+  };
+
   return (
     <div className="page-content">
       <div className="page-header">
@@ -539,6 +543,7 @@ export default function Services() {
           onView={handleViewService}
           openEditModal={openEditModal}
           onDeleteRequest={handleDeleteRequest}
+          onShare={handleShareRequest}
           navigate={navigate}
           revealImages={revealImages}
         />
@@ -556,6 +561,7 @@ export default function Services() {
           openEditModal={openEditModal}
           onToggleRequest={setToggleTarget}
           onDeleteRequest={handleDeleteRequest}
+          onShare={handleShareRequest}
           navigate={navigate}
           revealImages={revealImages}
         />

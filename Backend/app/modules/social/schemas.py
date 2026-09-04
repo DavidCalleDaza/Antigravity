@@ -131,3 +131,21 @@ class SocialPostResponse(SocialPostBase):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ── Batch Publishing ────────────────────────────────────────────────────────
+
+class SocialBatchPostCreate(BaseModel):
+    account_ids: List[uuid.UUID]
+    caption: Optional[str] = None
+    images: Optional[List[str]] = None
+    videos: Optional[List[str]] = None
+    product_id: Optional[uuid.UUID] = None
+    service_id: Optional[uuid.UUID] = None
+    is_ai_generated: bool = False
+
+
+class SocialBatchPostResponse(BaseModel):
+    total_posts: int
+    posts: List[SocialPostResponse]
+

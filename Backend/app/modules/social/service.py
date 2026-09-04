@@ -117,13 +117,14 @@ async def exchange_tiktok_code(code: str, redirect_uri: str, client_key: str | N
 
 async def publish_to_meta(access_token: str, local_image_paths: str | list, caption: str, is_ai_generated: bool = False) -> dict:
     """
-    Publish a photo (or carousel) to a Facebook Page.
+    Publish a photo, photo carousel, or video to a Facebook Page.
 
-    - Single image: uses /{page_id}/photos with direct file upload (existing behaviour).
+    - Single video: uses /{page_id}/videos with direct file upload.
+    - Single image: uses /{page_id}/photos with direct file upload.
     - Multiple images: creates carousel containers (is_carousel_item=true) then
       posts a feed entry with attached_media referencing all containers.
 
-    Facebook Photos API accepts direct file upload — no Cloudinary needed.
+    Facebook Photos/Videos API accepts direct file upload — no external CDN needed.
     """
     # Normalise to list
     if isinstance(local_image_paths, str):
@@ -136,10 +137,10 @@ async def publish_to_meta(access_token: str, local_image_paths: str | list, capt
     for p in paths:
         ap = os.path.abspath(p)
         if not os.path.exists(ap):
-            raise HTTPException(status_code=400, detail=f"Local image file not found: {ap}")
+            raise HTTPException(status_code=400, detail=f"Local media file not found: {ap}")
         abs_paths.append(ap)
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=120.0) as client:
         # Get the user's page(s)
         me_resp = await client.get(
             f"https://graph.facebook.com/{settings.META_API_VERSION}/me/accounts",
@@ -159,9 +160,29 @@ async def publish_to_meta(access_token: str, local_image_paths: str | list, capt
         page_id = page["id"]
         page_access_token = page.get("access_token", access_token)
 
-        logger.info(f"Publishing to Meta Page {page_id}. Images: {len(abs_paths)}. AI Generated: {is_ai_generated}")
+        is_video = any(ap.lower().endswith(('.mp4', '.mov', '.webm', '.avi', '.m4v')) for ap in abs_paths)
+        logger.info(f"Publishing to Meta Page {page_id}. Files: {len(abs_paths)}. IsVideo: {is_video}. AI Generated: {is_ai_generated}")
 
-        if len(abs_paths) == 1:
+        if is_video:
+            # ── Single Video Post to /{page_id}/videos ─────────────────────
+            with open(abs_paths[0], "rb") as f:
+                post_resp = await client.post(
+                    f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}/videos",
+                    data={
+                        "description": caption,
+                        "access_token": page_access_token,
+                    },
+                    files={"source": f},
+                )
+            post_data = post_resp.json()
+            if "error" in post_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Meta API error (publish video): {post_data['error'].get('message')}",
+                )
+            return post_data
+
+        elif len(abs_paths) == 1:
             # ── Single image: existing flow ────────────────────────────────
             with open(abs_paths[0], "rb") as f:
                 post_resp = await client.post(
@@ -223,11 +244,12 @@ async def publish_to_meta(access_token: str, local_image_paths: str | list, capt
 
 async def publish_to_instagram(access_token: str, image_url: str | list, caption: str, ig_user_id: str, is_ai_generated: bool = False) -> dict:
     """
-    Publish a photo (or carousel) to Instagram using the Instagram Graph API.
+    Publish a photo, photo carousel, or Reel/video to Instagram using the Instagram Graph API.
 
-    IMPORTANT: Instagram requires publicly accessible HTTPS URLs for images.
+    IMPORTANT: Instagram requires publicly accessible HTTPS URLs for media.
 
-    - Single image: 2-step process (create container → media_publish) — existing behaviour.
+    - Single video / Reel: media_type="REELS" → poll status → media_publish.
+    - Single image: 2-step process (create container → media_publish).
     - Multiple images: carousel — create N item containers (is_carousel_item=true),
       create a CAROUSEL container referencing all of them, then media_publish.
 
@@ -239,19 +261,77 @@ async def publish_to_instagram(access_token: str, image_url: str | list, caption
     """
     # Normalise to list
     if isinstance(image_url, str):
-        image_urls = [image_url]
+        urls = [image_url]
     else:
-        image_urls = list(image_url)
+        urls = list(image_url)
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        logger.info(f"Publishing to Instagram {ig_user_id}. Images: {len(image_urls)}. AI Generated: {is_ai_generated}")
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        is_video = any(u.lower().split('?')[0].endswith(('.mp4', '.mov', '.webm', '.avi', '.m4v')) for u in urls)
+        logger.info(f"Publishing to Instagram {ig_user_id}. URLs: {len(urls)}. IsVideo: {is_video}. AI Generated: {is_ai_generated}")
 
-        if len(image_urls) == 1:
-            # ── Single image: existing 2-step flow ────────────────────────
+        if is_video:
+            # ── Single Video / Reel flow ──────────────────────────────────
             container_resp = await client.post(
                 f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
                 data={
-                    "image_url": image_urls[0],
+                    "media_type": "REELS",
+                    "video_url": urls[0],
+                    "caption": caption,
+                    "access_token": access_token,
+                },
+            )
+            container_data = container_resp.json()
+            if "error" in container_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Instagram API error (create video container): {container_data['error'].get('message')}",
+                )
+
+            creation_id = container_data.get("id")
+            if not creation_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Instagram API error: no creation_id returned for video container",
+                )
+
+            # Wait for video processing on Instagram's end (polling)
+            for _ in range(20):
+                await asyncio.sleep(3.0)
+                status_resp = await client.get(
+                    f"https://graph.facebook.com/{settings.META_API_VERSION}/{creation_id}",
+                    params={"fields": "status_code", "access_token": access_token},
+                )
+                status_json = status_resp.json()
+                status_code = status_json.get("status_code")
+                if status_code == "FINISHED":
+                    break
+                elif status_code in ("ERROR", "EXPIRED"):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Instagram video processing failed: {status_json}",
+                    )
+
+            publish_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media_publish",
+                data={
+                    "creation_id": creation_id,
+                    "access_token": access_token,
+                },
+            )
+            publish_data = publish_resp.json()
+            if "error" in publish_data:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Instagram API error (video publish): {publish_data['error'].get('message')}",
+                )
+            return publish_data
+
+        elif len(urls) == 1:
+            # ── Single image: 2-step flow ────────────────────────────────
+            container_resp = await client.post(
+                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
+                data={
+                    "image_url": urls[0],
                     "caption": caption,
                     "access_token": access_token,
                 },
@@ -289,7 +369,7 @@ async def publish_to_instagram(access_token: str, image_url: str | list, caption
             # ── Multi-image carousel ──────────────────────────────────────
             # Step 1: Create a media container for each image (is_carousel_item=true)
             child_ids = []
-            for url in image_urls:
+            for url in urls:
                 item_resp = await client.post(
                     f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_user_id}/media",
                     data={
@@ -408,17 +488,17 @@ async def _poll_tiktok_publish(access_token: str, publish_id: str, max_attempts:
     return {"status": "processing", "platform_post_id": publish_id}
 
 
-async def publish_to_tiktok(access_token: str, local_image_path: str, caption: str, public_image_url: str = None, is_ai_generated: bool = False) -> dict:
+async def publish_to_tiktok(access_token: str, local_image_path: str, caption: str, public_image_url: str | list = None, is_ai_generated: bool = False) -> dict:
     """
-    Publish a photo or video to TikTok using the Content Posting API.
+    Publish a photo (or photo carousel) or video to TikTok using the Content Posting API.
     """
     abs_path = os.path.abspath(local_image_path)
     if not os.path.exists(abs_path):
-        raise HTTPException(status_code=400, detail=f"Local image file not found: {abs_path}")
+        raise HTTPException(status_code=400, detail=f"Local media file not found: {abs_path}")
 
     file_size = os.path.getsize(abs_path)
     ext = os.path.splitext(abs_path)[1].lower()
-    is_video = ext in (".mp4", ".webm", ".mov", ".avi")
+    is_video = ext in (".mp4", ".webm", ".mov", ".avi", ".m4v")
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         if is_video:
@@ -476,8 +556,15 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
             return await _poll_tiktok_publish(access_token, publish_id)
 
         else:
-            # Photo upload flow — TikTok Content Posting API for photos
-            logger.info(f"Publishing Photo to TikTok. AI Generated: {is_ai_generated}")
+            # Photo upload flow — TikTok Content Posting API for photos (single or carousel)
+            logger.info(f"Publishing Photo(s) to TikTok. AI Generated: {is_ai_generated}")
+            if isinstance(public_image_url, list):
+                photo_images = [u for u in public_image_url if u]
+            elif public_image_url:
+                photo_images = [public_image_url]
+            else:
+                photo_images = []
+
             init_resp = await client.post(
                 "https://open.tiktokapis.com/v2/post/publish/content/init/",
                 headers={
@@ -493,7 +580,7 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
                     },
                     "source_info": {
                         "source": "PULL_FROM_URL",
-                        "photo_images": [public_image_url] if public_image_url else []
+                        "photo_images": photo_images
                     },
                     "post_mode": "DIRECT_POST",
                     "media_type": "PHOTO",
@@ -509,6 +596,7 @@ async def publish_to_tiktok(access_token: str, local_image_path: str, caption: s
 
             publish_id = init_data.get("data", {}).get("publish_id")
             return await _poll_tiktok_publish(access_token, publish_id)
+
 
 
 async def refresh_tiktok_token(

@@ -325,3 +325,31 @@ async def test_renew_tiktok_token_valid(client: AsyncClient, db_session):
         select(SocialToken).where(SocialToken.account_id == account.id)
     )
     assert token_obj_result.scalar_one().access_token == "new-tik-tok"
+
+
+async def test_publish_batch_decomposes_images_and_videos_and_filters_audios(client: AsyncClient, db_session):
+    """Test batch publishing: 2 images + 2 videos + 1 audio across FB and TikTok creates 1 carousel + 2 video posts per account, completely ignoring the audio."""
+    user, token = await _create_user_with_token(db_session, email="batch_pub@example.com")
+    fb_acc = await _create_social_account(db_session, user.id, "facebook", is_default=True)
+    tiktok_acc = await _create_social_account(db_session, user.id, "tiktok", is_default=True)
+
+    with patch("app.modules.social.tasks.publish_to_social_task.apply_async") as mock_apply:
+        response = await client.post(
+            "/api/v1/social/publish/batch",
+            json={
+                "account_ids": [str(fb_acc.id), str(tiktok_acc.id)],
+                "caption": "Batch promotion",
+                "images": ["/uploads/img1.jpg", "/uploads/img2.png", "/uploads/song.mp3"],  # mp3 will be filtered out!
+                "videos": ["/uploads/video1.mp4", "/uploads/video2.mov", "/uploads/podcast.wav"],  # wav will be filtered out!
+                "is_ai_generated": False,
+            },
+            headers={"Authorization": f"Bearer {token}"}
+        )
+
+        assert response.status_code == 202
+        data = response.json()
+        # Per account: 1 image post (carousel of 2 photos) + 2 individual video posts = 3 posts per account * 2 accounts = 6 posts total
+        assert data["total_posts"] == 6
+        assert len(data["posts"]) == 6
+        assert mock_apply.call_count == 6
+

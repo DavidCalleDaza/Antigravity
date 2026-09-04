@@ -1118,3 +1118,78 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+
+/* ── SMART BATCH PUBLISHING SUMMARY CARD ── */
+.share-batch-summary-card {
+  margin-top: 1rem;
+  background: rgba(62, 180, 137, 0.05);
+  border: 1px solid rgba(62, 180, 137, 0.22);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .share-batch-summary-card {
+  background: rgba(62, 180, 137, 0.07);
+  border-color: rgba(62, 180, 137, 0.3);
+}
+
+.share-batch-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.share-batch-summary-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary, #3eb489);
+}
+
+.share-batch-summary-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.share-batch-summary-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.share-batch-summary-row.audio-note {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.share-batch-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--text-primary);
+}
+
+.share-batch-tag.audio {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+

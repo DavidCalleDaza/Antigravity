@@ -304,14 +304,9 @@ export default function ItemEditor({
                         <div
                           key={idx}
                           className={`share-multi-img-thumb ${idx === safeImgIdx ? 'share-multi-img-thumb--active' : ''} ${img.isPrimary ? 'share-multi-img-thumb--primary' : 'share-multi-img-thumb--interchangeable'}`}
-                          onClick={() => {
-                            setActiveImgIndex(idx);
-                            if (!img.isPrimary && img.additionalIndex !== undefined) {
-                              handleSwapImage?.(img.additionalIndex);
-                            }
-                          }}
+                          onClick={() => setActiveImgIndex(idx)}
                           style={{ borderColor: idx === safeImgIdx ? accentColor : undefined }}
-                          title={img.isPrimary ? 'Imagen principal' : 'Clic para seleccionar / intercambiar'}
+                          title={img.isPrimary ? 'Imagen 1 (Portada)' : `Imagen ${idx + 1} - Clic para ver`}
                         >
                           <img src={img.url} alt={`Thumb ${idx + 1}`} />
                           {!img.isPrimary && img.additionalIndex !== undefined && (

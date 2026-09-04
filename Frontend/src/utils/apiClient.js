@@ -272,6 +272,7 @@ export const socialClient = {
   listAccounts: () => apiClient.get('/social/accounts'),
   getAuthorizeUrl: (platform) => apiClient.get(`/social/authorize/${platform}`),
   publish: (data) => apiClient.post('/social/publish', data),
+  publishBatch: (data) => apiClient.post('/social/publish/batch', data),
   listPosts: () => apiClient.get('/social/posts'),
   deleteAccount: (platform) => apiClient.delete(`/social/accounts/platform/${platform}`),
   deleteAccountById: (accountId) => apiClient.delete(`/social/accounts/${accountId}`),

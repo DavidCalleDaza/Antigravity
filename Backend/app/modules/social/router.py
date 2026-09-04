@@ -631,6 +631,20 @@ async def delete_accounts_by_platform(
     return None
 
 
+def _is_audio(url_or_path: str) -> bool:
+    if not url_or_path:
+        return False
+    lower = url_or_path.lower().split('?')[0]
+    return lower.endswith(('.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.wma', '.opus'))
+
+
+def _is_video(url_or_path: str) -> bool:
+    if not url_or_path:
+        return False
+    lower = url_or_path.lower().split('?')[0]
+    return lower.endswith(('.mp4', '.webm', '.mov', '.avi', '.m4v', '.mkv'))
+
+
 # ── Publishing ──────────────────────────────────────────────────────────────
 
 @router.post("/publish", response_model=schemas.SocialPostResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -669,32 +683,32 @@ async def publish_content(
                 detail=f"Account is {account.status}. Please reconnect before publishing.",
             )
 
-    # ── Resolve effective media URLs (multi-image or single) ───────────────────
-    # Prefer media_urls (new field); fall back to media_url for backward compat.
+    # ── Resolve effective media URLs (filter out any audio files) ──────────────
+    raw_urls = []
     if post_in.media_urls and len(post_in.media_urls) > 0:
-        effective_urls = post_in.media_urls
+        raw_urls = post_in.media_urls
     elif post_in.media_url:
-        effective_urls = [post_in.media_url]
-    else:
-        effective_urls = []
+        raw_urls = [post_in.media_url]
 
-    # TikTok only accepts a single image/video — reject multi-image before enqueuing
-    if platform == "tiktok" and len(effective_urls) > 1:
-        raise HTTPException(
-            status_code=400,
-            detail="TikTok solo permite una imagen por publicación. Selecciona solo una imagen cuando publiques en TikTok."
-        )
-
-    # TikTok also requires at least one media_url (video or image)
-    if platform == "tiktok" and len(effective_urls) == 0:
-        raise HTTPException(status_code=400, detail="TikTok requires a video media_url")
+    effective_urls = [u for u in raw_urls if not _is_audio(u)]
 
     if len(effective_urls) == 0:
-        raise HTTPException(status_code=400, detail="media_url is required for publishing")
+        raise HTTPException(status_code=400, detail="Se requiere al menos una imagen o video para publicar (los archivos de audio se ignoran para redes sociales)")
+
+    # TikTok only accepts a single video or multiple photos
+    is_vid = _is_video(effective_urls[0])
+    if platform == "tiktok" and is_vid and len(effective_urls) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="TikTok solo permite un video por publicación."
+        )
 
     # Ensure platform is set on the post data
     if not post_in.platform:
         post_in.platform = platform
+
+    post_in.media_urls = effective_urls
+    post_in.media_url = effective_urls[0]
 
     db_post = await crud.create_social_post(db, current_user.id, post_in, account_id=account.id)
 
@@ -715,6 +729,122 @@ async def publish_content(
     )
 
     return db_post
+
+
+@router.post("/publish/batch", response_model=schemas.SocialBatchPostResponse, status_code=status.HTTP_202_ACCEPTED)
+async def publish_batch_content(
+    batch_in: schemas.SocialBatchPostCreate,
+    current_user=Depends(require_seller),
+    db: AsyncSession = Depends(get_db),
+):
+    """Decompose and enqueue a batch publication across multiple accounts and media types.
+
+    - Audios are completely filtered out (kept only for catalog).
+    - Images are grouped into 1 Carousel post per account.
+    - Videos are decomposed into individual video posts (1 per video) per account.
+    - Dispatches Celery tasks asynchronously with staggered countdowns.
+    """
+    if not batch_in.account_ids:
+        raise HTTPException(status_code=400, detail="Debe seleccionar al menos una cuenta para publicar.")
+
+    # Clean and partition media (ignore audios)
+    raw_images = batch_in.images or []
+    raw_videos = batch_in.videos or []
+
+    clean_images = [u for u in raw_images if u and not _is_audio(u)]
+    clean_videos = [u for u in raw_videos if u and not _is_audio(u)]
+
+    if not clean_images and not clean_videos:
+        raise HTTPException(
+            status_code=400,
+            detail="Se requiere al menos una imagen o video válido para publicar en redes."
+        )
+
+    from app.modules.social.tasks import publish_to_social_task
+
+    created_posts = []
+    task_delay_seconds = 0
+
+    for acc_id in batch_in.account_ids:
+        account = await crud.get_account_by_id(db, acc_id, current_user.id)
+        if not account or account.status != "active":
+            logger.warning(f"Skipping inactive/invalid account {acc_id} for batch publishing")
+            continue
+
+        platform = account.platform
+
+        # ── 1. Create image post / carousel if images exist ──────────────────
+        if clean_images:
+            img_post_in = schemas.SocialPostCreate(
+                account_id=account.id,
+                platform=platform,
+                caption=batch_in.caption,
+                media_url=clean_images[0],
+                media_urls=clean_images,
+                product_id=batch_in.product_id,
+                service_id=batch_in.service_id,
+                is_ai_generated=batch_in.is_ai_generated,
+            )
+            db_img_post = await crud.create_social_post(db, current_user.id, img_post_in, account_id=account.id)
+            created_posts.append(db_img_post)
+
+            local_img_paths = [u.lstrip('/') for u in clean_images]
+            publish_to_social_task.apply_async(
+                kwargs={
+                    "post_id_str": str(db_img_post.id),
+                    "user_id_str": str(current_user.id),
+                    "platform": platform,
+                    "local_path": local_img_paths[0],
+                    "local_paths": local_img_paths,
+                    "caption": batch_in.caption or "",
+                    "is_ai_generated": batch_in.is_ai_generated,
+                    "account_id_str": str(account.id),
+                },
+                countdown=task_delay_seconds,
+            )
+            task_delay_seconds += 3
+
+        # ── 2. Create individual video post for EACH video ───────────────────
+        for vid_url in clean_videos:
+            vid_post_in = schemas.SocialPostCreate(
+                account_id=account.id,
+                platform=platform,
+                caption=batch_in.caption,
+                media_url=vid_url,
+                media_urls=[vid_url],
+                product_id=batch_in.product_id,
+                service_id=batch_in.service_id,
+                is_ai_generated=batch_in.is_ai_generated,
+            )
+            db_vid_post = await crud.create_social_post(db, current_user.id, vid_post_in, account_id=account.id)
+            created_posts.append(db_vid_post)
+
+            local_vid_path = vid_url.lstrip('/')
+            publish_to_social_task.apply_async(
+                kwargs={
+                    "post_id_str": str(db_vid_post.id),
+                    "user_id_str": str(current_user.id),
+                    "platform": platform,
+                    "local_path": local_vid_path,
+                    "local_paths": [local_vid_path],
+                    "caption": batch_in.caption or "",
+                    "is_ai_generated": batch_in.is_ai_generated,
+                    "account_id_str": str(account.id),
+                },
+                countdown=task_delay_seconds,
+            )
+            task_delay_seconds += 4
+
+    if not created_posts:
+        raise HTTPException(
+            status_code=400,
+            detail="No se pudo encolar ninguna publicación. Verifica que tus cuentas sociales estén activas."
+        )
+
+    return schemas.SocialBatchPostResponse(
+        total_posts=len(created_posts),
+        posts=created_posts
+    )
 
 
 @router.post("/posts/reconcile-tiktok", status_code=status.HTTP_202_ACCEPTED)

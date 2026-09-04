@@ -343,20 +343,99 @@ export function useShareModal({
     }
   };
 
+  const isAudioMedia = (m) => {
+    if (!m) return false;
+    if (m.type === 'audio') return true;
+    const path = (m.name || m.uploadedUrl || m.previewUrl || '').toLowerCase().split('?')[0];
+    return path.endsWith('.mp3') || path.endsWith('.wav') || path.endsWith('.ogg') || path.endsWith('.m4a') || path.endsWith('.aac') || path.endsWith('.flac') || path.endsWith('.wma') || path.endsWith('.opus');
+  };
+
+  const isVideoMedia = (m) => {
+    if (!m) return false;
+    if (m.type === 'video') return true;
+    const path = (m.name || m.uploadedUrl || m.previewUrl || '').toLowerCase().split('?')[0];
+    return path.endsWith('.mp4') || path.endsWith('.webm') || path.endsWith('.mov') || path.endsWith('.avi') || path.endsWith('.m4v') || path.endsWith('.mkv');
+  };
+
+  const primaryMediaUrl = aiVideoUrl || enhancedImageUrl || item?.imageUrl || item?.image_url || '';
+  const isPrimaryVideo = Boolean(aiVideoUrl || (item?.video_url && item.video_url === primaryMediaUrl) || isVideoMedia({ previewUrl: primaryMediaUrl }));
+  const isPrimaryAudio = isAudioMedia({ previewUrl: primaryMediaUrl });
+
+  const audioCount = additionalImages.filter(isAudioMedia).length + (isPrimaryAudio ? 1 : 0);
+  const videoCount = (isPrimaryVideo ? 1 : 0) + additionalImages.filter(isVideoMedia).length;
+  const imageCount = (!isPrimaryVideo && !isPrimaryAudio && primaryMediaUrl ? 1 : 0) + additionalImages.filter((m) => !isAudioMedia(m) && !isVideoMedia(m)).length;
+
+  const postsPerAccount = (imageCount > 0 ? 1 : 0) + videoCount;
+  const totalBatchPosts = postsPerAccount * selectedAccounts.length;
+
   const handlePublishClick = async () => {
+    if (selectedAccounts.length === 0) {
+      alert('Por favor selecciona al menos una red social para publicar.');
+      return;
+    }
+
     setPublishing(true);
     const linked = item?.linkedItem;
+    const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+    const token = useStore.getState().currentUser?.token;
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const publishPromises = selectedAccounts.map((accountId) => {
-      const acc = accounts.find((a) => a.id === accountId);
-      const primaryUrl = aiVideoUrl || enhancedImageUrl || item?.imageUrl || item?.image_url || '';
+    try {
+      // 1. Upload any new blobs for additional media in parallel
+      const resolvedMediaUrls = await Promise.all(
+        additionalImages.map(async (m) => {
+          if (isAudioMedia(m)) return null; // Ignore audios for social publishing
+          if (m.uploadedUrl) return { url: m.uploadedUrl, isVideo: isVideoMedia(m) };
+          if (m.blob instanceof Blob || m.blob instanceof File) {
+            const formData = new FormData();
+            formData.append('file', m.blob, m.name || `media_${Date.now()}`);
+            const res = await fetch(`${API_BASE_URL}/uploads/media`, {
+              method: 'POST',
+              headers,
+              body: formData,
+            });
+            const data = await res.json();
+            return { url: data.url || null, isVideo: isVideoMedia(m) };
+          }
+          if (m.previewUrl && !m.previewUrl.startsWith('blob:')) {
+            return { url: m.previewUrl, isVideo: isVideoMedia(m) };
+          }
+          return null;
+        })
+      );
 
-      const buildPayload = (extraUrls) => ({
-        account_id: accountId,
-        platform: acc ? acc.platform : undefined,
+      const validExtras = resolvedMediaUrls.filter((x) => x && x.url);
+
+      const images = [];
+      const videos = [];
+
+      // Primary item
+      if (!isPrimaryAudio && primaryMediaUrl) {
+        if (isPrimaryVideo) {
+          videos.push(primaryMediaUrl);
+        } else {
+          images.push(primaryMediaUrl);
+        }
+      }
+
+      // Additional items
+      validExtras.forEach((m) => {
+        if (m.isVideo) {
+          videos.push(m.url);
+        } else {
+          images.push(m.url);
+        }
+      });
+
+      if (images.length === 0 && videos.length === 0) {
+        throw new Error('No hay imágenes ni videos para publicar (los archivos de audio se ignoran para redes sociales).');
+      }
+
+      const batchPayload = {
+        account_ids: selectedAccounts,
         caption: shareText,
-        media_url: primaryUrl,
-        media_urls: extraUrls.length > 0 ? extraUrls : undefined,
+        images: images.length > 0 ? images : undefined,
+        videos: videos.length > 0 ? videos : undefined,
         product_id: isWallPost
           ? linked?.kind === 'product'
             ? linked.id
@@ -372,41 +451,12 @@ export function useShareModal({
           ? item?.id
           : null,
         is_ai_generated: isAiGeneratedPost,
-      });
+      };
 
-      if (additionalImages.length === 0) {
-        return socialClient.publish(buildPayload([]));
-      }
+      const res = await socialClient.publishBatch(batchPayload);
 
-      const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
-      const token = useStore.getState().currentUser?.token;
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      const uploadPromises = additionalImages.map((img) => {
-        const formData = new FormData();
-        formData.append('file', img.blob, `additional_${Date.now()}.png`);
-        return fetch(`${API_BASE_URL}/uploads/media`, { method: 'POST', headers, body: formData })
-          .then((r) => r.json())
-          .then((data) => data.url || null);
-      });
-
-      return Promise.all(uploadPromises).then((extraUrls) => {
-        const allUrls = [primaryUrl, ...extraUrls.filter(Boolean)];
-        return socialClient.publish(buildPayload(allUrls));
-      });
-    });
-
-    const results = await Promise.allSettled(publishPromises);
-    setPublishing(false);
-
-    const failures = results.filter((r) => r.status === 'rejected');
-    if (failures.length > 0) {
-      console.error('Errors publishing:', failures);
-      const errors = failures.map((f) => f.reason?.detail || f.reason?.message || 'Desconocido').join(', ');
-      alert(`Hubo errores al publicar en algunas cuentas:\n${errors}`);
-    } else {
       if (onPublish) {
-        onPublish({ selectedAccounts, text: shareText, item });
+        onPublish({ selectedAccounts, text: shareText, item, batchResult: res });
       }
       if (isExpanded) {
         setActiveStep('publicado');
@@ -414,6 +464,11 @@ export function useShareModal({
       } else {
         handleClose();
       }
+    } catch (err) {
+      console.error('Error in batch publishing:', err);
+      alert(`Error al publicar en redes sociales: ${err.detail || err.message || 'Error desconocido'}`);
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -542,10 +597,15 @@ export function useShareModal({
     isAllSelected,
     hasSelected,
 
-    // Summaries
+    // Summaries & Batch Stats
     productSummary,
     aiSummary,
     socialSummary,
+    audioCount,
+    videoCount,
+    imageCount,
+    postsPerAccount,
+    totalBatchPosts,
 
     // Actions
     handleClose,

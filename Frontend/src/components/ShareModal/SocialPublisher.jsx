@@ -85,6 +85,11 @@ export default function SocialPublisher({
   handleDownloadImage,
   previewUrl,
   handleClose,
+  audioCount = 0,
+  videoCount = 0,
+  imageCount = 0,
+  postsPerAccount = 0,
+  totalBatchPosts = 0,
 }) {
   const navigate = useNavigate();
   const isOpen = openSection === 'social';
@@ -309,6 +314,37 @@ export default function SocialPublisher({
                   <ExternalLink width={13} height={13} />
                   <span>Gestionar cuentas en Mi Perfil &rarr; Redes sociales</span>
                 </Link>
+              )}
+
+              {selectedAccounts.length > 0 && (imageCount > 0 || videoCount > 0 || audioCount > 0) && (
+                <div className="share-batch-summary-card">
+                  <div className="share-batch-summary-header">
+                    <Sparkles width={14} height={14} className="text-primary" />
+                    <span className="share-batch-summary-title">
+                      Distribución Automática ({totalBatchPosts} publicaci{totalBatchPosts > 1 ? 'ones' : 'ón'} en total)
+                    </span>
+                  </div>
+                  <div className="share-batch-summary-body">
+                    {imageCount > 0 && (
+                      <div className="share-batch-summary-row">
+                        <span className="share-batch-tag">📸 {imageCount} {imageCount === 1 ? 'imagen' : 'imágenes'}</span>
+                        <span>&rarr; 1 publicación {imageCount > 1 ? 'tipo Carrusel' : 'con foto'} por red</span>
+                      </div>
+                    )}
+                    {videoCount > 0 && (
+                      <div className="share-batch-summary-row">
+                        <span className="share-batch-tag">🎬 {videoCount} {videoCount === 1 ? 'video' : 'videos'}</span>
+                        <span>&rarr; {videoCount} {videoCount === 1 ? 'post de video independiente' : 'posts de video independientes'} por red</span>
+                      </div>
+                    )}
+                    {audioCount > 0 && (
+                      <div className="share-batch-summary-row audio-note">
+                        <span className="share-batch-tag audio">🎧 {audioCount} {audioCount === 1 ? 'audio' : 'audios'}</span>
+                        <span>Conservado(s) en catálogo pero ignorado(s) para redes sociales</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

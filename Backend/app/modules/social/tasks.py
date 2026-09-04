@@ -12,6 +12,7 @@ during deployment (decision #6).
 import asyncio
 import uuid
 import logging
+import os
 
 from app.core.celery_app import celery_app
 from app.db.session import async_session_factory
@@ -221,7 +222,6 @@ async def _publish_async(
                 # Instagram requires a public HTTPS URL. We derive it from our ngrok base url
                 base_url = settings.META_REDIRECT_URI.split("/api/v1")[0]
 
-                # Build public URLs for all paths
                 def _to_public(lp):
                     path_part = lp if lp.startswith("/") else f"/{lp}"
                     return f"{base_url}{path_part}"
@@ -229,40 +229,49 @@ async def _publish_async(
                 public_image_urls = [_to_public(p) for p in effective_paths]
 
                 publish_result = await service.publish_to_instagram(
-                    access_token, public_image_urls, caption, platform_user_id
+                    access_token, public_image_urls, caption, platform_user_id, is_ai_generated=is_ai_generated
                 )
                 platform_post_id = publish_result.get("id")
 
             elif platform == "tiktok":
-                # TikTok requires strictly 9:16 aspect ratio (1080x1920) for best compatibility
-                try:
-                    from PIL import Image, ImageOps
-                    abs_path = f"/app/{local_path}" if not local_path.startswith("/app") else local_path
-                    import os
-                    if not os.path.exists(abs_path):
-                        abs_path = os.path.join(os.getcwd(), local_path.lstrip("/"))
-                    if os.path.exists(abs_path):
-                        img = Image.open(abs_path)
-                        rgb_im = img.convert('RGB')
+                ext = os.path.splitext(local_path)[1].lower()
+                is_video = ext in (".mp4", ".webm", ".mov", ".avi", ".m4v")
 
-                        # Strictly resize and crop to 1080x1920 (9:16)
-                        target_size = (1080, 1920)
-                        rgb_im = ImageOps.fit(rgb_im, target_size, Image.Resampling.LANCZOS)
-
-                        new_abs_path = abs_path.rsplit(".", 1)[0] + ".tiktok.jpg"
-                        rgb_im.save(new_abs_path, quality=90)
-                        local_path = local_path.rsplit(".", 1)[0] + ".tiktok.jpg"
-                except Exception as e:
-                    print(f"Failed to process image for TikTok: {e}")
-
-                # TikTok requires a public HTTPS URL for photos (PULL_FROM_URL)
                 base_url = settings.TIKTOK_REDIRECT_URI.split("/api/v1")[0]
-                path_part = local_path if local_path.startswith("/") else f"/{local_path}"
-                public_image_url = f"{base_url}{path_part}"
+                def _to_tiktok_public(lp):
+                    path_part = lp if lp.startswith("/") else f"/{lp}"
+                    return f"{base_url}{path_part}"
 
-                publish_result = await service.publish_to_tiktok(
-                    access_token, local_path, caption, public_image_url
-                )
+                if not is_video:
+                    # TikTok requires strictly 9:16 aspect ratio (1080x1920) for best compatibility
+                    processed_paths = []
+                    for p in effective_paths:
+                        curr_p = p
+                        try:
+                            from PIL import Image, ImageOps
+                            abs_path = f"/app/{p}" if not p.startswith("/app") else p
+                            if not os.path.exists(abs_path):
+                                abs_path = os.path.join(os.getcwd(), p.lstrip("/"))
+                            if os.path.exists(abs_path):
+                                img = Image.open(abs_path)
+                                rgb_im = img.convert('RGB')
+                                target_size = (1080, 1920)
+                                rgb_im = ImageOps.fit(rgb_im, target_size, Image.Resampling.LANCZOS)
+                                new_abs_path = abs_path.rsplit(".", 1)[0] + ".tiktok.jpg"
+                                rgb_im.save(new_abs_path, quality=90)
+                                curr_p = p.rsplit(".", 1)[0] + ".tiktok.jpg"
+                        except Exception as e:
+                            logger.warning(f"Failed to resize image for TikTok: {e}")
+                        processed_paths.append(curr_p)
+
+                    public_image_urls = [_to_tiktok_public(p) for p in processed_paths]
+                    publish_result = await service.publish_to_tiktok(
+                        access_token, processed_paths[0], caption, public_image_urls, is_ai_generated=is_ai_generated
+                    )
+                else:
+                    publish_result = await service.publish_to_tiktok(
+                        access_token, local_path, caption, None, is_ai_generated=is_ai_generated
+                    )
                 platform_post_id = publish_result.get("platform_post_id")
 
             else:

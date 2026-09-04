@@ -179,3 +179,51 @@ async def test_admin_can_patch_and_delete_any_service(client: AsyncClient, db_se
 
     delete_resp = await client.delete(f"{SERVICES_URL}/{service.id}", headers=_auth(token_admin))
     assert delete_resp.status_code == 204
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# List Visibility — Admin vs Seller
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def test_admin_can_list_all_products_and_services_from_other_users(client: AsyncClient, db_session):
+    """An admin can see products and services created by any seller or other admin."""
+    seller_1, token_seller_1 = await _create_user_with_token(db_session, role="seller", email="seller1_list@example.com")
+    seller_2, token_seller_2 = await _create_user_with_token(db_session, role="seller", email="seller2_list@example.com")
+    _, token_admin = await _create_user_with_token(db_session, role="admin", email="admin_list@example.com")
+
+    # Create products
+    p1 = await _create_product(db_session, seller_1.id, name="Producto Seller 1")
+    p2 = await _create_product(db_session, seller_2.id, name="Producto Seller 2")
+
+    # Create services
+    s1 = await _create_service(db_session, seller_1.id, name="Servicio Seller 1")
+    s2 = await _create_service(db_session, seller_2.id, name="Servicio Seller 2")
+
+    # Seller 1 lists products: only sees p1
+    resp_s1_prod = await client.get(PRODUCTS_URL, headers=_auth(token_seller_1))
+    assert resp_s1_prod.status_code == 200
+    prod_ids_s1 = [p["id"] for p in resp_s1_prod.json()]
+    assert str(p1.id) in prod_ids_s1
+    assert str(p2.id) not in prod_ids_s1
+
+    # Seller 1 lists services: only sees s1
+    resp_s1_svc = await client.get(SERVICES_URL, headers=_auth(token_seller_1))
+    assert resp_s1_svc.status_code == 200
+    svc_ids_s1 = [s["id"] for s in resp_s1_svc.json()]
+    assert str(s1.id) in svc_ids_s1
+    assert str(s2.id) not in svc_ids_s1
+
+    # Admin lists products: sees BOTH p1 and p2
+    resp_admin_prod = await client.get(PRODUCTS_URL, headers=_auth(token_admin))
+    assert resp_admin_prod.status_code == 200
+    prod_ids_admin = [p["id"] for p in resp_admin_prod.json()]
+    assert str(p1.id) in prod_ids_admin
+    assert str(p2.id) in prod_ids_admin
+
+    # Admin lists services: sees BOTH s1 and s2
+    resp_admin_svc = await client.get(SERVICES_URL, headers=_auth(token_admin))
+    assert resp_admin_svc.status_code == 200
+    svc_ids_admin = [s["id"] for s in resp_admin_svc.json()]
+    assert str(s1.id) in svc_ids_admin
+    assert str(s2.id) in svc_ids_admin
+

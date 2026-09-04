@@ -53,7 +53,7 @@ async def list_products(
     current_user: User = Depends(get_current_user),
 ) -> list[ProductResponse]:
     try:
-        if current_user.role == "client":
+        if current_user.role in ("client", "admin"):
             products = await get_products(
                 db, skip=skip, limit=limit, category_id=category_id,
                 status=status, user_id=seller_id,

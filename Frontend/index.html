@@ -15,6 +15,25 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Eruda: consola de depuración para iOS/móvil (?debug=true o donapp_debug en localStorage) -->
+    <!-- Se carga ANTES de React para capturar errores de bootstrap del bundle -->
+    <script>
+      (function() {
+        try {
+          var debug = new URLSearchParams(window.location.search).get('debug') === 'true'
+                   || localStorage.getItem('donapp_debug') === 'true';
+          if (debug) {
+            localStorage.setItem('donapp_debug', 'true');
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            s.onload = function() { if (window.eruda) window.eruda.init(); };
+            document.head.appendChild(s);
+          }
+        } catch(e) { /* localStorage bloqueado en modo privado */ }
+      })();
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

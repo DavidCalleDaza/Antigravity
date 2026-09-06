@@ -1,8 +1,17 @@
 import { getApiBaseUrl, getServerBaseUrl } from './urlHelper';
-import { useStore } from '../store/useStore';
 
 export const API_BASE_URL = getApiBaseUrl();
 export const SERVER_BASE_URL = getServerBaseUrl();
+
+// ─── Token Getter Inyectable ──────────────────────────────────────────────────
+// apiClient NO importa useStore directamente para evitar ciclos de evaluación
+// de módulos ES que WebKit/Safari rechaza. En su lugar, main.jsx registra una
+// función getter que se llama en runtime (nunca durante la evaluación del módulo).
+let _tokenGetter = () => null;
+let _logoutHandler = () => {};
+
+export function setApiTokenGetter(fn) { _tokenGetter = fn; }
+export function setApiLogoutHandler(fn) { _logoutHandler = fn; }
 
 class ApiError extends Error {
   constructor(message, status, data) {
@@ -23,7 +32,7 @@ class ApiClient {
   }
 
   async request(endpoint, options = {}) {
-    const token = useStore.getState().currentUser?.token;
+    const token = _tokenGetter();
 
     const headers = {
       'Content-Type': 'application/json',
@@ -53,7 +62,7 @@ class ApiClient {
       // Si no había token (ej. carrera con la rehidratación de Zustand al
       // recargar en dev), no es una sesión inválida real — solo propaga el error.
       if (endpoint === "/auth/me" && token) {
-        useStore.getState().logout();
+        _logoutHandler();
         window.location.href = "/login";
       }
 
@@ -76,7 +85,7 @@ class ApiClient {
 }
 
   async requestFormData(endpoint, body, method = 'POST') {
-    const token = useStore.getState().currentUser?.token;
+    const token = _tokenGetter();
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
@@ -116,7 +125,7 @@ class ApiClient {
    * porque este último no adjunta el Authorization header.
    */
   async getBlob(endpoint, options = {}) {
-    const token = useStore.getState().currentUser?.token;
+    const token = _tokenGetter();
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,

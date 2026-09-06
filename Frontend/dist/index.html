@@ -12,10 +12,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Uncial+Antiqua&family=Almendra+SC&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <title>DonApp — Servir es el único negocio donde todos ganan</title>
-    <script type="module" crossorigin src="/assets/index-B0p0Ng9u.js"></script>
+    <script type="module" crossorigin src="/assets/index-DLIsFzJb.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-rKKIsbJE.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
+
+    <!-- Eruda: consola de depuración para iOS/móvil (?debug=true o donapp_debug en localStorage) -->
+    <!-- Se carga ANTES de React para capturar errores de bootstrap del bundle -->
+    <script>
+      (function() {
+        try {
+          var debug = new URLSearchParams(window.location.search).get('debug') === 'true'
+                   || localStorage.getItem('donapp_debug') === 'true';
+          if (debug) {
+            localStorage.setItem('donapp_debug', 'true');
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            s.onload = function() { if (window.eruda) window.eruda.init(); };
+            document.head.appendChild(s);
+          }
+        } catch(e) { /* localStorage bloqueado en modo privado */ }
+      })();
+    </script>
+
   </body>
 </html>

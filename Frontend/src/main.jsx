@@ -2,26 +2,11 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './components/common/ErrorBoundary'
+import { useStore } from './store/useStore'
+import { setApiTokenGetter, setApiLogoutHandler } from './utils/apiClient'
 import './utils/formValidationTooltip.js'
 import './utils/customTooltip.js'
 
-// Inyección de consola móvil Eruda para depuración en iPhone / iOS WebKit (?debug=true)
-if (typeof window !== 'undefined') {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('debug') === 'true' || localStorage.getItem('donapp_debug') === 'true') {
-      localStorage.setItem('donapp_debug', 'true');
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/eruda';
-      script.onload = () => {
-        if (window.eruda) window.eruda.init();
-      };
-      document.head.appendChild(script);
-    }
-  } catch (e) {
-    // Ignorar si localStorage está deshabilitado en modo privado
-  }
-}
 
 // Global CSS Imports
 import '../css/variables.css'
@@ -43,6 +28,24 @@ import '../css/pages/wall.css'
 import '../css/pages/statistics.css'
 import '../css/pages/profile.css'
 import '../css/pages/Customers.css'
+
+// Conectar apiClient con el store de Zustand sin crear dependencia circular.
+// IMPORTANTE: Esto se hace en runtime (no en evaluación de módulo), lo que
+// permite que WebKit resuelva el grafo de módulos correctamente.
+setApiTokenGetter(() => {
+  try {
+    return useStore.getState()?.currentUser?.token ?? null;
+  } catch {
+    return null;
+  }
+});
+setApiLogoutHandler(() => {
+  try {
+    useStore.getState().logout();
+  } catch {
+    // Ignorar si el store no está disponible
+  }
+});
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

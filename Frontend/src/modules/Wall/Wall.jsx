@@ -6,6 +6,7 @@ import {
 import Helpers from '../../utils/helpers';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../../components/ui/Toast';
+import { apiClient } from '../../utils/apiClient';
 import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
 import Avatar from '../../components/common/Avatar';
@@ -147,7 +148,12 @@ function WallContent() {
   const getPostViewMode = (postId) => postViewModes[postId] || 'detail';
 
   useEffect(() => {
-    Helpers.initRevealAnimations();
+    const observer = Helpers.initRevealAnimations();
+    return () => {
+      if (observer && typeof observer.disconnect === 'function') {
+        observer.disconnect();
+      }
+    };
   }, [posts]);
 
   useEffect(() => {

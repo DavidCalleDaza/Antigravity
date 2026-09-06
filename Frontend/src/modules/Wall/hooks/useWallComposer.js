@@ -8,6 +8,7 @@ export function useWallComposer({ createPost, setPosts, toast, showConfirm }) {
   const [additionalVideos, setAdditionalVideos] = useState([]); // [{ id, file, name, size, previewUrl }]
   const [audioError, setAudioError] = useState('');
   const [videoError, setVideoError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef(null);
   const entity = useWallComposerEntity({ toast });
   const [enhanceTarget, setEnhanceTarget] = useState(null); // { kind, item } | null
@@ -188,6 +189,7 @@ export function useWallComposer({ createPost, setPosts, toast, showConfirm }) {
     }
 
     const executePublish = async (finalText) => {
+      setIsSubmitting(true);
       try {
         const resolvedEntity = await entity.resolveEntityId();
         const type = resolvedEntity
@@ -228,6 +230,8 @@ export function useWallComposer({ createPost, setPosts, toast, showConfirm }) {
         toast.success('Publicación compartida.');
       } catch (err) {
         toast.error('No se pudo publicar.');
+      } finally {
+        setIsSubmitting(false);
       }
     };
 
@@ -251,6 +255,7 @@ export function useWallComposer({ createPost, setPosts, toast, showConfirm }) {
     additionalVideos,
     audioError,
     videoError,
+    isSubmitting,
     textareaRef,
     entity,
     enhanceTarget,

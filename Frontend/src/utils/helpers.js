@@ -150,6 +150,10 @@ export const Helpers = {
     document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale').forEach(el => {
       observer.observe(el);
     });
+
+    // Retornamos el observer para que el caller pueda hacer disconnect()
+    // y evitar acumulación en memoria (crítico en iOS con memoria limitada).
+    return observer;
   },
 
   resolveMediaUrl(url) {

@@ -1,4 +1,5 @@
 import { getApiBaseUrl, getServerBaseUrl } from './urlHelper';
+import { useStore } from '../store/useStore';
 
 export const API_BASE_URL = getApiBaseUrl();
 export const SERVER_BASE_URL = getServerBaseUrl();
@@ -187,7 +188,6 @@ export function triggerBlobDownload(blob, filename) {
   window.URL.revokeObjectURL(url);
 }
 
-import { useStore } from '../store/useStore';
 export const apiClient = new ApiClient(API_BASE_URL);
 
 export const authClient = {

@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
 
+  build: {
+    target: ['es2020', 'safari14', 'ios14'],
+  },
+
   server: {
     host: '0.0.0.0',
     port: 5173,        // Intenta usar este puerto primero

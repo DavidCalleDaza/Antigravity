@@ -5,6 +5,24 @@ import ErrorBoundary from './components/common/ErrorBoundary'
 import './utils/formValidationTooltip.js'
 import './utils/customTooltip.js'
 
+// Inyección de consola móvil Eruda para depuración en iPhone / iOS WebKit (?debug=true)
+if (typeof window !== 'undefined') {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('debug') === 'true' || localStorage.getItem('donapp_debug') === 'true') {
+      localStorage.setItem('donapp_debug', 'true');
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+      script.onload = () => {
+        if (window.eruda) window.eruda.init();
+      };
+      document.head.appendChild(script);
+    }
+  } catch (e) {
+    // Ignorar si localStorage está deshabilitado en modo privado
+  }
+}
+
 // Global CSS Imports
 import '../css/variables.css'
 import '../css/reset.css'

@@ -52,6 +52,10 @@ export function useWallSockets({
     cleanupSocket();
 
     const targetUrl = resolveWsUrl('/wall/ws/wall');
+    if (typeof window === 'undefined' || typeof WebSocket === 'undefined' || !targetUrl || !targetUrl.startsWith('ws')) {
+      return;
+    }
+
     setConnectionStatus(retriesRef.current === 0 ? 'CONNECTING' : 'RECONNECTING');
 
     try {

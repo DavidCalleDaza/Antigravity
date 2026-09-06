@@ -23,6 +23,9 @@ export const connectNotifications = () => {
   if (!token) return;
 
   const wsUrl = resolveWsUrl('/notifications/ws/notifications', { token });
+  if (typeof window === 'undefined' || typeof WebSocket === 'undefined' || !wsUrl || !wsUrl.startsWith('ws')) {
+    return;
+  }
 
   try {
     socket = new WebSocket(wsUrl);

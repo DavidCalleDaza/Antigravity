@@ -19,8 +19,29 @@ export const Helpers = {
     return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
   },
 
+  parseDate(date) {
+    if (!date) return null;
+    if (date instanceof Date) {
+      return isNaN(date.getTime()) ? null : date;
+    }
+    if (typeof date === 'string') {
+      const trimmed = date.trim();
+      if (!trimmed) return null;
+      // Reemplaza espacio con 'T' para compatibilidad estricta con Safari/WebKit
+      const normalized = trimmed.includes(' ') && !trimmed.includes('T') ? trimmed.replace(' ', 'T') : trimmed;
+      const parsed = new Date(normalized);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    if (typeof date === 'number') {
+      const parsed = new Date(date);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    return null;
+  },
+
   formatDate(date, format = 'short') {
-    const d = new Date(date);
+    const d = this.parseDate(date);
+    if (!d) return '';
     
     if (format === 'relative') {
       return this.timeAgo(d);
@@ -30,18 +51,35 @@ export const Helpers = {
       ? { year: 'numeric', month: 'long', day: 'numeric' }
       : { year: 'numeric', month: 'short', day: 'numeric' };
     
-    return d.toLocaleDateString(APP_CONFIG.LOCALE, options);
+    try {
+      return d.toLocaleDateString(APP_CONFIG.LOCALE, options);
+    } catch {
+      return '';
+    }
   },
 
   formatTime(date) {
-    return new Date(date).toLocaleTimeString(APP_CONFIG.LOCALE, {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const d = this.parseDate(date);
+    if (!d) return '';
+    try {
+      return d.toLocaleTimeString(APP_CONFIG.LOCALE, {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return '';
+    }
   },
 
   timeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
+    const d = this.parseDate(date);
+    if (!d) return 'hace un momento';
+
+    const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (isNaN(seconds) || seconds < 5) {
+      return 'hace un momento';
+    }
+
     const intervals = [
       { label: 'año', seconds: 31536000 },
       { label: 'mes', seconds: 2592000 },

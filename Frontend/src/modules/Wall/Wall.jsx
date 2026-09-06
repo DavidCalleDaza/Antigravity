@@ -28,10 +28,11 @@ import {
   Legend
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler, Legend);
 
-export default function Wall() {
+function WallContent() {
   const { currentUser } = useStore();
   const toast = useToast();
 
@@ -470,5 +471,13 @@ export default function Wall() {
         />
       )}
     </div>
+  );
+}
+
+export default function Wall() {
+  return (
+    <ErrorBoundary fallbackTitle="Error al cargar el Muro de Impacto">
+      <WallContent />
+    </ErrorBoundary>
   );
 }

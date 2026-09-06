@@ -7,6 +7,7 @@ import { useToast } from '../ui/Toast';
 import DonAppLogo from '../ui/DonAppLogo';
 import Helpers from '../../utils/helpers';
 import Modal from '../ui/Modal';
+import Avatar from '../common/Avatar';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
@@ -121,27 +122,7 @@ export default function Sidebar({ isOpen, closeMobile }) {
 
         <div className="sidebar-footer">
           <div className="sidebar-user" id="sidebar-user-menu" onClick={() => setIsLogoutModalOpen(true)}>
-            <div className="avatar avatar-sm">
-              {getAvatarUrl() ? (
-                <>
-                  <img
-                    src={getAvatarUrl()}
-                    alt={currentUser.name}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                  <span style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 'inherit' }}>
-                    {currentUser?.name?.substring(0, 2).toUpperCase()}
-                  </span>
-                </>
-              ) : (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 'inherit' }}>
-                  {currentUser?.name?.substring(0, 2).toUpperCase()}
-                </span>
-              )}
-            </div>
+            <Avatar author={currentUser} size={32} className="avatar-sm" />
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{currentUser?.name}</div>
               <div className="sidebar-user-role">{APP_CONFIG.ROLE_LABELS[currentUser?.role]}</div>

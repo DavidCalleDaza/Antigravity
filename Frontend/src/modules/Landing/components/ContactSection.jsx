@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Mail, MessageCircle, Linkedin, MapPin, Send, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 
+import { getApiBaseUrl } from '../../../../utils/urlHelper';
+
 const SUBJECTS = [
   { value: 'usar_donapp',       label: 'Quiero usar DonApp' },
   { value: 'integrar_negocio',  label: 'Tengo un negocio y quiero integrarme' },
@@ -8,8 +10,6 @@ const SUBJECTS = [
   { value: 'modelo_impacto',    label: 'Preguntas sobre el modelo de impacto' },
   { value: 'otro',              label: 'Otro' },
 ];
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 export default function ContactSection() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', website: '' });
@@ -45,7 +45,7 @@ export default function ContactSection() {
     setFeedback('');
 
     try {
-      const res = await fetch(`${API_BASE}/contact`, {
+      const res = await fetch(`${getApiBaseUrl()}/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),

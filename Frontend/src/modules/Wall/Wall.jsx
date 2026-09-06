@@ -8,6 +8,7 @@ import { useStore } from '../../store/useStore';
 import { useToast } from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
 import Drawer from '../../components/ui/Drawer';
+import Avatar from '../../components/common/Avatar';
 
 import WallComposer from './components/WallComposer';
 import WallFeed from './components/WallFeed';
@@ -63,15 +64,37 @@ export default function Wall() {
     });
   };
 
-  const postManager = useWallPosts({ toast, showConfirm });
   const {
-    loading, posts, setPosts, editingPostId, setEditingPostId, editingCommentId, setEditingCommentId,
-    editTargetPostId, setEditTargetPostId, handleDeletePost, handleDeleteAllPosts, handleUpdatePost,
-    handleDeleteMedia, handleEditMediaUpload, handleComment, handleUpdateComment,
-    handleDeleteComment, createPost
-  } = postManager;
+    posts,
+    setPosts,
+    loading,
+    fetchPosts,
+    editingPostId,
+    setEditingPostId,
+    editTargetPostId,
+    setEditTargetPostId,
+    editingCommentId,
+    setEditingCommentId,
+    handleUpdatePost,
+    handleDeletePost,
+    handleDeleteAllPosts,
+    handleEditMediaUpload,
+    handleDeleteMedia,
+    handleComment,
+    handleUpdateComment,
+    handleDeleteComment,
+    createPost
+  } = useWallPosts({
+    toast,
+    showConfirm
+  });
 
-  const composerProps = useWallComposer({ createPost, setPosts, toast, showConfirm });
+  const composerProps = useWallComposer({
+    createPost,
+    setPosts,
+    toast,
+    showConfirm
+  });
 
   const [postViewModes, setPostViewModes] = useState({});
   const [viewModeMenuOpen, setViewModeMenuOpen] = useState(null);
@@ -81,39 +104,9 @@ export default function Wall() {
   const composerRef = useRef(null);
   const postRefsMap = useRef(new Map());
 
-  const getAvatarUrl = (avatar) => {
-    return Helpers.resolveMediaUrl(avatar);
-  };
-
-  const renderAvatarContent = (author) => {
+  const renderAvatarContent = (author, size = 36) => {
     if (!author) return null;
-    const urlRaw = author.avatar_url || author.avatar;
-    const avatarUrl = urlRaw ? getAvatarUrl(urlRaw) : null;
-    const name = author.full_name || author.name || (typeof author === 'string' ? author : '?');
-
-    if (avatarUrl) {
-      return (
-        <>
-          <img
-            src={avatarUrl}
-            alt={name}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-            }}
-            onLoad={(e) => {
-              e.target.style.display = 'block';
-              if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
-            }}
-            style={{ display: 'none' }}
-          />
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: 'inherit' }}>
-            {Helpers.getInitials(name)}
-          </span>
-        </>
-      );
-    }
-    return Helpers.getInitials(name);
+    return <Avatar author={author} size={size} />;
   };
 
   const renderMentionBadge = (post) => {

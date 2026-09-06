@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../../css/pages/ConfirmMention.css";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { getApiBaseUrl } from "../utils/urlHelper";
 
 export default function ConfirmMention() {
   const { token } = useParams();
@@ -19,7 +18,7 @@ export default function ConfirmMention() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/api/v1/public/wall/mentions/${token}`);
+        const res = await fetch(`${getApiBaseUrl()}/public/wall/mentions/${token}`);
         if (!res.ok) {
           throw new Error(
             res.status === 404
@@ -46,7 +45,7 @@ export default function ConfirmMention() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/public/wall/mentions/${token}/respond`, {
+      const res = await fetch(`${getApiBaseUrl()}/public/wall/mentions/${token}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),

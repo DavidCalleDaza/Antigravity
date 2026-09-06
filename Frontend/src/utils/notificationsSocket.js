@@ -1,59 +1,70 @@
 import { useStore } from '../store/useStore';
-import { SERVER_BASE_URL } from './apiClient';
+import { resolveWsUrl } from './urlHelper';
 
 let socket = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const BASE_RECONNECT_DELAY = 1500;
+const MAX_RECONNECT_DELAY = 30000;
+
+function calculateBackoff(attempt) {
+  const delay = Math.min(BASE_RECONNECT_DELAY * Math.pow(1.8, attempt), MAX_RECONNECT_DELAY);
+  const jitter = delay * 0.2 * Math.random();
+  return Math.floor(delay + jitter);
+}
 
 export const connectNotifications = () => {
-  if (socket && socket.readyState === WebSocket.OPEN) return;
-  
+  if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+    return;
+  }
+
   const token = useStore.getState().currentUser?.token;
   if (!token) return;
 
-  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  // Use host from SERVER_BASE_URL if available, else window.location.host
-  let wsHost = window.location.host;
-  if (SERVER_BASE_URL) {
+  const wsUrl = resolveWsUrl('/notifications/ws/notifications', { token });
+
+  try {
+    socket = new WebSocket(wsUrl);
+
+    socket.onopen = () => {
+      reconnectAttempts = 0;
+    };
+
+    socket.onmessage = (event) => {
       try {
-          const url = new URL(SERVER_BASE_URL);
-          wsHost = url.host;
-      } catch (e) { }
-  }
-  
-  const wsUrl = `${wsProtocol}//${wsHost}/api/v1/notifications/ws/notifications?token=${encodeURIComponent(token)}`;
-  
-  socket = new WebSocket(wsUrl);
+        const data = JSON.parse(event.data);
+        useStore.getState().addNotification(data);
+      } catch {
+        // Ignorar payload malformado
+      }
+    };
 
-  socket.onopen = () => {
-    console.log('Notifications WebSocket connected');
-    reconnectAttempts = 0;
-  };
+    socket.onclose = (event) => {
+      // 1008 = Policy Violation (ej. token expirado o inválido)
+      if (event.code !== 1008 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        const delay = calculateBackoff(reconnectAttempts);
+        reconnectAttempts++;
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          connectNotifications();
+        }, delay);
+      }
+    };
 
-  socket.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      useStore.getState().addNotification(data);
-    } catch (err) {
-      console.error('Error parsing notification data', err);
-    }
-  };
-
-  socket.onclose = (event) => {
-    console.log('Notifications WebSocket disconnected', event);
-    if (event.code !== 1008 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+    socket.onerror = () => {
+      // Dejar que onclose maneje el reintento de conexión
+    };
+  } catch {
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      const delay = calculateBackoff(reconnectAttempts);
       reconnectAttempts++;
-      const backoff = Math.min(1000 * reconnectAttempts, 5000);
+      clearTimeout(reconnectTimer);
       reconnectTimer = setTimeout(() => {
         connectNotifications();
-      }, backoff);
+      }, delay);
     }
-  };
-
-  socket.onerror = (error) => {
-    console.error('Notifications WebSocket error', error);
-  };
+  }
 };
 
 export const disconnectNotifications = () => {
@@ -62,7 +73,17 @@ export const disconnectNotifications = () => {
     reconnectTimer = null;
   }
   if (socket) {
-    socket.close();
+    socket.onopen = null;
+    socket.onmessage = null;
+    socket.onerror = null;
+    socket.onclose = null;
+    try {
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+        socket.close();
+      }
+    } catch {
+      // Ignorar errores de cierre
+    }
     socket = null;
   }
 };

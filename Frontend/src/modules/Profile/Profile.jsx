@@ -11,6 +11,7 @@ import ImageCropperModal from '../../components/ui/ImageCropperModal';
 import SocialSettings from './SocialSettings';
 import WhatsAppSettings from './WhatsAppSettings';
 import LocationSelects from '../../components/ui/LocationSelects';
+import Avatar from '../../components/common/Avatar';
 
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 const ROLE_OPTIONS = Object.entries(APP_CONFIG.ROLES).map(([key, value]) => ({
@@ -370,19 +371,13 @@ export default function Profile() {
             {/* ── Hero Section ── */}
         <div className="profile-hero-card">
           <div className="profile-avatar-wrapper" onClick={handleAvatarClick}>
-            <div className="avatar avatar-xl">
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt={currentUser?.name}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary-subtle text-primary font-bold">
-                  {(currentUser?.name || 'U').substring(0, 2).toUpperCase()}
-                </div>
-              )}
-            </div>
+            <Avatar
+              author={currentUser}
+              src={previewUrl}
+              name={currentUser?.name}
+              size={96}
+              className="avatar avatar-xl"
+            />
             <div className="avatar-overlay">
               <Camera width="20" height="20" />
               <span>EDITAR</span>

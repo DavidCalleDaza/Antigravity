@@ -1,5 +1,7 @@
-const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:8000/api/v1';
-export const SERVER_BASE_URL = API_BASE_URL.replace('/api/v1', '');
+import { getApiBaseUrl, getServerBaseUrl } from './urlHelper';
+
+export const API_BASE_URL = getApiBaseUrl();
+export const SERVER_BASE_URL = getServerBaseUrl();
 
 class ApiError extends Error {
   constructor(message, status, data) {

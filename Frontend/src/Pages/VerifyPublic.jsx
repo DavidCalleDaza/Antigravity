@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../../css/pages/VerifyPublic.css";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { getApiBaseUrl, getServerBaseUrl } from "../utils/urlHelper";
 
 const STATUS_LABELS = {
   draft: { label: "Borrador", tone: "neutral" },
@@ -24,7 +23,7 @@ export default function VerifyPublic() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/api/v1/verify/${cufe}`);
+        const res = await fetch(`${getApiBaseUrl()}/verify/${cufe}`);
         if (!res.ok) {
           throw new Error(
             res.status === 404 ? "Factura no encontrada" : "Error al consultar la factura"
@@ -110,7 +109,7 @@ export default function VerifyPublic() {
         <div className="verify-actions">
           <a
             className="verify-btn verify-btn--primary"
-            href={`${API_BASE}${invoice.pdf_url}`}
+            href={`${getServerBaseUrl()}${invoice.pdf_url}`}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -118,7 +117,7 @@ export default function VerifyPublic() {
           </a>
           <a
             className="verify-btn verify-btn--secondary"
-            href={`${API_BASE}${invoice.xml_url}`}
+            href={`${getServerBaseUrl()}${invoice.xml_url}`}
             target="_blank"
             rel="noopener noreferrer"
           >

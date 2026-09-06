@@ -7,6 +7,8 @@ import {
 import Helpers from '../../../utils/helpers';
 import SquareAudioPlayer from '../../../components/ui/SquareAudioPlayer';
 import SquareVideoPlayer from '../../../components/ui/SquareVideoPlayer';
+import SafeImage from '../../../components/common/SafeImage';
+import Avatar from '../../../components/common/Avatar';
 
 export default function WallPostCard({ post, feed, utils, currentUser }) {
   const {
@@ -139,7 +141,7 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
                       title="Haz clic para mejorar con IA"
                     >
                       {m.media_type?.startsWith('image/') ? (
-                        <img src={Helpers.resolveMediaUrl(m.media_url)} alt="" />
+                        <SafeImage src={Helpers.resolveMediaUrl(m.media_url)} alt="" />
                       ) : m.media_type?.startsWith('video/') ? (
                         <SquareVideoPlayer src={Helpers.resolveMediaUrl(m.media_url)} compact />
                       ) : m.media_type?.startsWith('audio/') ? (
@@ -224,7 +226,7 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
               >
                 <div className="wall-linked-card-media">
                   {post.linked_item.image_url ? (
-                    <img src={Helpers.resolveMediaUrl(post.linked_item.image_url)} alt="" />
+                    <SafeImage src={Helpers.resolveMediaUrl(post.linked_item.image_url)} alt="" />
                   ) : (
                     <Package size="18" />
                   )}
@@ -245,7 +247,7 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
               <div className="wall-post-media-grid">
                 {post.media.map(m =>
                   m.media_type?.startsWith('image/') ? (
-                    <img key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} alt="Media" />
+                    <SafeImage key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} alt="Media" />
                   ) : m.media_type?.startsWith('video/') ? (
                     <SquareVideoPlayer key={m.id} src={Helpers.resolveMediaUrl(m.media_url)} />
                   ) : m.media_type?.startsWith('audio/') ? (
@@ -261,7 +263,7 @@ export default function WallPostCard({ post, feed, utils, currentUser }) {
             ) : post.media_url ? (
               <div className="wall-post-media">
                 {post.media_type?.startsWith('image/') ? (
-                  <img src={Helpers.resolveMediaUrl(post.media_url)} alt="Impact" />
+                  <SafeImage src={Helpers.resolveMediaUrl(post.media_url)} alt="Impact" />
                 ) : post.media_type?.startsWith('video/') ? (
                   <SquareVideoPlayer src={Helpers.resolveMediaUrl(post.media_url)} isSingle />
                 ) : post.media_type?.startsWith('audio/') ? (

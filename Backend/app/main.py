@@ -31,6 +31,7 @@ from app.modules.billing.public_verify_router import router as public_verify_rou
 from app.modules.wall.public_mention_router import router as public_mention_router
 from app.modules.tokens.router import router as tokens_router
 from app.modules.contact.router import router as contact_router
+from app.modules.search.router import router as search_router
 from app.shared.schemas import HealthCheckResponse
 import os
 os.makedirs("uploads", exist_ok=True)
@@ -182,6 +183,11 @@ app.include_router(
     tokens_router,
     prefix="/api/v1/tokens",
     tags=["Tokens"],
+)
+app.include_router(
+    search_router,
+    prefix="/api/v1/search",
+    tags=["Global Search"],
 )
 app.mount("/uploads", StaticFiles(directory="uploads", html=False), name="uploads")
 app.mount("/legal", StaticFiles(directory="legal", html=True), name="legal")

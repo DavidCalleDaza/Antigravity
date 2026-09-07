@@ -257,6 +257,10 @@ export const authClient = {
   requestEmailChange: (data) => apiClient.post('/auth/request-email-change', data),
 };
 
+export const searchClient = {
+  global: (q, limit = 20) => apiClient.get(`/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+};
+
 export const agendaClient = {
   // Sellers (public)
   listSellers: () => apiClient.get('/agenda/sellers'),

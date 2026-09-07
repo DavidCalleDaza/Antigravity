@@ -422,22 +422,28 @@
 .navbar-right {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   margin-left: auto;
 }
 
 /* Navbar search */
 .navbar-search {
   position: relative;
-  width: 280px;
+  width: 300px;
+  max-width: 100%;
 }
 
 .navbar-search .form-input {
+  width: 100%;
+  box-sizing: border-box;
   padding-left: var(--space-10);
+  padding-right: var(--space-4);
   background: var(--primary-50);
-  border: none;
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   height: 40px;
+  text-overflow: ellipsis;
+  font-size: var(--text-sm);
 }
 
 .navbar-search .search-icon {

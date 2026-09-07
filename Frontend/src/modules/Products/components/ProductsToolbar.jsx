@@ -50,42 +50,44 @@ export default function ProductsToolbar({
           value={statusFilter}
           onChange={setStatusFilter}
         />
-        <div className="d-flex items-center gap-1" style={{ marginLeft: 'var(--space-1)' }}>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm btn-icon-only"
-            onClick={onBulkDeleteClick}
-            disabled={selectedCount === 0}
-            title={selectedCount > 0 ? `Eliminar (${selectedCount}) seleccionados` : 'Eliminar (selecciona al menos un registro)'}
-            style={{
-              color: selectedCount > 0 ? '#ef4444' : 'var(--text-secondary)',
-              opacity: selectedCount > 0 ? 1 : 0.45,
-              cursor: selectedCount > 0 ? 'pointer' : 'not-allowed',
-            }}
-          >
-            <Trash2 width="16" height="16" />
-          </button>
+        {!isClient && (
+          <div className="d-flex items-center gap-1" style={{ marginLeft: 'var(--space-1)' }}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm btn-icon-only"
+              onClick={onBulkDeleteClick}
+              disabled={selectedCount === 0}
+              title={selectedCount > 0 ? `Eliminar (${selectedCount}) seleccionados` : 'Eliminar (selecciona al menos un registro)'}
+              style={{
+                color: selectedCount > 0 ? '#ef4444' : 'var(--text-secondary)',
+                opacity: selectedCount > 0 ? 1 : 0.45,
+                cursor: selectedCount > 0 ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Trash2 width="16" height="16" />
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm btn-icon-only"
-            onClick={onExportExcel}
-            title="Exportar a Excel"
-            style={{ color: 'var(--gold, #d4af37)' }}
-          >
-            <Download width="16" height="16" />
-          </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm btn-icon-only"
+              onClick={onExportExcel}
+              title="Exportar a Excel"
+              style={{ color: 'var(--gold, #d4af37)' }}
+            >
+              <Download width="16" height="16" />
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm btn-icon-only"
-            onClick={onImportExcel}
-            title="Importar desde Excel"
-            style={{ color: '#22c55e' }}
-          >
-            <UploadCloud width="16" height="16" />
-          </button>
-        </div>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm btn-icon-only"
+              onClick={onImportExcel}
+              title="Importar desde Excel"
+              style={{ color: '#22c55e' }}
+            >
+              <UploadCloud width="16" height="16" />
+            </button>
+          </div>
+        )}
       </div>
       <div className="view-toggle">
         <button
@@ -102,13 +104,15 @@ export default function ProductsToolbar({
         >
           <Grid3X3 width="18" height="18" />
         </button>
-        <button
-          className={`view-toggle-btn ${!revealImages ? 'active' : ''}`}
-          onClick={() => setRevealImages(!revealImages)}
-          title={revealImages ? 'Ocultar imágenes y precios' : 'Mostrar imágenes y precios'}
-        >
-          {revealImages ? <Eye width="18" height="18" /> : <EyeOff width="18" height="18" />}
-        </button>
+        {!isClient && (
+          <button
+            className={`view-toggle-btn ${!revealImages ? 'active' : ''}`}
+            onClick={() => setRevealImages(!revealImages)}
+            title={revealImages ? 'Ocultar imágenes y precios' : 'Mostrar imágenes y precios'}
+          >
+            {revealImages ? <Eye width="18" height="18" /> : <EyeOff width="18" height="18" />}
+          </button>
+        )}
       </div>
     </div>
   );

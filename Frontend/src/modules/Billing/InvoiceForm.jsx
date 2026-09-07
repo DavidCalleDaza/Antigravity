@@ -608,7 +608,7 @@ export default function InvoiceForm({ isOpen, onClose, onSave, invoiceToEdit = n
         zIndex: 20000 // <--- Asegura que el formulario de editar esté POR ENCIMA del detalle (zIndex 10000)
       }}
     >
-      <div className="modal modal-lg animate-scaleUp">
+      <div className="modal modal-lg invoice-modal animate-scaleUp">
 
         {/* HEADER */}
         <div className="modal-header">

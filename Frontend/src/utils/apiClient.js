@@ -13,9 +13,34 @@ let _logoutHandler = () => {};
 export function setApiTokenGetter(fn) { _tokenGetter = fn; }
 export function setApiLogoutHandler(fn) { _logoutHandler = fn; }
 
+function extractErrorMessage(detail, defaultMsg = "Error en la petición") {
+  if (!detail) return defaultMsg;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          return item.msg || item.message || JSON.stringify(item);
+        }
+        return String(item);
+      })
+      .filter(Boolean);
+    return messages.length > 0 ? messages.join(', ') : defaultMsg;
+  }
+  if (typeof detail === 'object') {
+    if (detail.msg) return detail.msg;
+    if (detail.message) return detail.message;
+    if (detail.error) return detail.error;
+    return JSON.stringify(detail);
+  }
+  return String(detail);
+}
+
 class ApiError extends Error {
   constructor(message, status, data) {
-    super(message);
+    const formattedMessage = typeof message === 'string' ? message : extractErrorMessage(message);
+    super(formattedMessage);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
@@ -67,7 +92,7 @@ class ApiClient {
       }
 
       throw new ApiError(
-          data.detail || "No autorizado",
+          extractErrorMessage(data.detail, "No autorizado"),
           response.status,
           data
       );
@@ -75,7 +100,7 @@ class ApiClient {
 
     if (!response.ok) {
         throw new ApiError(
-            data.detail || `HTTP ${response.status}`,
+            extractErrorMessage(data.detail, `HTTP ${response.status}`),
             response.status,
             data
         );
@@ -109,11 +134,16 @@ class ApiClient {
         console.warn("401 recibido:", endpoint);
 
         throw new ApiError(
-            data.detail || "No autorizado",
+            extractErrorMessage(data.detail, "No autorizado"),
             response.status,
             data
         );
       }
+      throw new ApiError(
+          extractErrorMessage(data.detail, `HTTP ${response.status}`),
+          response.status,
+          data
+      );
     }
     return data;
   }
@@ -149,11 +179,17 @@ class ApiClient {
         console.warn("401 recibido:", endpoint);
 
         throw new ApiError(
-            data.detail || "No autorizado",
+            extractErrorMessage(data.detail, "No autorizado"),
             response.status,
             data
         );
       }
+
+      throw new ApiError(
+          extractErrorMessage(data.detail, `HTTP ${response.status}`),
+          response.status,
+          data
+      );
     }
     return response.blob();
   }
@@ -202,6 +238,7 @@ export const apiClient = new ApiClient(API_BASE_URL);
 export const authClient = {
   register: (data) => apiClient.post('/auth/register', data),
   login: (data) => apiClient.post('/auth/login', data),
+  activate: (data) => apiClient.post('/auth/activate', data),
   googleExchange: (code) => apiClient.post('/auth/google/exchange', { code }),
   me: () => apiClient.get('/auth/me'),
   updateMe: (data) => apiClient.patch('/auth/me', data),
@@ -217,6 +254,7 @@ export const authClient = {
   requestPasswordReset: (email) => apiClient.post('/auth/password-recovery/request', { email }),
   resetPassword: (email, code, newPassword) =>
     apiClient.post('/auth/password-recovery/reset', { email, code, new_password: newPassword }),
+  requestEmailChange: (data) => apiClient.post('/auth/request-email-change', data),
 };
 
 export const agendaClient = {

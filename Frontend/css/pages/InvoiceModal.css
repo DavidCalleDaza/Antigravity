@@ -3,7 +3,7 @@
    ========================================================================== */
 
 /** Estilos Generales del Modal **/    
-.modal-header {
+.invoice-modal .modal-header {
     padding-top: 6px !important;     
     padding-bottom: 10px !important;  
     min-height: auto !important;     
@@ -14,7 +14,7 @@
 }
 
 /* Estilos para el modal de factura */
-.modal.modal-lg {
+.invoice-modal.modal.modal-lg {
     width: 92% !important;           
     min-width: auto !important;
     max-width: 1400px !important;    
@@ -30,7 +30,7 @@
     padding: 15px 15px; 
 }
 
-.modal-body {
+.invoice-modal .modal-body {
     flex: 1;
     display: grid !important;
     grid-template-columns: 1fr 290px   !important; /* Sidebar a la derecha */
@@ -39,7 +39,7 @@
     overflow-y: auto !important; /* Asegura el scroll vertical del modal */
 }
 
-.modal-title {
+.invoice-modal .modal-title {
     font-size: 18px !important; 
     font-weight: 600;
     margin: 0;
@@ -47,7 +47,7 @@
 }
 
 /* Botón de cerrar compacto */
-.modal-close {
+.invoice-modal .modal-close {
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -60,7 +60,7 @@
     transition: background 0.2s !important;
 }
 
-.modal-close:hover {
+.invoice-modal .modal-close:hover {
     background: var(--border); 
     color: var(--text-primary) !important;
 }
@@ -68,8 +68,8 @@
 /* ==========================================================================
    Diseño de Inputs y Selects Unificados
    ========================================================================== */
-.modal-body .form-control,
-.modal-body .form-select {
+.invoice-modal .modal-body .form-control,
+.invoice-modal .modal-body .form-select {
     width: 100% !important;
     height: 36px !important;
     padding: 4px 10px !important;
@@ -84,7 +84,7 @@
 }
 
 /* Flecha personalizada unificada para los selectores */
-.modal-body .form-select {
+.invoice-modal .modal-body .form-select {
     appearance: none !important;
     padding-right: 28px !important;
     background-repeat: no-repeat !important;
@@ -93,14 +93,14 @@
 }
 
 /* Estado Hover Unificado */
-.modal-body .form-control:hover,
-.modal-body .form-select:hover {
+.invoice-modal .modal-body .form-control:hover,
+.invoice-modal .modal-body .form-select:hover {
     border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Estado Focus Unificado */
-.modal-body .form-control:focus,
-.modal-body .form-select:focus {
+.invoice-modal .modal-body .form-control:focus,
+.invoice-modal .modal-body .form-select:focus {
     border-color: var(--text-gold, #d4af37) !important;
     box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2) !important;
     outline: none !important;
@@ -688,7 +688,7 @@
    Responsive: Tablet (≤ 900px)
    ========================================================================== */
 @media (max-width: 900px) {
-  .modal-body {
+  .invoice-modal .modal-body {
     grid-template-columns: 1fr !important;
   }
 
@@ -703,7 +703,7 @@
    ========================================================================== */
 @media (max-width: 768px) {
   /* Limitamos la altura del modal para dejar un margen con la barra inferior del dispositivo */
-  .modal.modal-lg {
+  .invoice-modal.modal.modal-lg {
     width: 96% !important;
     height: 85vh !important; /* Altura controlada para evitar solapamientos */
     max-height: 85vh !important;
@@ -711,7 +711,7 @@
     padding-bottom: 24px !important; 
   }
 
-  .modal-body {
+  .invoice-modal .modal-body {
     padding: 10px !important;
     gap: 16px !important;
     overflow-y: auto !important; 
@@ -1004,7 +1004,7 @@
    Responsive: Small Mobile (≤ 480px)
    ========================================================================== */
 @media (max-width: 480px) {
-  .modal.modal-lg {
+  .invoice-modal.modal.modal-lg {
     width: 100% !important;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -1012,16 +1012,15 @@
     padding: 6px !important;
   }
 
-  .modal-body {
+  .invoice-modal .modal-body {
     padding-bottom: 70px !important; /* Incrementamos espacio seguro en dispositivos muy pequeños */
-    
   }
 
-  .modal-header {
+  .invoice-modal .modal-header {
     padding: 4px 8px !important;
   }
 
-  .modal-title {
+  .invoice-modal .modal-title {
     font-size: 15px !important;
   }
 

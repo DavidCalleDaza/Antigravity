@@ -45,7 +45,12 @@ async def get_user_by_id(db: AsyncSession, user_id: str) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
+async def create_user(
+    db: AsyncSession,
+    user_in: UserCreate,
+    is_approved: bool = True,
+    activation_code: str | None = None,
+) -> User:
     """
     Create a new user in the database.
 
@@ -56,6 +61,8 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
     Args:
         db: Active async database session.
         user_in: Validated registration payload.
+        is_approved: Whether the user is approved/activated.
+        activation_code: Secret code for first login validation.
 
     Returns:
         The newly created ``User`` instance with all fields populated.
@@ -65,6 +72,8 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         hashed_password=hash_password(user_in.password),
         full_name=user_in.full_name,
         role=user_in.role.value,
+        is_approved=is_approved,
+        activation_code=activation_code,
     )
     db.add(db_user)
     await db.commit()
@@ -103,11 +112,18 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
 
     if user_in.location is not None:
         from app.modules.locations.models import Location
+        loc_data = user_in.location.model_dump(exclude_unset=True)
+        # Normalizar country_code vacío a None para evitar violación de Foreign Key
+        if "country_code" in loc_data and (loc_data["country_code"] is None or str(loc_data["country_code"]).strip() == ""):
+            loc_data["country_code"] = None
+
         if user.location:
-            for k, v in user_in.location.model_dump(exclude_unset=True).items():
+            for k, v in loc_data.items():
                 setattr(user.location, k, v)
         else:
-            user.location = Location(**user_in.location.model_dump())
+            new_loc = Location(**loc_data)
+            db.add(new_loc)
+            user.location = new_loc
 
     was_onboarding = user.needs_onboarding
     if user.needs_onboarding:

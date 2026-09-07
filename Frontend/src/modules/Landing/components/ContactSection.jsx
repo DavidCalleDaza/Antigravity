@@ -54,12 +54,20 @@ export default function ContactSection() {
 
       if (res.ok && data.success) {
         setStatus('success');
-        setFeedback(data.detail || '¡Gracias! Recibimos tu mensaje y te responderemos pronto.');
+        setFeedback(typeof data.detail === 'string' ? data.detail : '¡Gracias! Recibimos tu mensaje y te responderemos pronto.');
         setForm({ name: '', email: '', subject: '', message: '', website: '' });
         setErrors({});
       } else {
         setStatus('error');
-        setFeedback(data.detail || 'Ocurrió un error al enviar tu mensaje. Intenta de nuevo.');
+        let errorMsg = 'Ocurrió un error al enviar tu mensaje. Intenta de nuevo.';
+        if (typeof data?.detail === 'string') {
+          errorMsg = data.detail;
+        } else if (Array.isArray(data?.detail)) {
+          errorMsg = data.detail.map((d) => d.msg || (typeof d === 'string' ? d : JSON.stringify(d))).join(', ');
+        } else if (data?.detail && typeof data.detail === 'object') {
+          errorMsg = data.detail.msg || JSON.stringify(data.detail);
+        }
+        setFeedback(errorMsg);
       }
     } catch {
       setStatus('error');

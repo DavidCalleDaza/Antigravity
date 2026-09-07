@@ -18,7 +18,6 @@ export default function Landing() {
   const [contactWebsite, setContactWebsite] = useState('');
   const [contactStatus, setContactStatus] = useState('idle');
   const [contactError, setContactError] = useState('');
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (contactStatus === 'sending') return;
@@ -26,10 +25,11 @@ export default function Landing() {
     setContactError('');
     contactClient
       .send({
-        name: contactName,
-        email: contactEmail,
+        name: contactName.trim(),
+        email: contactEmail.trim(),
         subject: contactSubject,
-        message: contactMessage,
+        message: contactMessage.trim(),
+        website: contactWebsite.trim(),
       })
       .then(() => {
         setContactStatus('success');
@@ -37,14 +37,17 @@ export default function Landing() {
         setContactEmail('');
         setContactSubject('');
         setContactMessage('');
+        setContactWebsite('');
       })
       .catch((err) => {
         setContactStatus('error');
-        setContactError(
-          err instanceof ApiError && err.data?.detail
-            ? err.data.detail
-            : 'No pudimos enviar tu mensaje. Intenta de nuevo más tarde.'
-        );
+        let msg = 'No pudimos enviar tu mensaje. Intenta de nuevo más tarde.';
+        if (err instanceof ApiError && err.message) {
+          msg = err.message;
+        } else if (typeof err?.message === 'string') {
+          msg = err.message;
+        }
+        setContactError(msg);
       });
   };
 
@@ -549,6 +552,8 @@ export default function Landing() {
                           placeholder="Tu nombre"
                           value={contactName}
                           onChange={(e) => setContactName(e.target.value)}
+                          minLength={2}
+                          maxLength={100}
                           required
                         />
                       </div>
@@ -584,6 +589,8 @@ export default function Landing() {
                         placeholder="¿Cómo podemos ayudarte?"
                         value={contactMessage}
                         onChange={(e) => setContactMessage(e.target.value)}
+                        minLength={10}
+                        maxLength={2000}
                         required
                       ></textarea>
                     </div>

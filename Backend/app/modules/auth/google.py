@@ -3,6 +3,8 @@ import hashlib
 import json
 import logging
 import os
+import random
+import secrets
 import urllib.parse
 import uuid
 from datetime import datetime, timezone
@@ -260,9 +262,17 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db), 
                 await db.commit()
             except IntegrityError:
                 await db.rollback()
+
+        if not user.is_approved:
+            encoded_email = urllib.parse.quote(user.email)
+            return RedirectResponse(f"{frontend_url}/auth/callback?social_status=pending_approval&email={encoded_email}")
     else:
         full_name = payload.get("name", email.split("@")[0])
         avatar_url = payload.get("picture")
+
+        # Generar código de activación criptográficamente seguro de 6 dígitos con prefijo DON-
+        code_digits = f"{secrets.randbelow(900000) + 100000}"
+        activation_code = f"DON-{code_digits}"
 
         user = User(
             email=email,
@@ -270,7 +280,9 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db), 
             role=requested_role,
             avatar_url=avatar_url,
             hashed_password=None,
-            needs_onboarding=(requested_intent == "register"),
+            needs_onboarding=True,
+            is_approved=False,
+            activation_code=activation_code,
         )
         db.add(user)
         await db.flush()
@@ -284,6 +296,36 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db), 
             await db.rollback()
             logger.error(f"Database error creating new user from Google Auth for email {email}")
             return RedirectResponse(f"{frontend_url}/auth/callback?social_status=error&detail=user_creation_failed")
+
+        # Notificar al administrador por correo
+        role_labels = {
+            "admin": "Administrador",
+            "seller": "Comerciante / Negocio",
+            "client": "Cliente",
+        }
+        role_label = role_labels.get(requested_role, requested_role)
+        created_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+        try:
+            from app.core.email import send_email
+            send_email(
+                to=settings.CONTACT_NOTIFICATION_EMAIL,
+                subject=f"[DonApp] Nueva solicitud de registro (Google) — {full_name}",
+                template_name="new_user_approval.html",
+                context={
+                    "full_name": full_name,
+                    "email": email,
+                    "role_label": f"{role_label} (Google)",
+                    "created_at": created_str,
+                    "activation_code": activation_code,
+                },
+            )
+            logger.info("Notificación de nuevo usuario Google enviada a admin para %s (Code: %s)", email, activation_code)
+        except Exception as e:
+            logger.error("Error al enviar notificación de registro Google al admin: %s", e)
+
+        encoded_email = urllib.parse.quote(email)
+        return RedirectResponse(f"{frontend_url}/auth/callback?social_status=pending_approval&email={encoded_email}")
 
     # Generate one-time exchange_code
     exchange_code = uuid.uuid4().hex
@@ -323,6 +365,9 @@ async def google_exchange(payload: ExchangeRequest, db: AsyncSession = Depends(g
 
     if not user or not user.is_active:
         raise UnauthorizedException(detail="Usuario no encontrado o inactivo.")
+
+    if not user.is_approved:
+        raise UnauthorizedException(detail="Cuenta pendiente de validación y aprobación por el administrador.")
 
     access_token = create_access_token(data={"sub": str(user.id), "email": user.email, "role": user.role})
     

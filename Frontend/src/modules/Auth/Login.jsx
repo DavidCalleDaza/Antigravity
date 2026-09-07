@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, KeyRound, ShieldAlert } from 'lucide-react';
 import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
 import { useStore } from '../../store/useStore';
@@ -10,10 +10,18 @@ import ParticleNetwork from '../../components/ui/ParticleNetwork';
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [requiresActivation, setRequiresActivation] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '', activationCode: '' });
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { login } = useStore();
+
+  useEffect(() => {
+    if (location.state?.email) {
+      setFormData((prev) => ({ ...prev, email: location.state.email }));
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -24,8 +32,9 @@ export default function Login() {
     setLoading(true);
     try {
       const response = await authClient.login({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
+        activation_code: requiresActivation ? formData.activationCode.trim().toUpperCase() : undefined,
       });
       login({
         id: response.user.id,
@@ -37,10 +46,20 @@ export default function Login() {
         location: response.user.location,
         is_staff: response.user.is_staff,
       });
-      toast.success('Sesión iniciada', 'Bienvenido');
+      toast.success(requiresActivation ? '¡Cuenta activada con éxito!' : 'Sesión iniciada', 'Bienvenido');
       navigate('/wall');
     } catch (error) {
-      toast.error(error.message || 'Credenciales inválidas.', 'Error');
+      const errorMsg = error.message || '';
+      if (
+        error.status === 403 ||
+        errorMsg.toLowerCase().includes('código de activación') ||
+        errorMsg.toLowerCase().includes('proceso de validación')
+      ) {
+        setRequiresActivation(true);
+        toast.info(errorMsg || 'Esta cuenta requiere un código de activación para el primer ingreso.', 'Código Requerido');
+      } else {
+        toast.error(errorMsg || 'Credenciales inválidas.', 'Error');
+      }
     } finally {
       setLoading(false);
     }
@@ -124,6 +143,40 @@ export default function Login() {
               </div>
             </div>
 
+            {requiresActivation && (
+              <div style={{
+                background: 'rgba(46, 125, 50, 0.08)',
+                border: '1px solid rgba(46, 125, 50, 0.25)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '16px',
+                animation: 'fadeIn 0.3s ease-in-out'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontWeight: '600', fontSize: '13px', marginBottom: '8px' }}>
+                  <ShieldAlert size={18} /> Validación de Primer Acceso
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 12px 0', lineHeight: '1.5' }}>
+                  Introduce el <strong>código de activación</strong> que te proporcionó el administrador para desbloquear tu cuenta.
+                </p>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label htmlFor="activationCode" style={{ fontSize: '12px' }}>Código de Activación</label>
+                  <div className="input-group">
+                    <span className="input-icon"><KeyRound width="18" height="18" /></span>
+                    <input
+                      type="text"
+                      className="form-input"
+                      id="activationCode"
+                      placeholder="Ej: DON-123456"
+                      required
+                      value={formData.activationCode}
+                      onChange={handleChange}
+                      style={{ letterSpacing: '2px', fontWeight: '700', textTransform: 'uppercase' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="auth-actions">
               <label className="d-flex items-center gap-2 cursor-pointer text-muted">
                 <input type="checkbox" className="custom-checkbox" /> Recordarme
@@ -132,7 +185,9 @@ export default function Login() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{marginTop: '10px'}}>
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {loading
+                ? (requiresActivation ? 'Activando cuenta...' : 'Iniciando sesión...')
+                : (requiresActivation ? 'Activar e Iniciar Sesión →' : 'Iniciar Sesión')}
             </button>
 
             <div className="auth-divider">

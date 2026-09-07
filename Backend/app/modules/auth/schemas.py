@@ -117,6 +117,14 @@ class UserLogin(BaseModel):
             examples=["SecureP@ss123"],
         ),
     ]
+    activation_code: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Activation code required on first login for newly registered accounts.",
+            examples=["DON-123456"],
+        ),
+    ] = None
 
 
 class TokenResponse(BaseModel):
@@ -236,6 +244,10 @@ class UserResponse(UserBase):
         bool,
         Field(description="Whether the user account is active."),
     ]
+    is_approved: Annotated[
+        bool,
+        Field(description="Whether the user has been approved/activated.", default=True),
+    ] = True
     is_staff: Annotated[
         bool,
         Field(description="Whether the user is a staff member.", default=False),
@@ -305,3 +317,26 @@ class PasswordRecoveryReset(BaseModel):
             examples=["NewSecureP@ss123"],
         ),
     ]
+
+
+class EmailChangeRequest(BaseModel):
+    """Schema for requesting an email change by the current user."""
+
+    new_email: Annotated[
+        str,
+        Field(
+            ...,
+            description="Nueva dirección de correo electrónico.",
+            examples=["nuevo_correo@donapp.com"],
+            max_length=255,
+        ),
+    ]
+    reason: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Motivo del cambio de correo.",
+            max_length=500,
+        ),
+    ] = None
+

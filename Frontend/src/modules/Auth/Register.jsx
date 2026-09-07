@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Store, User, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Store, User, Shield, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { authClient, apiClient } from '../../utils/apiClient';
 import { useToast } from '../../components/ui/Toast';
-import { useStore } from '../../store/useStore';
 import DonAppLogo from '../../components/ui/DonAppLogo';
 import ParticleNetwork from '../../components/ui/ParticleNetwork';
 
@@ -11,6 +10,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('seller');
   const [loading, setLoading] = useState(false);
+  const [registeredSuccess, setRegisteredSuccess] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -20,7 +20,6 @@ export default function Register() {
   });
   const navigate = useNavigate();
   const toast = useToast();
-  const { login } = useStore();
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -41,22 +40,8 @@ export default function Register() {
         role: role === 'admin' ? 'admin' : role === 'seller' ? 'seller' : 'client',
         password: formData.password,
       });
-      const response = await authClient.login({
-        email: formData.email,
-        password: formData.password,
-      });
-      login({
-        id: response.user.id,
-        name: response.user.full_name,
-        email: response.user.email,
-        role: response.user.role,
-        avatar: response.user.avatar_url,
-        token: response.access_token,
-        location: response.user.location,
-        is_staff: response.user.is_staff,
-      });
-      toast.success('¡Cuenta creada con éxito!', 'Bienvenido');
-      navigate('/wall');
+      setRegisteredSuccess(true);
+      toast.success('Solicitud enviada para validación', 'Registro Exitoso');
     } catch (error) {
       toast.error(error.message || 'No se pudo crear la cuenta.', 'Error');
     } finally {
@@ -102,111 +87,166 @@ export default function Register() {
             </Link>
           </div>
 
-          <form className="auth-form" onSubmit={handleRegister}>
-            <div className="form-group">
-              <label>Tipo de Cuenta</label>
-              <div className="role-selector">
-                <div className={`role-option ${role === 'seller' ? 'selected' : ''}`} onClick={() => setRole('seller')}>
-                  <div className="role-option-icon"><Store width="20" height="20" /></div>
-                  <span className="role-option-label">Vendedor</span>
-                </div>
-                <div className={`role-option ${role === 'client' ? 'selected' : ''}`} onClick={() => setRole('client')}>
-                  <div className="role-option-icon"><User width="20" height="20" /></div>
-                  <span className="role-option-label">Cliente</span>
-                </div>
-                <div className={`role-option ${role === 'admin' ? 'selected' : ''}`} onClick={() => setRole('admin')}>
-                  <div className="role-option-icon"><Shield width="20" height="20" /></div>
-                  <span className="role-option-label">Admin</span>
-                </div>
+          {registeredSuccess ? (
+            <div className="auth-success-card" style={{
+              textAlign: 'center',
+              padding: '24px 16px',
+              animation: 'fadeIn 0.4s ease-out'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(46, 125, 50, 0.12)',
+                color: '#2e7d32',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px auto'
+              }}>
+                <ShieldCheck size={36} />
               </div>
-            </div>
 
-            <div className="form-row">
+              <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-primary)' }}>
+                ¡Solicitud de Registro Enviada!
+              </h2>
+
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '24px' }}>
+                Tu cuenta para <strong>{formData.email}</strong> ha sido creada y está en proceso de validación.
+                El administrador revisará tu información y te compartirá personalmente el <strong>código de activación</strong> para tu primer ingreso.
+              </p>
+
+              <div style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                border: '1px dashed var(--border-color, #e2e8f0)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px',
+                textAlign: 'left'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>
+                  <CheckCircle2 size={16} /> Próximo paso:
+                </div>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  Cuando recibas tu código, ingresa a <strong>Iniciar Sesión</strong> con tu correo y contraseña habituales e introduce el código que te enviaron.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-primary btn-lg w-full"
+                onClick={() => navigate('/login', { state: { email: formData.email } })}
+              >
+                Ir a Iniciar Sesión →
+              </button>
+            </div>
+          ) : (
+            <form className="auth-form" onSubmit={handleRegister}>
               <div className="form-group">
-                <label htmlFor="firstName">Nombre</label>
-                <input type="text" className="form-input" id="firstName" placeholder="Tu nombre" required value={formData.firstName} onChange={handleChange} />
+                <label>Tipo de Cuenta</label>
+                <div className="role-selector">
+                  <div className={`role-option ${role === 'seller' ? 'selected' : ''}`} onClick={() => setRole('seller')}>
+                    <div className="role-option-icon"><Store width="20" height="20" /></div>
+                    <span className="role-option-label">Vendedor</span>
+                  </div>
+                  <div className={`role-option ${role === 'client' ? 'selected' : ''}`} onClick={() => setRole('client')}>
+                    <div className="role-option-icon"><User width="20" height="20" /></div>
+                    <span className="role-option-label">Cliente</span>
+                  </div>
+                  <div className={`role-option ${role === 'admin' ? 'selected' : ''}`} onClick={() => setRole('admin')}>
+                    <div className="role-option-icon"><Shield width="20" height="20" /></div>
+                    <span className="role-option-label">Admin</span>
+                  </div>
+                </div>
               </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="firstName">Nombre</label>
+                  <input type="text" className="form-input" id="firstName" placeholder="Tu nombre" required value={formData.firstName} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="lastName">Apellido</label>
+                  <input type="text" className="form-input" id="lastName" placeholder="Tu apellido" required value={formData.lastName} onChange={handleChange} />
+                </div>
+              </div>
+
               <div className="form-group">
-                <label htmlFor="lastName">Apellido</label>
-                <input type="text" className="form-input" id="lastName" placeholder="Tu apellido" required value={formData.lastName} onChange={handleChange} />
+                <label htmlFor="email">Correo electrónico</label>
+                <div className="input-group">
+                  <span className="input-icon"><Mail width="18" height="18" /></span>
+                  <input type="email" className="form-input" id="email" placeholder="tu@correo.com" required value={formData.email} onChange={handleChange} />
+                </div>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label htmlFor="email">Correo electrónico</label>
-              <div className="input-group">
-                <span className="input-icon"><Mail width="18" height="18" /></span>
-                <input type="email" className="form-input" id="email" placeholder="tu@correo.com" required value={formData.email} onChange={handleChange} />
+              <div className="form-group">
+                <label htmlFor="business">Nombre del Negocio</label>
+                <div className="input-group">
+                  <span className="input-icon"><Store width="18" height="18" /></span>
+                  <input
+                    type="text"
+                    className="form-input"
+                    id="business"
+                    placeholder="Mi Tienda de Barrio"
+                    value={formData.business}
+                    onChange={handleChange}
+                    disabled={role !== 'seller'}
+                  />
+                </div>
+                {role !== 'seller' && (
+                  <p className="text-xs text-tertiary mt-1">Solo aplica para cuentas de tipo Vendedor.</p>
+                )}
               </div>
-            </div>
 
-            <div className="form-group">
-              <label htmlFor="business">Nombre del Negocio</label>
-              <div className="input-group">
-                <span className="input-icon"><Store width="18" height="18" /></span>
-                <input
-                  type="text"
-                  className="form-input"
-                  id="business"
-                  placeholder="Mi Tienda de Barrio"
-                  value={formData.business}
-                  onChange={handleChange}
-                  disabled={role !== 'seller'}
-                />
+              <div className="form-group">
+                <label htmlFor="password">Contraseña</label>
+                <div className="input-group password-group">
+                  <span className="input-icon"><Lock width="18" height="18" /></span>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-input"
+                    id="password"
+                    placeholder="Mínimo 8 caracteres"
+                    required
+                    minLength="8"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle" 
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff width="18" height="18" /> : <Eye width="18" height="18" />}
+                  </button>
+                </div>
               </div>
-              {role !== 'seller' && (
-                <p className="text-xs text-tertiary mt-1">Solo aplica para cuentas de tipo Vendedor.</p>
-              )}
-            </div>
 
-            <div className="form-group">
-              <label htmlFor="password">Contraseña</label>
-              <div className="input-group password-group">
-                <span className="input-icon"><Lock width="18" height="18" /></span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="form-input"
-                  id="password"
-                  placeholder="Mínimo 8 caracteres"
-                  required
-                  minLength="8"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                <button 
-                  type="button" 
-                  className="password-toggle" 
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff width="18" height="18" /> : <Eye width="18" height="18" />}
-                </button>
+              <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{marginTop: '6px'}}>
+                {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+              </button>
+
+              <div className="auth-divider">
+                <span>o regístrate con</span>
               </div>
-            </div>
 
-            <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{marginTop: '6px'}}>
-              {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
-            </button>
-
-            <div className="auth-divider">
-              <span>o regístrate con</span>
-            </div>
-
-            <button
-              type="button"
-              className="btn btn-outline w-full d-flex items-center justify-center gap-2"
-              style={{ padding: '0.75rem', marginTop: '10px' }}
-              onClick={handleGoogleClick}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                <path d="M1 1h22v22H1z" fill="none" />
-              </svg>
-              Continuar con Google
-            </button>
-          </form>
+              <button
+                type="button"
+                className="btn btn-outline w-full d-flex items-center justify-center gap-2"
+                style={{ padding: '0.75rem', marginTop: '10px' }}
+                onClick={handleGoogleClick}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                  <path d="M1 1h22v22H1z" fill="none" />
+                </svg>
+                Continuar con Google
+              </button>
+            </form>
+          )}
 
           <div className="auth-footer">
             ¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link>

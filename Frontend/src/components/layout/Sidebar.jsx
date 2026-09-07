@@ -74,10 +74,12 @@ export default function Sidebar({ isOpen, closeMobile }) {
     navigate('/login');
   };
 
-  const visibleSections = NAV_ITEMS.map((section) => ({
-    ...section,
-    items: section.items.filter((item) => item.allowedRoles.includes(userRole)),
-  })).filter((section) => section.items.length > 0);
+  const visibleSections = currentUser?.needsOnboarding
+    ? []
+    : NAV_ITEMS.map((section) => ({
+        ...section,
+        items: section.items.filter((item) => item.allowedRoles.includes(userRole)),
+      })).filter((section) => section.items.length > 0);
 
   return (
     <>

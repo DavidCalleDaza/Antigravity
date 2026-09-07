@@ -92,6 +92,17 @@ class User(Base):
         default=False,
         server_default="false",
     )
+    is_approved: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+    activation_code: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        default=None,
+    )
     location_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("locations.id", ondelete="SET NULL"),

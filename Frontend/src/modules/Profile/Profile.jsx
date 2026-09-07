@@ -61,6 +61,11 @@ export default function Profile() {
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  // Solicitud de cambio de correo
+  const [isEmailChangeModalOpen, setIsEmailChangeModalOpen] = useState(false);
+  const [emailChangeData, setEmailChangeData] = useState({ new_email: '', reason: '' });
+  const [sendingEmailChange, setSendingEmailChange] = useState(false);
+
   const processAvatarFileRef = useRef(null);
 
   useEffect(() => {
@@ -150,7 +155,6 @@ export default function Profile() {
 
       const payload = {
         full_name: formData.full_name,
-        email: formData.email,
         business_name: formData.role === 'seller' ? formData.business_name : undefined,
         location: {
           country: formData.country,
@@ -330,6 +334,39 @@ export default function Profile() {
     }
   };
 
+  const handleRequestEmailChange = async (e) => {
+    if (e) e.preventDefault();
+    const newEmailClean = (emailChangeData.new_email || '').trim().toLowerCase();
+    const currentEmailClean = (currentUser?.email || '').trim().toLowerCase();
+
+    if (!newEmailClean || !newEmailClean.includes('@')) {
+      toast.error('Por favor ingresa un correo electrónico válido.', 'Correo Inválido');
+      return;
+    }
+    if (newEmailClean === currentEmailClean) {
+      toast.error('El nuevo correo no puede ser igual al correo actual.', 'Atención');
+      return;
+    }
+
+    setSendingEmailChange(true);
+    try {
+      const res = await authClient.requestEmailChange({
+        new_email: newEmailClean,
+        reason: emailChangeData.reason?.trim() || null,
+      });
+      toast.success(
+        res?.detail || 'Solicitud de cambio de correo enviada a administración.',
+        'Solicitud Enviada'
+      );
+      setIsEmailChangeModalOpen(false);
+      setEmailChangeData({ new_email: '', reason: '' });
+    } catch (err) {
+      toast.error(err.message || 'Error al enviar la solicitud de cambio de correo.', 'Error');
+    } finally {
+      setSendingEmailChange(false);
+    }
+  };
+
   return (
     <div className="page-content profile-bg-photo">
       <div className="page-header">
@@ -428,7 +465,30 @@ export default function Profile() {
             </div>
 
             <div className="profile-field">
-              <label htmlFor="email">Correo Electrónico</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-1)' }}>
+                <label htmlFor="email" style={{ marginBottom: 0 }}>Correo Electrónico</label>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs text-primary"
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    border: '1px solid var(--primary-light, #dcfce7)',
+                    borderRadius: '6px',
+                    background: 'var(--primary-subtle, rgba(46, 125, 50, 0.08))',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setIsEmailChangeModalOpen(true)}
+                  title="Solicitar cambio de correo electrónico a administración"
+                >
+                  <Mail width="12" height="12" />
+                  Solicitar cambio
+                </button>
+              </div>
               <div className="input-with-icon">
                 <Mail width="18" height="18" />
                 <input
@@ -437,10 +497,18 @@ export default function Profile() {
                   id="email"
                   placeholder="ejemplo@correo.com"
                   value={formData.email}
-                  onChange={handleChange}
-                  required
+                  readOnly
+                  disabled
+                  style={{
+                    backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                    cursor: 'not-allowed',
+                    color: 'var(--text-secondary, #64748b)',
+                  }}
                 />
               </div>
+              <p className="text-xs text-tertiary mt-1">
+                Por seguridad, el correo no es editable directamente. Usa «Solicitar cambio» para notificar a administración.
+              </p>
             </div>
 
             <div className="profile-field full-width">
@@ -664,6 +732,104 @@ export default function Profile() {
         imageFile={selectedImage}
         onCropComplete={handleCropComplete}
       />
+
+      {/* ── Modal Solicitar Cambio de Correo ── */}
+      <Modal
+        isOpen={isEmailChangeModalOpen}
+        onClose={() => !sendingEmailChange && setIsEmailChangeModalOpen(false)}
+        title="Solicitar Cambio de Correo Electrónico"
+        size="md"
+        actions={[
+          {
+            label: 'Cancelar',
+            onClick: () => setIsEmailChangeModalOpen(false),
+            disabled: sendingEmailChange,
+          },
+          {
+            label: sendingEmailChange ? 'Enviando...' : 'Enviar Solicitud',
+            className: 'btn-primary',
+            onClick: handleRequestEmailChange,
+            disabled: sendingEmailChange,
+          },
+        ]}
+      >
+        <form onSubmit={handleRequestEmailChange} style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+          <div style={{
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            fontSize: '0.85rem',
+            color: 'var(--text-primary)',
+            lineHeight: '1.5',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            Por motivos de seguridad, la modificación de correo debe ser validada por administración. Al enviar la solicitud, el administrador recibirá una notificación para su aprobación.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              Correo Actual
+            </label>
+            <div className="input-with-icon" style={{ width: '100%' }}>
+              <Mail width="18" height="18" />
+              <input
+                type="email"
+                className="form-input"
+                value={currentUser?.email || ''}
+                disabled
+                readOnly
+                style={{
+                  width: '100%',
+                  backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                  cursor: 'not-allowed',
+                  color: 'var(--text-secondary, #64748b)',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <label htmlFor="new_email_input" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              Nuevo Correo Electrónico <span style={{ color: 'var(--danger, #ef4444)' }}>*</span>
+            </label>
+            <div className="input-with-icon" style={{ width: '100%' }}>
+              <Mail width="18" height="18" />
+              <input
+                type="email"
+                id="new_email_input"
+                className="form-input"
+                placeholder="nuevo_correo@ejemplo.com"
+                value={emailChangeData.new_email}
+                onChange={(e) => setEmailChangeData((prev) => ({ ...prev, new_email: e.target.value }))}
+                required
+                disabled={sendingEmailChange}
+                autoFocus
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <label htmlFor="reason_input" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              Motivo del Cambio (Opcional)
+            </label>
+            <textarea
+              id="reason_input"
+              className="form-input"
+              rows={3}
+              placeholder="Explica brevemente la razón de este cambio..."
+              value={emailChangeData.reason}
+              onChange={(e) => setEmailChangeData((prev) => ({ ...prev, reason: e.target.value }))}
+              maxLength={500}
+              disabled={sendingEmailChange}
+              style={{ width: '100%', resize: 'vertical', minHeight: '80px', boxSizing: 'border-box' }}
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

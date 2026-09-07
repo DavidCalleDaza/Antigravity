@@ -179,12 +179,38 @@
   transition: all var(--transition-fast);
 }
 
+.form-input:disabled,
+.form-input[disabled],
+.form-input[readonly],
+.form-select:disabled,
+.form-select[disabled],
+.form-textarea:disabled,
+.form-textarea[disabled],
+.form-textarea[readonly] {
+  opacity: 0.75;
+  cursor: not-allowed !important;
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
 [data-theme="light"] .form-input,
 [data-theme="light"] .form-select,
 [data-theme="light"] .form-textarea {
   background: var(--form-input-bg);
   color: var(--form-input-text);
   border-color: var(--form-input-border);
+}
+
+[data-theme="light"] .form-input:disabled,
+[data-theme="light"] .form-input[disabled],
+[data-theme="light"] .form-input[readonly],
+[data-theme="light"] .form-select:disabled,
+[data-theme="light"] .form-select[disabled],
+[data-theme="light"] .form-textarea:disabled,
+[data-theme="light"] .form-textarea[disabled],
+[data-theme="light"] .form-textarea[readonly] {
+  background-color: var(--neutral-100, #f3f4f6);
+  color: var(--neutral-500, #6b7280);
 }
 
 .form-input:hover,
@@ -959,21 +985,21 @@
   margin-bottom: var(--space-6);
 }
 
-/* ── Tooltips Personalizados Universales (Fondo morado transparente, letra negra) ── */
+/* ── Tooltips Personalizados Universales (Tema oscuro: Dorado con letras negras) ── */
 .custom-global-tooltip {
   position: fixed;
   z-index: 999999999 !important;
   pointer-events: none;
-  background: rgba(196, 168, 224, 0.28) !important;
+  background: var(--gold, #d4af37) !important;
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   color: #000000 !important;
-  border: 1px solid rgba(147, 51, 234, 0.25);
-  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.35;
   white-space: nowrap;
   max-width: 320px;
@@ -994,6 +1020,8 @@
   background: rgba(196, 168, 224, 0.35) !important;
   color: #000000 !important;
   border-color: rgba(147, 51, 234, 0.28);
+  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
 }
 
 [data-tooltip] {
@@ -1007,13 +1035,13 @@
   transform: translateX(-50%);
   padding: 5px 10px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: #000000 !important;
-  background: rgba(196, 168, 224, 0.28) !important;
+  background: var(--gold, #d4af37) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(147, 51, 234, 0.25);
-  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   white-space: nowrap;
   opacity: 0;
@@ -1025,6 +1053,14 @@
 [data-tooltip]:hover::after {
   opacity: 1;
   visibility: visible;
+}
+
+[data-theme="light"] [data-tooltip]::after {
+  background: rgba(196, 168, 224, 0.35) !important;
+  color: #000000 !important;
+  border-color: rgba(147, 51, 234, 0.28);
+  box-shadow: 0 6px 20px rgba(147, 51, 234, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
 }
 
 /* ── Drawer ── */

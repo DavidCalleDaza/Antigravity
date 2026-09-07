@@ -500,9 +500,9 @@ export default function Profile() {
                   readOnly
                   disabled
                   style={{
-                    backgroundColor: 'var(--bg-secondary, #f8fafc)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
                     cursor: 'not-allowed',
-                    color: 'var(--text-secondary, #64748b)',
+                    color: 'var(--text-secondary, #a098b0)',
                   }}
                 />
               </div>

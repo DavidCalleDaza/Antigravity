@@ -8,11 +8,11 @@
   padding: var(--space-12) var(--space-8);
   margin-bottom: var(--space-10);
   position: relative;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-radius: var(--radius-3xl);
-  border: 2px solid #000000;
+  border: var(--glass-border);
   box-shadow: var(--shadow-xl);
   overflow: hidden;
   animation: fadeIn 0.8s ease-out;
@@ -35,7 +35,7 @@
   font-size: var(--text-2xl);
   font-weight: var(--font-light);
   line-height: var(--leading-relaxed);
-  color: #000000;
+  color: var(--text-primary);
   max-width: 720px;
   margin: 0 auto var(--space-6);
   position: relative;
@@ -54,10 +54,23 @@
 
 .wall-subtitle {
   font-size: var(--text-sm);
-  color: #000000;
-  opacity: 0.6;
+  color: var(--text-secondary);
+  opacity: 0.8;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
+}
+
+[data-theme="light"] .wall-header {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .wall-quote {
+  color: #121212;
+}
+
+[data-theme="light"] .wall-subtitle {
+  color: #6c757d;
 }
 
 /* Impact Counters */

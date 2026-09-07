@@ -94,6 +94,11 @@ section { position: relative; z-index: 1; }
   border-bottom-color: var(--line);
 }
 
+[data-theme="light"] .landing-nav {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom-color: var(--line);
+}
+
 .landing-logo {
   display: flex;
   align-items: center;

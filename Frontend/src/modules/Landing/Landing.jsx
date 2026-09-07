@@ -496,37 +496,7 @@ export default function Landing() {
             </div>
           </section>
 
-          <section className="section team-section" id="team">
-            <div className="container">
-              <div className="team-header">
-                <div className="section-label reveal">Colaboradores</div>
-                <h2 className="reveal reveal-delay-1">El equipo detrás<br/><em>de DonApp</em></h2>
-              </div>
-              <div className="team-grid">
-                <div className="team-card reveal reveal-delay-1">
-                  <div className="team-photo">
-                    <img src="/assets/foto_david.png" alt="David" loading="lazy" />
-                  </div>
-                  <h3 className="team-name">David</h3>
-                  <p className="team-role">Fullstack Developer &amp; Senior QA Automation</p>
-                </div>
-                <div className="team-card reveal reveal-delay-2">
-                  <div className="team-photo">
-                    <img src="/assets/foto_rodrigo.png" alt="Rodrigo" loading="lazy" />
-                  </div>
-                  <h3 className="team-name">Rodrigo</h3>
-                  <p className="team-role">Fullstack Developer — Estadísticas &amp; Facturación</p>
-                </div>
-                <div className="team-card reveal reveal-delay-3">
-                  <div className="team-photo">
-                    <img src="/assets/foto_pamela.png" alt="Pamela" loading="lazy" />
-                  </div>
-                  <h3 className="team-name">Pamela</h3>
-                  <p className="team-role">Scrum Master</p>
-                </div>
-              </div>
-            </div>
-          </section>
+
 
           <section className="section cta-section" id="cta">
             <div className="container">

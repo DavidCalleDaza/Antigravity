@@ -973,6 +973,7 @@ body.page-scrolled .app:has(.profile-bg-photo) .sidebar {
 }
 
 /* ── Glassmorphism Transparency for all Profile Cards ── */
+.profile-upgrade-card,
 .profile-hero-card,
 .profile-section-card,
 .sns-vault-hero,
@@ -988,6 +989,7 @@ body.page-scrolled .app:has(.profile-bg-photo) .sidebar {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
 }
 
+[data-theme="light"] .profile-upgrade-card,
 [data-theme="light"] .profile-hero-card,
 [data-theme="light"] .profile-section-card,
 [data-theme="light"] .sns-vault-hero,
@@ -998,6 +1000,17 @@ body.page-scrolled .app:has(.profile-bg-photo) .sidebar {
   background: rgba(255, 255, 255, 0.65) !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+}
+
+.profile-upgrade-card {
+  padding: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
 }
 
 /* ── Transparent Glassmorphism Social Brand Icon Badges ── */

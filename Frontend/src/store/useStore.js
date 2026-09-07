@@ -57,6 +57,12 @@ export const useStore = create(
         document.body.classList.remove('logged-in');
       },
 
+      activeViewMode: 'seller', // 'seller' | 'client'
+      setActiveViewMode: (mode) => set({ activeViewMode: mode }),
+      toggleActiveViewMode: () => set((state) => ({
+        activeViewMode: state.activeViewMode === 'seller' ? 'client' : 'seller',
+      })),
+
       notifications: [],
       unreadCount: 0,
       setNotifications: (list) => set({ notifications: list, unreadCount: list.filter(n => !n.is_read).length }),
@@ -77,6 +83,7 @@ export const useStore = create(
         sidebarCollapsed: state.sidebarCollapsed,
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,
+        activeViewMode: state.activeViewMode,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && state.theme) {

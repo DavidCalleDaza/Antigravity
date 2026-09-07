@@ -4,10 +4,10 @@ import SellerAgendaView from './components/SellerAgendaView';
 import ClientAgendaView from './components/ClientAgendaView';
 
 export default function Agenda() {
-  const { currentUser } = useStore();
+  const { currentUser, activeViewMode } = useStore();
   const userRole = currentUser?.role;
-  const isSeller = userRole === 'admin' || userRole === 'seller';
+  const isSellerMode = userRole === 'admin' || (userRole === 'seller' && activeViewMode === 'seller');
 
-  if (isSeller) return <SellerAgendaView />;
+  if (isSellerMode) return <SellerAgendaView />;
   return <ClientAgendaView />;
 }

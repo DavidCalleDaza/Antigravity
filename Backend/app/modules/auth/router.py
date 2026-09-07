@@ -21,6 +21,7 @@ from app.modules.auth.schemas import (
     PasswordRecoveryRequest,
     PasswordRecoveryReset,
     TokenResponse,
+    UpgradeToSellerRequest,
     UserCreate,
     UserLogin,
     UserResponse,
@@ -785,5 +786,34 @@ async def approve_email_change(
         """,
         status_code=status.HTTP_200_OK,
     )
+
+
+@router.post(
+    "/upgrade-to-seller",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar cuenta de cliente a vendedor",
+    description="Permite que un usuario autenticado con rol de cliente active su perfil de vendedor completando sus datos comerciales.",
+)
+async def upgrade_to_seller(
+    body: UpgradeToSellerRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """
+    Promote current user to seller role and update commercial details.
+    """
+    current_user.role = "seller"
+    if body.business_name and body.business_name.strip():
+        current_user.full_name = body.business_name.strip()
+    if body.phone and body.phone.strip():
+        current_user.phone = body.phone.strip()
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    logger.info("Usuario %s (%s) ascendido a VENDEDOR exitosamente.", current_user.email, current_user.full_name)
+    return current_user
+
 
 

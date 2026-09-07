@@ -255,6 +255,7 @@ export const authClient = {
   resetPassword: (email, code, newPassword) =>
     apiClient.post('/auth/password-recovery/reset', { email, code, new_password: newPassword }),
   requestEmailChange: (data) => apiClient.post('/auth/request-email-change', data),
+  upgradeToSeller: (data) => apiClient.post('/auth/upgrade-to-seller', data),
 };
 
 export const searchClient = {

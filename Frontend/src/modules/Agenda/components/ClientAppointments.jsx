@@ -29,7 +29,7 @@ export default function ClientAppointments() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await agendaClient.listAppointments();
+      const data = await agendaClient.listAppointments({ as_client: 'true' });
       setAppointments(data);
     } catch (e) {
       toast.error('Error al cargar mis citas');

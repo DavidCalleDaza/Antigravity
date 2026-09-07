@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Search, Bell, Moon, Sun, Package, Wrench, Store, User, Loader2, X } from 'lucide-react';
+import { Menu, Search, Bell, Moon, Sun, Package, Wrench, Store, User, Loader2, X, ShoppingBag, ArrowLeftRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { apiClient, searchClient } from '../../utils/apiClient';
 import { connectNotifications, disconnectNotifications } from '../../utils/notificationsSocket';
 import Helpers from '../../utils/helpers';
 
 export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) {
-  const { theme, toggleTheme, isAuthenticated, notifications, unreadCount, setNotifications, markAsRead } = useStore();
+  const { theme, toggleTheme, isAuthenticated, currentUser, activeViewMode, toggleActiveViewMode, notifications, unreadCount, setNotifications, markAsRead } = useStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
@@ -180,6 +180,44 @@ export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) 
       </div>
 
       <div className="navbar-right">
+        {/* ── Switch de Modo Dual (Solo para Vendedores con perfil comercial activo) ── */}
+        {currentUser?.role === 'seller' && (
+          <button
+            type="button"
+            onClick={toggleActiveViewMode}
+            className="btn btn-sm"
+            style={{
+              height: '36px',
+              padding: '0 12px',
+              borderRadius: '20px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              backgroundColor: activeViewMode === 'seller' ? 'rgba(212, 175, 55, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+              color: activeViewMode === 'seller' ? 'var(--gold, #d4af37)' : '#60a5fa',
+              border: `1px solid ${activeViewMode === 'seller' ? 'rgba(212, 175, 55, 0.35)' : 'rgba(59, 130, 246, 0.35)'}`,
+              transition: 'all 0.2s ease',
+            }}
+            title={activeViewMode === 'seller' ? 'Cambiar a Modo Cliente (Ver catálogo y mis citas)' : 'Cambiar a Modo Vendedor (Gestionar mi negocio)'}
+          >
+            {activeViewMode === 'seller' ? (
+              <>
+                <Store width="14" height="14" />
+                <span>Modo Vendedor</span>
+              </>
+            ) : (
+              <>
+                <User width="14" height="14" />
+                <span>Modo Cliente</span>
+              </>
+            )}
+            <ArrowLeftRight width="12" height="12" style={{ opacity: 0.6, marginLeft: '2px' }} />
+          </button>
+        )}
+
         {/* ── Buscador Global Inteligente ── */}
         <div className="navbar-search" ref={searchContainerRef} style={{ position: 'relative', width: '300px' }}>
           <span className="search-icon" style={{ pointerEvents: 'none', display: 'flex', alignItems: 'center', zIndex: 1 }}>

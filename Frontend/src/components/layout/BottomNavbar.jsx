@@ -20,16 +20,17 @@ const SECONDARY_NAV_ITEMS = [
 ];
 
 export default function BottomNavbar() {
-  const { currentUser } = useStore();
+  const { currentUser, activeViewMode } = useStore();
   const location = useLocation();
   const [isPopoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef(null);
   const moreButtonRef = useRef(null);
 
   const userRole = currentUser?.role;
+  const effectiveRole = userRole === SELLER && activeViewMode === 'client' ? CLIENT : userRole;
 
-  const visibleMainItems = MAIN_NAV_ITEMS.filter(item => item.allowedRoles.includes(userRole));
-  const visibleSecondaryItems = SECONDARY_NAV_ITEMS.filter(item => item.allowedRoles.includes(userRole));
+  const visibleMainItems = MAIN_NAV_ITEMS.filter(item => item.allowedRoles.includes(effectiveRole));
+  const visibleSecondaryItems = SECONDARY_NAV_ITEMS.filter(item => item.allowedRoles.includes(effectiveRole));
   const hasSecondaryItems = visibleSecondaryItems.length > 0;
 
   const isActive = (path) => location.pathname.startsWith(path);

@@ -52,7 +52,7 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar({ isOpen, closeMobile }) {
-  const { currentUser, sidebarCollapsed, logout, toggleSidebar } = useStore();
+  const { currentUser, sidebarCollapsed, logout, toggleSidebar, activeViewMode } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -74,11 +74,15 @@ export default function Sidebar({ isOpen, closeMobile }) {
     navigate('/login');
   };
 
+  const effectiveRole = userRole === SELLER && activeViewMode === 'client'
+    ? CLIENT
+    : userRole;
+
   const visibleSections = currentUser?.needsOnboarding
     ? []
     : NAV_ITEMS.map((section) => ({
         ...section,
-        items: section.items.filter((item) => item.allowedRoles.includes(userRole)),
+        items: section.items.filter((item) => item.allowedRoles.includes(effectiveRole)),
       })).filter((section) => section.items.length > 0);
 
   return (

@@ -340,3 +340,37 @@ class EmailChangeRequest(BaseModel):
         ),
     ] = None
 
+
+class UpgradeToSellerRequest(BaseModel):
+    """Schema for upgrading a client account to a seller account."""
+
+    business_name: Annotated[
+        str,
+        Field(
+            ...,
+            description="Nombre comercial o de negocio del vendedor.",
+            min_length=2,
+            max_length=150,
+            examples=["Barbería Clásica DonApp"],
+        ),
+    ]
+    category: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Categoría principal de actividad.",
+            max_length=100,
+            examples=["Servicios de Belleza / Barbería"],
+        ),
+    ] = None
+    phone: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description="Teléfono de contacto comercial.",
+            max_length=30,
+            examples=["+57 300 123 4567"],
+        ),
+    ] = None
+
+

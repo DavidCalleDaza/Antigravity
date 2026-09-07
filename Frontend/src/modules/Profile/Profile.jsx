@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation, Store, Lock } from 'lucide-react';
+import { Camera, User, Mail, Shield, AlertTriangle, Share2, MessageCircle, MapPin, Map, Home, Compass, Navigation, Store, Lock, Sparkles, Briefcase, Phone } from 'lucide-react';
 import { APP_CONFIG } from '../../config/appConfig';
 import { useStore } from '../../store/useStore';
 import { authClient, locationClient } from '../../utils/apiClient';
@@ -65,6 +65,39 @@ export default function Profile() {
   const [isEmailChangeModalOpen, setIsEmailChangeModalOpen] = useState(false);
   const [emailChangeData, setEmailChangeData] = useState({ new_email: '', reason: '' });
   const [sendingEmailChange, setSendingEmailChange] = useState(false);
+
+  // Modal de activación / upgrade a vendedor
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeData, setUpgradeData] = useState({
+    business_name: '',
+    category: '',
+    phone: '',
+  });
+  const [upgradingSeller, setUpgradingSeller] = useState(false);
+
+  const handleUpgradeToSeller = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!upgradeData.business_name.trim()) {
+      toast.error('Por favor ingresa el nombre de tu negocio o actividad comercial');
+      return;
+    }
+    setUpgradingSeller(true);
+    try {
+      const updatedUser = await authClient.upgradeToSeller(upgradeData);
+      setCurrentUser({
+        ...currentUser,
+        role: updatedUser.role || 'seller',
+        name: updatedUser.full_name || currentUser.name,
+      });
+      useStore.getState().setActiveViewMode('seller');
+      setIsUpgradeModalOpen(false);
+      toast.success('¡Felicidades!', 'Tu cuenta ha sido promovida a Vendedor con éxito.');
+    } catch (err) {
+      toast.error('Error al activar perfil de vendedor', err.message || 'Inténtalo de nuevo');
+    } finally {
+      setUpgradingSeller(false);
+    }
+  };
 
   const processAvatarFileRef = useRef(null);
 
@@ -405,6 +438,46 @@ export default function Profile() {
       <div className="profile-layout">
         {activeTab === 'personal' ? (
           <>
+            {/* ── Banner Upgrade a Vendedor (Solo para Clientes) ── */}
+            {userRole === CLIENT && (
+              <div className="profile-upgrade-card">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: '260px' }}>
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '14px',
+                      backgroundColor: 'rgba(212, 175, 55, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--gold, #d4af37)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Store width="24" height="24" />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      ¿Ofreces productos o servicios? Conviértete en Vendedor
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.825rem', color: 'var(--text-secondary)' }}>
+                      Publica tu catálogo, recibe citas y pedidos, emite facturas y gestiona tu negocio en DonApp.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  style={{ padding: '8px 18px', fontWeight: 700, borderRadius: '10px', fontSize: '0.85rem' }}
+                >
+                  <Sparkles width="15" height="15" />
+                  Activar Perfil de Vendedor
+                </button>
+              </div>
+            )}
+
             {/* ── Hero Section ── */}
         <div className="profile-hero-card">
           <div className="profile-avatar-wrapper" onClick={handleAvatarClick}>
@@ -827,6 +900,103 @@ export default function Profile() {
               disabled={sendingEmailChange}
               style={{ width: '100%', resize: 'vertical', minHeight: '80px', boxSizing: 'border-box' }}
             />
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Modal de Activación / Upgrade a Vendedor ── */}
+      <Modal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => !upgradingSeller && setIsUpgradeModalOpen(false)}
+        title="Activar Perfil de Vendedor"
+        size="md"
+        actions={[
+          {
+            label: 'Cancelar',
+            className: 'btn-ghost',
+            onClick: () => setIsUpgradeModalOpen(false),
+            disabled: upgradingSeller,
+          },
+          {
+            label: upgradingSeller ? 'Activando...' : 'Activar Cuenta Comercial',
+            className: 'btn-primary',
+            onClick: handleUpgradeToSeller,
+            disabled: upgradingSeller,
+          },
+        ]}
+      >
+        <form onSubmit={handleUpgradeToSeller} style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+          <div style={{
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            border: '1px solid rgba(212, 175, 55, 0.25)',
+            borderRadius: '10px',
+            padding: '14px 16px',
+            fontSize: '0.85rem',
+            color: 'var(--text-primary)',
+            lineHeight: '1.5',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}>
+            🎉 <strong>¡Estás a un paso de comenzar a vender!</strong> Al activar tu perfil comercial se desbloquearán las herramientas de gestión de productos, servicios, facturación electrónica y agenda de clientes.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <label htmlFor="business_name_input" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              Nombre de tu Negocio o Marca Comercial <span style={{ color: 'var(--danger, #ef4444)' }}>*</span>
+            </label>
+            <div className="input-with-icon" style={{ width: '100%' }}>
+              <Store width="18" height="18" />
+              <input
+                type="text"
+                id="business_name_input"
+                className="form-input"
+                placeholder="Ej: Barbería DonApp, Estética Bella, etc."
+                value={upgradeData.business_name}
+                onChange={(e) => setUpgradeData((prev) => ({ ...prev, business_name: e.target.value }))}
+                required
+                disabled={upgradingSeller}
+                autoFocus
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <label htmlFor="category_input" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              Categoría o Especialidad Comercial
+            </label>
+            <div className="input-with-icon" style={{ width: '100%' }}>
+              <Briefcase width="18" height="18" />
+              <input
+                type="text"
+                id="category_input"
+                className="form-input"
+                placeholder="Ej: Belleza, Barbería, Gastronomía, Salud, Tecnología..."
+                value={upgradeData.category}
+                onChange={(e) => setUpgradeData((prev) => ({ ...prev, category: e.target.value }))}
+                disabled={upgradingSeller}
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <label htmlFor="phone_input" style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              Teléfono de Contacto Comercial
+            </label>
+            <div className="input-with-icon" style={{ width: '100%' }}>
+              <Phone width="18" height="18" />
+              <input
+                type="tel"
+                id="phone_input"
+                className="form-input"
+                placeholder="+57 300 123 4567"
+                value={upgradeData.phone}
+                onChange={(e) => setUpgradeData((prev) => ({ ...prev, phone: e.target.value }))}
+                disabled={upgradingSeller}
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
           </div>
         </form>
       </Modal>

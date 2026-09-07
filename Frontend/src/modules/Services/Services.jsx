@@ -19,11 +19,12 @@ import { filterServices } from './utils/serviceHelpers';
 const { ADMIN, SELLER, CLIENT } = APP_CONFIG.ROLES;
 
 export default function Services() {
-  const { currentUser } = useStore();
+  const { currentUser, activeViewMode } = useStore();
   const userRole = currentUser?.role;
-  const canManage = userRole === ADMIN || userRole === SELLER;
-  const isAdmin = userRole === ADMIN;
-  const isClient = userRole === 'client';
+  const effectiveRole = userRole === SELLER && activeViewMode === 'client' ? CLIENT : userRole;
+  const canManage = effectiveRole === ADMIN || effectiveRole === SELLER;
+  const isAdmin = effectiveRole === ADMIN;
+  const isClient = effectiveRole === CLIENT;
   const navigate = useNavigate();
 
   const [view, setView] = useState('table');
@@ -137,7 +138,7 @@ export default function Services() {
     } else {
       agendaClient.listStoreLocations().then(setStoreLocations).catch(() => {});
     }
-  }, []);
+  }, [isClient]);
 
   useEffect(() => {
     if (isClient) loadServices();

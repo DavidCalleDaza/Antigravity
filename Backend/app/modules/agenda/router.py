@@ -184,13 +184,15 @@ async def list_appointments(
     status_filter: str | None = Query(None, alias="status"),
     date_from: str | None = Query(None, description="YYYY-MM-DD"),
     date_to: str | None = Query(None, description="YYYY-MM-DD"),
+    as_client: bool = Query(False, description="Filtrar citas en calidad de cliente"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     d_from = datetime.strptime(date_from, "%Y-%m-%d").date() if date_from else None
     d_to = datetime.strptime(date_to, "%Y-%m-%d").date() if date_to else None
+    effective_role = "client" if (current_user.role == "client" or as_client) else current_user.role
     appointments = await crud.get_appointments(
-        db, current_user.id, current_user.role, status_filter, d_from, d_to
+        db, current_user.id, effective_role, status_filter, d_from, d_to
     )
     return [_build_appointment_response(apt) for apt in appointments]
 
@@ -201,8 +203,8 @@ async def create_appointment(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if current_user.role != "client":
-        raise HTTPException(status_code=403, detail="Solo clientes pueden agendar citas")
+    if current_user.id == data.seller_id:
+        raise HTTPException(status_code=400, detail="No puedes agendar una cita contigo mismo")
 
     seller = await crud.get_seller_by_id(db, data.seller_id)
     if not seller:

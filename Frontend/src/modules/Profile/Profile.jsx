@@ -25,9 +25,7 @@ export default function Profile() {
   const toast = useToast();
   const userRole = currentUser?.role;
   const canManageIntegrations = userRole === SELLER || userRole === ADMIN;
-  const roleSelectOptions = currentUser?.needsOnboarding
-    ? ROLE_OPTIONS.filter((opt) => opt.value !== ADMIN)
-    : ROLE_OPTIONS;
+  const roleSelectOptions = ROLE_OPTIONS;
 
   // Initialise tab from ?tab= query param (e.g. /profile?tab=social from ShareModal link)
   const initialTab = (() => {
@@ -588,7 +586,13 @@ export default function Profile() {
               <label htmlFor="role">Rol en la Plataforma</label>
               <div className="input-with-icon">
                 <Shield width="18" height="18" />
-                <select className="form-select" id="role" value={formData.role} onChange={handleChange} disabled={!currentUser?.needsOnboarding}>
+                <select
+                  className="form-select"
+                  id="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  disabled={!currentUser?.needsOnboarding}
+                >
                   {roleSelectOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
@@ -596,7 +600,9 @@ export default function Profile() {
               </div>
               <p className="text-xs text-tertiary mt-1">
                 {currentUser?.needsOnboarding
-                  ? 'Selecciona el tipo de cuenta que mejor describe tu uso de DonApp.'
+                  ? 'Selecciona el tipo de cuenta que mejor describe tu uso de DonApp (Vendedor, Cliente o Administrador).'
+                  : currentUser?.role === ADMIN
+                  ? 'Cuenta con rol y privilegios de Administrador del sistema.'
                   : 'El rol es asignado por administración y no puede ser cambiado por el usuario.'}
               </p>
             </div>

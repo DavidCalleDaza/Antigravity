@@ -261,3 +261,50 @@ async def test_admin_bulk_delete_users(client: AsyncClient, db_session: AsyncSes
     )
     assert bulk_perm_res.status_code == 200
     assert bulk_perm_res.json()["deleted_count"] == 2
+
+
+async def test_admin_registration_and_onboarding(client: AsyncClient, db_session: AsyncSession):
+    email = f"new_admin_{uuid.uuid4().hex[:6]}@donapp.com"
+    reg_res = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "full_name": "New Admin Registered",
+            "password": "SecurePassword123!",
+            "role": "admin",
+        },
+    )
+    assert reg_res.status_code == 201
+    user_data = reg_res.json()
+    assert user_data["role"] == "admin"
+    assert user_data["is_staff"] is True
+
+    # Retrieve created user from DB to activate
+    user = await db_session.get(User, uuid.UUID(user_data["id"]))
+    user.is_approved = True
+    user.needs_onboarding = True
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    # Login / Token
+    headers = get_auth_headers(user)
+
+    # Perform onboarding profile update (PATCH /api/v1/auth/me with role='admin')
+    patch_res = await client.patch(
+        "/api/v1/auth/me",
+        json={
+            "full_name": "New Admin Registered Updated",
+            "role": "admin",
+            "location": {
+                "country": "Colombia",
+                "city": "Medellín",
+            },
+        },
+        headers=headers,
+    )
+    assert patch_res.status_code == 200
+    updated_body = patch_res.json()
+    assert updated_body["role"] == "admin"
+    assert updated_body["full_name"] == "New Admin Registered Updated"
+    assert updated_body["is_staff"] is True
+

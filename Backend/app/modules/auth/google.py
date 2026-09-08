@@ -274,10 +274,12 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db), 
         code_digits = f"{secrets.randbelow(900000) + 100000}"
         activation_code = f"DON-{code_digits}"
 
+        is_admin = requested_role == "admin"
         user = User(
-            email=email,
-            full_name=full_name,
+            email=email.strip().lower(),
+            full_name=full_name.strip(),
             role=requested_role,
+            is_staff=is_admin,
             avatar_url=avatar_url,
             hashed_password=None,
             needs_onboarding=True,

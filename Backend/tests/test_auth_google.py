@@ -175,3 +175,54 @@ async def test_google_auth_non_escalation_role(client: AsyncClient, db_session: 
     assert identity is not None
     assert identity.provider == "google"
     assert identity.provider_id == "google123"
+
+
+async def test_google_login_onboarding_can_choose_admin_role(client: AsyncClient, db_session: AsyncSession):
+    """
+    Test that a new user created via Google login with default 'client' role
+    can select 'admin' role during onboarding.
+    """
+    from app.core.security import create_access_token
+
+    new_user = User(
+        id=uuid.uuid4(),
+        email=f"google_onboarding_{uuid.uuid4().hex[:6]}@example.com",
+        full_name="Google Onboarding User",
+        role="client",
+        is_staff=False,
+        is_active=True,
+        is_approved=True,
+        needs_onboarding=True,
+        hashed_password=None,
+    )
+    db_session.add(new_user)
+    await db_session.commit()
+    await db_session.refresh(new_user)
+
+    token = create_access_token(data={"sub": str(new_user.id), "email": new_user.email, "role": new_user.role})
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Complete onboarding choosing 'admin' role with password set
+    res = await client.patch(
+        "/api/v1/auth/me",
+        json={
+            "full_name": "Google Onboarding Admin",
+            "role": "admin",
+            "password": "SecurePassword123!",
+            "location": {
+                "country": "Colombia",
+                "city": "Bogotá",
+            },
+        },
+        headers=headers,
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["role"] == "admin"
+    assert data["is_staff"] is True
+
+    await db_session.refresh(new_user)
+    assert new_user.role == "admin"
+    assert new_user.is_staff is True
+    assert new_user.needs_onboarding is False
+

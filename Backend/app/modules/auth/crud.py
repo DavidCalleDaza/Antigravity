@@ -67,11 +67,14 @@ async def create_user(
     Returns:
         The newly created ``User`` instance with all fields populated.
     """
+    role_val = user_in.role.value if hasattr(user_in.role, "value") else str(user_in.role)
+    is_admin = role_val == "admin"
     db_user = User(
-        email=user_in.email,
+        email=user_in.email.strip().lower(),
         hashed_password=hash_password(user_in.password),
-        full_name=user_in.full_name,
-        role=user_in.role.value,
+        full_name=user_in.full_name.strip(),
+        role=role_val,
+        is_staff=is_admin,
         is_approved=is_approved,
         activation_code=activation_code,
     )
@@ -98,9 +101,11 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
             raise BadRequestException(
                 detail="No puedes cambiar tu rol una vez completado el registro."
             )
-        if user_in.role not in (UserRole.CLIENT, UserRole.SELLER):
+        if user_in.role not in (UserRole.CLIENT, UserRole.SELLER, UserRole.ADMIN):
             raise BadRequestException(detail="Rol no permitido.")
         user.role = user_in.role.value
+        if user.role == UserRole.ADMIN.value:
+            user.is_staff = True
 
     update_data = user_in.model_dump(exclude_unset=True, exclude={"location", "password", "role"})
     for field, value in update_data.items():
@@ -142,6 +147,11 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
         try:
             from app.core.config import settings
             from app.core.email import send_email
+            role_label = (
+                "Administrador"
+                if user.role == "admin"
+                else ("Vendedor" if user.role == "seller" else "Cliente")
+            )
             send_email(
                 to=user.email,
                 subject="¡Bienvenido a DonApp!",
@@ -149,7 +159,7 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
                 context={
                     "full_name": user.full_name,
                     "company_name": settings.SMTP_FROM_NAME or "DonApp",
-                    "role_label": "Vendedor" if user.role == "seller" else "Cliente",
+                    "role_label": role_label,
                 },
             )
         except Exception as e:

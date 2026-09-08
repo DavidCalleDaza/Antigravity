@@ -45,6 +45,7 @@ const NAV_ITEMS = [
   {
     section: 'Administración',
     items: [
+      { id: 'users', label: 'Usuarios y Roles', icon: 'UserCog', page: '/admin/users', allowedRoles: [ADMIN] },
       { id: 'tokens', label: 'Tokens de IA', icon: 'Sparkles', page: '/admin/tokens', allowedRoles: [ADMIN] },
       { id: 'social', label: 'Redes Sociales', icon: 'Share2', page: '/admin/social', allowedRoles: [ADMIN] },
     ],

@@ -20,9 +20,10 @@ import Statistics from './modules/Statistics/Statistics';
 import Market from './modules/Market/Market';
 import Profile from './modules/Profile/Profile';
 import SocialAccountsAdmin from './modules/Admin/SocialAccountsAdmin';
+import TokensAdmin from './modules/Admin/TokensAdmin';
+import UsersAdmin from './modules/Admin/UsersAdmin';
 import VerifyPublic from './Pages/VerifyPublic';
 import ConfirmMention from './Pages/ConfirmMention';
-import TokensAdmin from './modules/Admin/TokensAdmin';
 
 import CustomCursor from './components/common/CustomCursor';
 import Customers from './modules/Billing/Customers';
@@ -65,6 +66,7 @@ function App() {
 
         <Route element={<ProtectedRoute isStaffRequired={true} />}>
           <Route element={<MainLayout />}>
+            <Route path="/admin/users" element={<UsersAdmin />} />
             <Route path="/admin/social" element={<SocialAccountsAdmin />} />
             <Route path="/admin/tokens" element={<TokensAdmin />} />
           </Route>

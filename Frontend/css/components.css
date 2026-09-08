@@ -129,6 +129,38 @@
   transform: translateY(-1px);
 }
 
+/* Warning - Glassmorphism Transparent */
+.btn-warning {
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.12) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-theme="light"] .btn-warning {
+  background: rgba(217, 119, 6, 0.14) !important;
+  color: #b45309 !important;
+  border-color: rgba(217, 119, 6, 0.45) !important;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.12) !important;
+}
+
+.btn-warning:hover {
+  background: rgba(245, 158, 11, 0.9) !important;
+  color: #ffffff !important;
+  border-color: rgba(245, 158, 11, 1) !important;
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .btn-warning:hover {
+  background: #d97706 !important;
+  color: #ffffff !important;
+  border-color: #d97706 !important;
+}
+
 /* Sizes */
 .btn-sm { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); }
 .btn-lg { padding: var(--space-4) var(--space-8); font-size: var(--text-base); }
@@ -725,16 +757,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-4);
+  flex-wrap: wrap;
+  gap: 10px;
   padding: var(--space-4) var(--space-6);
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .modal-footer .btn,
 .modal-footer button {
-  min-width: 125px !important;
-  height: 42px !important;
-  padding: 0 20px !important;
+  min-width: 100px;
+  height: 38px !important;
+  padding: 0 16px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -744,8 +777,13 @@
   text-transform: none !important;
   letter-spacing: 0 !important;
   box-sizing: border-box !important;
-  border-radius: 4px !important;
+  border-radius: 8px !important;
   flex: 0 0 auto;
+}
+
+.modal-footer .btn-ghost {
+  min-width: auto;
+  padding: 0 14px !important;
 }
 
 .modal-lg { max-width: 720px; }

@@ -348,6 +348,27 @@ export const adminSocialClient = {
   deleteAccount: (userId, platform) => apiClient.delete(`/admin/social/accounts/${userId}/${platform}`),
 };
 
+export const adminUsersClient = {
+  getStats: () => apiClient.get('/admin/users/stats'),
+  listUsers: (params = {}) => {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query.append(key, value);
+      }
+    });
+    const queryString = query.toString();
+    return apiClient.get(`/admin/users${queryString ? `?${queryString}` : ''}`);
+  },
+  getUser: (id) => apiClient.get(`/admin/users/${id}`),
+  createUser: (data) => apiClient.post('/admin/users', data),
+  updateUser: (id, data) => apiClient.patch(`/admin/users/${id}`, data),
+  deleteUser: (id, permanent = false) =>
+    apiClient.delete(`/admin/users/${id}?permanent=${permanent}`),
+  bulkDeleteUsers: (userIds, permanent = false) =>
+    apiClient.post('/admin/users/bulk-delete', { user_ids: userIds, permanent }),
+};
+
 export const billingClient = {
   // Customers
   listCustomers: (params = {}) => {

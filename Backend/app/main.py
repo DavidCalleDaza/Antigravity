@@ -47,6 +47,41 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """
     # --- Startup ---
     _app.state.redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
+
+    # Seed default country settings if table is empty
+    try:
+        from app.db.session import async_session_factory
+        from app.modules.country_settings.models import CountrySetting
+        from sqlalchemy import select
+        async with async_session_factory() as session:
+            default_countries = [
+                ("CO", "Colombia", 19.00, "COP", "$"),
+                ("EC", "Ecuador", 15.00, "USD", "$"),
+                ("PE", "Perú", 18.00, "PEN", "S/."),
+                ("PA", "Panamá", 7.00, "PAB", "B/."),
+                ("US", "Estados Unidos", 0.00, "USD", "$"),
+                ("MX", "México", 16.00, "MXN", "$"),
+                ("ES", "España", 21.00, "EUR", "€"),
+                ("AR", "Argentina", 21.00, "ARS", "$"),
+                ("CL", "Chile", 19.00, "CLP", "$"),
+            ]
+            for c_code, c_name, c_tax, c_curr, c_sym in default_countries:
+                stmt = select(CountrySetting).where(CountrySetting.country_code == c_code)
+                res = await session.execute(stmt)
+                if not res.scalar_one_or_none():
+                    session.add(CountrySetting(
+                        country_code=c_code,
+                        country_name=c_name,
+                        default_tax_rate=c_tax,
+                        currency_code=c_curr,
+                        currency_symbol=c_sym,
+                        is_active=True,
+                    ))
+            await session.commit()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Could not verify/seed country settings on startup: {e}")
+
     yield
     
     # --- Shutdown ---

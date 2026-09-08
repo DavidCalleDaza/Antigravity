@@ -117,9 +117,45 @@ async def update_user(db: AsyncSession, user: User, user_in: UserUpdateMe) -> Us
 
     if user_in.location is not None:
         from app.modules.locations.models import Location
+        from app.modules.country_settings.models import CountrySetting
         loc_data = user_in.location.model_dump(exclude_unset=True)
-        # Normalizar country_code vacío a None para evitar violación de Foreign Key
-        if "country_code" in loc_data and (loc_data["country_code"] is None or str(loc_data["country_code"]).strip() == ""):
+
+        raw_code = loc_data.get("country_code")
+        if raw_code and str(raw_code).strip():
+            clean_code = str(raw_code).strip().upper()
+            cs_stmt = select(CountrySetting).where(CountrySetting.country_code == clean_code)
+            cs_res = await db.execute(cs_stmt)
+            cs_obj = cs_res.scalar_one_or_none()
+            if cs_obj:
+                loc_data["country_code"] = clean_code
+            else:
+                default_countries = {
+                    "CO": ("Colombia", 19.0, "COP", "$"),
+                    "EC": ("Ecuador", 15.0, "USD", "$"),
+                    "PE": ("Perú", 18.0, "PEN", "S/."),
+                    "PA": ("Panamá", 7.0, "PAB", "B/."),
+                    "US": ("Estados Unidos", 0.0, "USD", "$"),
+                    "MX": ("México", 16.0, "MXN", "$"),
+                    "ES": ("España", 21.0, "EUR", "€"),
+                    "AR": ("Argentina", 21.0, "ARS", "$"),
+                    "CL": ("Chile", 19.0, "CLP", "$"),
+                }
+                if clean_code in default_countries:
+                    c_name, c_tax, c_curr, c_sym = default_countries[clean_code]
+                    new_cs = CountrySetting(
+                        country_code=clean_code,
+                        country_name=loc_data.get("country") or c_name,
+                        default_tax_rate=c_tax,
+                        currency_code=c_curr,
+                        currency_symbol=c_sym,
+                        is_active=True,
+                    )
+                    db.add(new_cs)
+                    await db.flush()
+                    loc_data["country_code"] = clean_code
+                else:
+                    loc_data["country_code"] = None
+        else:
             loc_data["country_code"] = None
 
         if user.location:

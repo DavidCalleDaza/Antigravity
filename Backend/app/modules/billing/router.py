@@ -39,6 +39,7 @@ from app.modules.billing.crud import (
     get_top_selling_products_and_services,
     get_customer_default_tax_rate,
     get_revenue_by_line,
+    get_payment_stats,
 )
 from app.modules.billing.schemas import (
     CustomerCreate,
@@ -57,7 +58,8 @@ from app.modules.billing.schemas import (
     TopSellingResponse,
     CountrySettingResponse,
     CategoryDistributionItem,
-    RevenueByLineItem
+    RevenueByLineItem,
+    PaymentStatItem,
 )
 from app.modules.billing.pdf_service import (
     generate_invoice_pdf,
@@ -529,6 +531,18 @@ async def get_revenue_by_line_endpoint(
     """Retrieve monthly revenue broken down by business line (products vs services)."""
     rows = await get_revenue_by_line(db, date_from=date_from, date_to=date_to)
     return [RevenueByLineItem(**row) for row in rows]
+
+
+@router.get("/payment-stats", response_model=list[PaymentStatItem])
+async def get_payment_stats_endpoint(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[PaymentStatItem]:
+    """Retrieve revenue distribution by payment method."""
+    rows = await get_payment_stats(db, date_from=date_from, date_to=date_to)
+    return [PaymentStatItem(**row) for row in rows]
     
 # --- Country Settings ---
 

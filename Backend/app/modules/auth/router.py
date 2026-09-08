@@ -44,7 +44,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 router.include_router(google_router)
 
-email_change_serializer = URLSafeTimedSerializer(settings.SECRET_KEY, salt="email-change-approval")
+from app.modules.auth.tokens import (
+    activation_forward_serializer,
+    email_change_serializer,
+    build_activation_approval_context,
+)
 
 
 @router.post(
@@ -59,6 +63,7 @@ email_change_serializer = URLSafeTimedSerializer(settings.SECRET_KEY, salt="emai
 )
 async def register_user(
     user_in: UserCreate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> UserResponse:
     """
@@ -69,7 +74,7 @@ async def register_user(
         2. If it does, raise a 409 Conflict.
         3. Generate a secure random activation code (e.g. DON-XXXXXX).
         4. Hash the password and persist user with is_approved=False and activation_code.
-        5. Send approval notification email to administrator with the generated code.
+        5. Send approval notification email to administrator with the generated code and 1-click forward link.
         6. Return the created user.
     """
     existing_user = await get_user_by_email(db, user_in.email)
@@ -100,17 +105,20 @@ async def register_user(
     created_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     try:
+        email_ctx = build_activation_approval_context(
+            user_id=new_user.id,
+            email=user_in.email,
+            full_name=user_in.full_name,
+            role_label=role_label,
+            activation_code=activation_code,
+            created_at=created_str,
+            request=request,
+        )
         send_email(
             to=settings.CONTACT_NOTIFICATION_EMAIL,
             subject=f"[DonApp] Nueva solicitud de registro — {user_in.full_name}",
             template_name="new_user_approval.html",
-            context={
-                "full_name": user_in.full_name,
-                "email": user_in.email,
-                "role_label": role_label,
-                "created_at": created_str,
-                "activation_code": activation_code,
-            },
+            context=email_ctx,
         )
         logger.info(
             "Notificación de nuevo usuario enviada a %s (User: %s, Code: %s)",
@@ -814,6 +822,220 @@ async def upgrade_to_seller(
 
     logger.info("Usuario %s (%s) ascendido a VENDEDOR exitosamente.", current_user.email, current_user.full_name)
     return current_user
+
+
+@router.get(
+    "/forward-activation-code",
+    response_class=HTMLResponse,
+    summary="Enviar código de activación al usuario (Admin)",
+    description="Valida el token de aprobación y envía el código de activación directamente al correo del usuario registrado.",
+)
+async def forward_activation_code_to_user(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+) -> HTMLResponse:
+    """
+    Called when administrator clicks the 'Enviar Código al Usuario por Correo' button in the notification email.
+    Validates the signed token, dispatches the user_activation_code.html email to the user,
+    and returns an interactive HTML confirmation page.
+    """
+    try:
+        data = activation_forward_serializer.loads(token, max_age=604800)  # 7 days
+    except SignatureExpired:
+        return HTMLResponse(
+            content="""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><title>Enlace Expirado — DonApp</title></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 40px 20px;">
+                <div style="max-width: 500px; margin: 40px auto; background: #ffffff; border: 1px solid #fee2e2; border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h2 style="color: #dc2626; margin-top: 0;">Enlace Expirado</h2>
+                    <p style="color: #475569;">Este enlace de envío de código ha expirado (validez de 7 días). Puedes gestionar al usuario directamente desde el panel de administración.</p>
+                </div>
+            </body>
+            </html>
+            """,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    except BadSignature:
+        return HTMLResponse(
+            content="""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><title>Enlace Inválido — DonApp</title></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 40px 20px;">
+                <div style="max-width: 500px; margin: 40px auto; background: #ffffff; border: 1px solid #fee2e2; border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h2 style="color: #dc2626; margin-top: 0;">Enlace Inválido</h2>
+                    <p style="color: #475569;">El token de autorización no es válido o ha sido alterado.</p>
+                </div>
+            </body>
+            </html>
+            """,
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user_id_str = data.get("user_id")
+    token_code = data.get("code")
+
+    if not user_id_str:
+        return HTMLResponse(
+            content="<p>Parámetros incompletos en el token de activación.</p>",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        user_uuid = uuid.UUID(user_id_str)
+    except ValueError:
+        return HTMLResponse(
+            content="<p>Identificador de usuario inválido.</p>",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = await get_user_by_id(db, user_uuid)
+    if not user:
+        return HTMLResponse(
+            content="""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><title>Usuario No Encontrado — DonApp</title></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 40px 20px;">
+                <div style="max-width: 500px; margin: 40px auto; background: #ffffff; border: 1px solid #fee2e2; border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h2 style="color: #dc2626; margin-top: 0;">Usuario No Encontrado</h2>
+                    <p style="color: #475569;">El usuario asociado a esta solicitud ya no existe en la base de datos.</p>
+                </div>
+            </body>
+            </html>
+            """,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    frontend_url = settings.FRONTEND_URL or "http://localhost:5173"
+    login_url = f"{frontend_url}/login"
+
+    # If the user already completed onboarding/activation
+    if user.is_approved and not user.activation_code:
+        return HTMLResponse(
+            content=f"""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"><title>Usuario Ya Activo — DonApp</title></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 40px 20px;">
+                <div style="max-width: 540px; margin: 40px auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 36px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    <h2 style="color: #0f172a; margin: 0 0 8px 0; font-size: 26px; font-weight: 800;">
+                        Don<span style="color: #2e7d32;">App</span>
+                    </h2>
+                    <div style="display: inline-block; background-color: #f1f5f9; color: #475569; font-weight: 700; padding: 4px 14px; border-radius: 20px; font-size: 13px; margin: 16px 0;">
+                        Cuenta Ya Activa
+                    </div>
+                    <p style="color: #334155; font-size: 16px; margin: 0 0 20px 0;">
+                        El usuario <strong>{user.full_name}</strong> ({user.email}) ya activó su cuenta y se encuentra activo en DonApp.
+                    </p>
+                    <a href="{login_url}" style="display: inline-block; background: #2563eb; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                        Ir a DonApp
+                    </a>
+                </div>
+            </body>
+            </html>
+            """,
+            status_code=status.HTTP_200_OK,
+        )
+
+    activation_code = user.activation_code or token_code or "DON-000000"
+
+    # Send activation email to the registered user
+    try:
+        send_email(
+            to=user.email,
+            subject="[DonApp] ¡Tu solicitud de registro ha sido aprobada! Código de activación",
+            template_name="user_activation_code.html",
+            context={
+                "full_name": user.full_name,
+                "email": user.email,
+                "activation_code": activation_code,
+                "login_url": login_url,
+            },
+        )
+        logger.info(
+            "Código de activación %s enviado exitosamente al usuario %s (%s)",
+            activation_code,
+            user.full_name,
+            user.email,
+        )
+    except Exception as exc:
+        logger.error("Error al enviar correo de activación al usuario %s: %s", user.email, exc)
+
+    role_labels = {
+        "admin": "Administrador",
+        "seller": "Comerciante / Negocio",
+        "client": "Cliente",
+    }
+    role_name = role_labels.get(str(user.role), str(user.role))
+    sent_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+    return HTMLResponse(
+        content=f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Código de Activación Enviado — DonApp</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 40px 20px; display: flex; align-items: center; justify-content: center; min-height: 80vh;">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 36px 32px; max-width: 520px; width: 100%; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06); text-align: center;">
+                
+                <h1 style="color: #0f172a; margin: 0 0 6px 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">
+                    Don<span style="color: #2e7d32;">App</span>
+                </h1>
+                <p style="color: #64748b; font-size: 13px; margin: 0 0 20px 0;">Control de Seguridad y Acceso</p>
+                
+                <div style="width: 60px; height: 60px; background-color: #f0fdf4; border: 2px solid #86efac; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 18px; color: #166534; font-size: 28px; line-height: 60px;">
+                    &#10003;
+                </div>
+
+                <h2 style="color: #0f172a; font-size: 20px; font-weight: 700; margin: 0 0 10px 0;">
+                    ¡Código de Activación Enviado!
+                </h2>
+                
+                <p style="color: #475569; font-size: 15px; margin: 0 0 24px 0; line-height: 1.5;">
+                    Se ha enviado exitosamente el correo de bienvenida con el código de activación a <strong style="color: #2563eb;">{user.email}</strong>.
+                </p>
+
+                <!-- Details Card -->
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 20px; margin-bottom: 24px; text-align: left; font-size: 14px;">
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+                        <span style="color: #64748b; font-weight: 600;">Usuario:</span>
+                        <span style="color: #0f172a; font-weight: 700;">{user.full_name}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+                        <span style="color: #64748b; font-weight: 600;">Correo:</span>
+                        <span style="color: #2563eb; font-weight: 600;">{user.email}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+                        <span style="color: #64748b; font-weight: 600;">Rol:</span>
+                        <span style="color: #0f172a; font-weight: 600;">{role_name}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+                        <span style="color: #64748b; font-weight: 600;">Código enviado:</span>
+                        <span style="color: #15803d; font-weight: 800; font-family: monospace; font-size: 15px;">{activation_code}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                        <span style="color: #64748b; font-weight: 600;">Fecha de envío:</span>
+                        <span style="color: #64748b;">{sent_time}</span>
+                    </div>
+                </div>
+
+                <a href="{login_url}" 
+                   style="display: inline-block; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);">
+                    Ir al Panel de DonApp
+                </a>
+            </div>
+        </body>
+        </html>
+        """,
+        status_code=status.HTTP_200_OK,
+    )
+
 
 
 

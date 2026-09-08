@@ -310,17 +310,22 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db), 
 
         try:
             from app.core.email import send_email
+            from app.modules.auth.tokens import build_activation_approval_context
+
+            email_ctx = build_activation_approval_context(
+                user_id=user.id,
+                email=email,
+                full_name=full_name,
+                role_label=f"{role_label} (Google)",
+                activation_code=activation_code,
+                created_at=created_str,
+                request=request,
+            )
             send_email(
                 to=settings.CONTACT_NOTIFICATION_EMAIL,
                 subject=f"[DonApp] Nueva solicitud de registro (Google) — {full_name}",
                 template_name="new_user_approval.html",
-                context={
-                    "full_name": full_name,
-                    "email": email,
-                    "role_label": f"{role_label} (Google)",
-                    "created_at": created_str,
-                    "activation_code": activation_code,
-                },
+                context=email_ctx,
             )
             logger.info("Notificación de nuevo usuario Google enviada a admin para %s (Code: %s)", email, activation_code)
         except Exception as e:

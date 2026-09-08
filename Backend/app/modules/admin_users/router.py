@@ -187,3 +187,60 @@ async def bulk_delete_users_by_admin(
         skipped_count=skipped_count,
         message=msg,
     )
+
+
+@router.post(
+    "/{user_id}/send-activation-code",
+    status_code=status.HTTP_200_OK,
+    summary="Enviar código de activación por correo (Admin)",
+    description="Permite al administrador enviar o reenviar el código de activación al correo de un usuario.",
+)
+async def send_activation_code_by_admin(
+    user_id: uuid.UUID,
+    current_staff: User = Depends(require_staff),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    from app.core.email import send_email
+    from app.core.config import settings
+
+    user = await crud.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
+    if user.is_approved and not user.activation_code:
+        return {"detail": f"El usuario {user.full_name} ya completó su activación y se encuentra activo."}
+
+    import secrets
+    activation_code = user.activation_code
+    if not activation_code:
+        code_digits = f"{secrets.randbelow(900000) + 100000}"
+        activation_code = f"DON-{code_digits}"
+        user.activation_code = activation_code
+        db.add(user)
+        await db.commit()
+
+    frontend_url = settings.FRONTEND_URL or "http://localhost:5173"
+    login_url = f"{frontend_url}/login"
+
+    try:
+        send_email(
+            to=user.email,
+            subject="[DonApp] ¡Tu solicitud de registro ha sido aprobada! Código de activación",
+            template_name="user_activation_code.html",
+            context={
+                "full_name": user.full_name,
+                "email": user.email,
+                "activation_code": activation_code,
+                "login_url": login_url,
+            },
+        )
+        logger.info("Admin %s envió código de activación %s a %s", current_staff.email, activation_code, user.email)
+    except Exception as exc:
+        logger.error("Error al enviar código de activación a %s: %s", user.email, exc)
+        raise BadRequestException(detail=f"No se pudo enviar el correo de activación: {exc}")
+
+    return {
+        "detail": f"Código de activación ({activation_code}) enviado exitosamente a {user.email}.",
+        "activation_code": activation_code,
+    }
+

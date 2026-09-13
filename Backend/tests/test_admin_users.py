@@ -250,6 +250,18 @@ async def test_admin_bulk_delete_users(client: AsyncClient, db_session: AsyncSes
     assert u1.is_active is False
     assert u2.is_active is False
 
+    # Attach a SocialPost to u1 to test cascading deletion without foreign key violation
+    from app.modules.social.models import SocialPost
+    post = SocialPost(
+        id=uuid.uuid4(),
+        user_id=u1.id,
+        platform="facebook",
+        status="published",
+        caption="Post to test cascade delete",
+    )
+    db_session.add(post)
+    await db_session.commit()
+
     # Test bulk permanent delete
     bulk_perm_res = await client.post(
         "/api/v1/admin/users/bulk-delete",
@@ -261,6 +273,12 @@ async def test_admin_bulk_delete_users(client: AsyncClient, db_session: AsyncSes
     )
     assert bulk_perm_res.status_code == 200
     assert bulk_perm_res.json()["deleted_count"] == 2
+
+    # Verify social post was also deleted
+    post_id = post.id
+    db_session.expire_all()
+    deleted_post = await db_session.get(SocialPost, post_id)
+    assert deleted_post is None
 
 
 async def test_admin_registration_and_onboarding(client: AsyncClient, db_session: AsyncSession):

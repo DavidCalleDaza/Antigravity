@@ -229,10 +229,26 @@ async def delete_user(db: AsyncSession, user: User) -> None:
         db: Active async database session.
         user: The user ORM instance to delete.
     """
+    # Clean up dependent records
+    from app.modules.social.models import SocialPost
+    from app.modules.notifications.models import Notification
+    from sqlalchemy import delete
+    from sqlalchemy.exc import IntegrityError
+    from app.core.exceptions import BadRequestException
+
+    await db.execute(delete(SocialPost).where(SocialPost.user_id == user.id))
+    await db.execute(delete(Notification).where(Notification.user_id == user.id))
+
     # Remove avatar directory if it exists
     user_avatar_dir = os.path.join("uploads", "avatars", str(user.id))
     if os.path.exists(user_avatar_dir):
         shutil.rmtree(user_avatar_dir)
 
     await db.delete(user)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise BadRequestException(
+            detail="No se pudo eliminar la cuenta debido a registros asociados. Contacta a soporte."
+        )

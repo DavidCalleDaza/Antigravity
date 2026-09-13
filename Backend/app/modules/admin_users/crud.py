@@ -3,21 +3,29 @@ DonApp API — Admin Users: CRUD Operations.
 Database operations for searching, modifying, and managing users and roles.
 """
 
+import logging
 import os
 import shutil
 import uuid
 from typing import Optional, Tuple, List
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, delete
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.exceptions import BadRequestException
 from app.core.security import hash_password
 from app.modules.auth.models import User
+from app.modules.social.models import SocialPost
+from app.modules.notifications.models import Notification
+from app.modules.billing.models import Invoice
 from app.modules.admin_users.schemas import (
     AdminUserCreateRequest,
     AdminUserUpdateRequest,
     AdminUserStatsResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def get_users_paginated(
@@ -178,13 +186,31 @@ async def admin_update_user(
 async def admin_delete_user(db: AsyncSession, user: User, permanent: bool = False) -> None:
     """Delete or deactivate user."""
     if permanent:
+        # Check if user has invoices (invoices must be legally preserved)
+        inv_check = await db.execute(select(Invoice.id).where(Invoice.user_id == user.id).limit(1))
+        if inv_check.scalar_one_or_none():
+            raise BadRequestException(
+                detail=f"No es posible eliminar permanentemente al usuario '{user.email}' porque tiene facturas registradas en el sistema. Puedes inactivar su cuenta en su lugar."
+            )
+
+        # Clean up related records that may not cascade at DB level
+        await db.execute(delete(SocialPost).where(SocialPost.user_id == user.id))
+        await db.execute(delete(Notification).where(Notification.user_id == user.id))
+
         # Clean up avatar directory
         avatar_dir = os.path.join("uploads", "avatars", str(user.id))
         if os.path.exists(avatar_dir):
             shutil.rmtree(avatar_dir)
 
         await db.delete(user)
-        await db.commit()
+        try:
+            await db.commit()
+        except IntegrityError as exc:
+            await db.rollback()
+            logger.error("Error de integridad al eliminar usuario %s: %s", user.id, exc)
+            raise BadRequestException(
+                detail="No es posible eliminar permanentemente este usuario debido a registros asociados. Te sugerimos inactivarlo."
+            )
     else:
         user.is_active = False
         await db.commit()
@@ -211,15 +237,37 @@ async def admin_bulk_delete_users(
     if not users:
         return 0, skipped_count
 
+    target_ids = [u.id for u in users]
+
     if permanent:
+        # Check if any user has invoices
+        inv_check = await db.execute(select(Invoice.id).where(Invoice.user_id.in_(target_ids)).limit(1))
+        if inv_check.scalar_one_or_none():
+            raise BadRequestException(
+                detail="Uno o más de los usuarios seleccionados tienen facturas registradas en el sistema por motivos legales y contables. Por seguridad, no pueden eliminarse permanentemente; elija la opción 'Inactivar'."
+            )
+
+        # Clean up dependent records before deleting users
+        await db.execute(delete(SocialPost).where(SocialPost.user_id.in_(target_ids)))
+        await db.execute(delete(Notification).where(Notification.user_id.in_(target_ids)))
+
         for u in users:
             avatar_dir = os.path.join("uploads", "avatars", str(u.id))
             if os.path.exists(avatar_dir):
                 shutil.rmtree(avatar_dir)
             await db.delete(u)
+
+        try:
+            await db.commit()
+        except IntegrityError as exc:
+            await db.rollback()
+            logger.error("Error de integridad en borrado masivo: %s", exc)
+            raise BadRequestException(
+                detail="No fue posible eliminar permanentemente algunos usuarios debido a dependencias en la base de datos. Se recomienda usar la opción 'Inactivar'."
+            )
     else:
         for u in users:
             u.is_active = False
+        await db.commit()
 
-    await db.commit()
     return len(users), skipped_count

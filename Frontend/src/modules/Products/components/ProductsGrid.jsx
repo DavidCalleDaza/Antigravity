@@ -36,8 +36,8 @@ export default function ProductsGrid({
             onView={onView}
             onEdit={openEditModal}
             onDelete={(item) => onDeleteRequest(item)}
-            onAction={(product) => toast.success(`${product.name} añadido`)}
-            actionLabel="Añadir"
+            onAction={(product) => toast.success(`${product.name} añadido al carrito`)}
+            actionLabel="Añadir a carrito"
             actionIcon={ShoppingCart}
             revealImages={revealImages}
           />

@@ -4,7 +4,7 @@ import Helpers from '../../../utils/helpers';
 
 export function statusBadge(s) {
   const cls = { active: 'badge-success', inactive: 'badge-neutral', out_of_stock: 'badge-danger' };
-  return <span className={`badge badge-dot ${cls[s] || 'badge-neutral'}`}>{APP_CONFIG.PRODUCT_STATUS_LABELS[s]}</span>;
+  return <span className={`badge badge-dot ${cls[s] || 'badge-neutral'}`} style={{ whiteSpace: 'nowrap' }}>{APP_CONFIG.PRODUCT_STATUS_LABELS[s]}</span>;
 }
 
 export function filterProducts(products, categoryFilter, statusFilter, dbCategories) {
@@ -32,18 +32,18 @@ export function buildProductColumns(isClient, revealImages = false) {
     { key: 'name', label: 'Producto', sortable: true, width: '180px' },
     ...(isClient ? [
       { key: 'seller_name', label: 'Vendedor', sortable: true, width: '150px' },
-      { key: 'seller_city', label: 'Ciudad', sortable: true, width: '120px' },
+      { key: 'seller_city', label: 'Ciudad', sortable: true, width: '140px' },
       { key: 'store_name', label: 'Tienda', sortable: true, width: '120px' },
     ] : []),
-    { key: 'category', label: 'Categoría', sortable: true, width: '150px' },
+    { key: 'category', label: 'Categoría', sortable: true, width: '140px' },
     { 
       key: 'price', 
       label: 'Precio', 
       sortable: true, 
-      width: '120px', 
+      width: '110px', 
       render: (v) => revealImages ? Helpers.formatCurrency(v) : '••••••' 
     },
-    { key: 'stock', label: 'Stock', sortable: true, width: '90px' },
-    { key: 'status', label: 'Estado', sortable: true, width: '110px', render: (v) => statusBadge(v) }
+    { key: 'stock', label: 'Stock', sortable: true, width: '85px' },
+    { key: 'status', label: 'Estado', sortable: true, width: '100px', render: (v) => statusBadge(v) }
   ].flat();
 }

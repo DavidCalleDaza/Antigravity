@@ -3,72 +3,38 @@
    ========================================================================== */
 
 
-/* --- 6. Tabla Compacta (Reducción de altura de filas) --- */
-.services-table-wrapper .table th{
-  padding: 8px 16px ;
-  font-family: 'Verdana', sans-serif;
+/* --- 6. Tabla Compacta y Estilizada --- */
+.services-table-wrapper .table th {
+  padding: 10px 14px !important;
   text-align: center !important;
-  font-size: 12px;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #ffffff !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   background: #000000 !important;
   white-space: nowrap;
 }
+
 .services-table-wrapper .table td {
-  padding: 4px 16px !important; /* Reduce el relleno vertical a 6px para achicar las filas */
-  font-size: 12px !important;    /* Ajuste de tamaño de fuente para mejorar la armonía visual */
+  padding: 8px 12px !important;
+  font-size: 0.8125rem !important;
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
   color: var(--text-primary);
   text-align: center !important;
   vertical-align: middle;
   white-space: nowrap;
-  font-weight: none !important;
 }
 
-/* Ajuste de tamaño para los botones de acción para que quepan perfectamente en filas bajas */
+/* Ajuste de tamaño para los botones de acción para que quepan perfectamente */
 .services-table-wrapper .table .btn-icon-only.btn-sm {
   width: 28px !important;
   height: 28px !important;
   padding: 0 !important;
 }
 
-
 .services-table-wrapper .table tr:hover td {
     background: rgba(255, 255, 255, 0.02) !important;
-}
-/* Configuracion por columnas */
-
-.services-table-wrapper .table th:nth-child(1),
-.services-table-wrapper .table td:nth-child(1) {
- width: 30% !important;
- 
-}
-
-.services-table-wrapper .table th:nth-child(2),
-.services-table-wrapper .table td:nth-child(2) {
- width: 30% !important;
-}
-
-.services-table-wrapper .table th:nth-child(3),
-.services-table-wrapper .table td:nth-child(3) {
- width: 10% !important;
-}
-
-.services-table-wrapper .table th:nth-child(4),
-.services-table-wrapper .table td:nth-child(4) {
-  text-align: center !important;
-  width: 10% !important;
-}
-
-.services-table-wrapper .table th:nth-child(5),
-.services-table-wrapper .table td:nth-child(5) {
- width: 10% !important;
-}
-
-.services-table-wrapper .table th:nth-child(6),
-.services-table-wrapper .table td:nth-child(6) {
- width: 10% !important;
 }
 

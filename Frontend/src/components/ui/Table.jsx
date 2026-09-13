@@ -10,6 +10,7 @@ const Table = ({
   searchable = true,
   onRowClick = null,
   actions = null,
+  actionsWidth = null,
   footer = null,
   enableDragAndDrop = true
 }) => {
@@ -170,7 +171,7 @@ const Table = ({
   const allCols = [
     ...(enableDragAndDrop ? [{ key: '_drag_handle', label: '', sortable: false, width: '32px' }] : []),
     ...colOrder,
-    ...(actions ? [{ key: '_actions', label: 'Acciones', sortable: false, width: '120px' }] : []),
+    ...(actions ? [{ key: '_actions', label: 'Acciones', sortable: false, width: actionsWidth || '120px' }] : []),
   ];
 
   return (

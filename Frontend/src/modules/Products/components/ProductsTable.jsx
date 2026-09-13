@@ -20,6 +20,7 @@ export default function ProductsTable({
   onDeleteRequest,
   navigate,
   revealImages = true,
+  toast,
 }) {
   const baseColumns = useMemo(() => buildProductColumns(isClient, revealImages), [isClient, revealImages]);
   const columns = isAdmin ? [
@@ -78,16 +79,14 @@ export default function ProductsTable({
         </>
       )}
       {isClient && (
-        <>
-          <button className="btn btn-primary btn-sm" onClick={() => navigate(`/agenda?seller_id=${row.user_id}`)}>
-            <Calendar width="14" height="14" />
-            Ver Agenda
-          </button>
-          <button className="btn btn-primary btn-sm">
-            <CartIcon />
-            Añadir
-          </button>
-        </>
+        <button 
+          className="btn btn-primary btn-sm" 
+          style={{ whiteSpace: 'nowrap', padding: '4px 12px', fontSize: '11px', gap: '6px' }}
+          onClick={() => toast?.success ? toast.success(`${row.name} añadido al carrito`) : null}
+        >
+          <CartIcon />
+          Añadir a carrito
+        </button>
       )}
     </div>
   );
@@ -98,6 +97,8 @@ export default function ProductsTable({
         columns={columns}
         data={filteredProducts}
         actions={tableActions}
+        actionsWidth={isClient ? '180px' : '140px'}
+        enableDragAndDrop={false}
       />
     </div>
   );

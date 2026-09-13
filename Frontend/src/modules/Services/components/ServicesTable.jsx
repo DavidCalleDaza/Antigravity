@@ -78,8 +78,12 @@ export default function ServicesTable({
         </>
       )}
       {isClient && (
-        <button className="btn btn-primary btn-sm" onClick={() => navigate(`/agenda?seller_id=${row.user_id}&service_id=${row.id}`)}>
-          <Calendar width="14" height="14" />
+        <button 
+          className="btn btn-primary btn-sm" 
+          style={{ whiteSpace: 'nowrap', padding: '4px 12px', fontSize: '11px', gap: '5px' }}
+          onClick={() => navigate(`/agenda?seller_id=${row.user_id}&service_id=${row.id}`)}
+        >
+          <Calendar width="13" height="13" />
           Agendar
         </button>
       )}
@@ -92,6 +96,8 @@ export default function ServicesTable({
         columns={columns}
         data={filteredServices}
         actions={tableActions}
+        actionsWidth={isClient ? '160px' : '140px'}
+        enableDragAndDrop={false}
       />
     </div>
   );

@@ -636,6 +636,7 @@ export default function Products() {
           onShare={handleShareRequest}
           navigate={navigate}
           revealImages={revealImages}
+          toast={toast}
         />
       )}
 

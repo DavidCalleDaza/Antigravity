@@ -334,7 +334,11 @@ export default function UsersAdmin() {
         );
       case 'seller':
         return (
-          <span className="role-badge role-badge-seller">
+          <span
+            className="role-badge role-badge-seller"
+            title="En este rol se da por hecho que también es un cliente para otros vendedores dentro del sistema"
+            data-custom-tooltip="En este rol se da por hecho que también es un cliente para otros vendedores dentro del sistema"
+          >
             <Store width="12" height="12" /> Vendedor
           </span>
         );

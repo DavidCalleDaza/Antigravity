@@ -141,22 +141,67 @@ async def test_smtp_diagnostic() -> dict:
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
+    import httpx
 
     info = {
+        "PROVIDER_ACTIVE": "Resend API (HTTPS port 443)" if settings.RESEND_API_KEY else "SMTP (port 587)",
+        "RESEND_API_KEY_SET": bool(settings.RESEND_API_KEY),
+        "RESEND_FROM_EMAIL": settings.RESEND_FROM_EMAIL,
         "SMTP_HOST": settings.SMTP_HOST,
         "SMTP_PORT": settings.SMTP_PORT,
         "SMTP_USER": settings.SMTP_USER,
-        "SMTP_PASSWORD_SET": bool(settings.SMTP_PASSWORD),
-        "SMTP_PASSWORD_LEN": len(settings.SMTP_PASSWORD or ""),
         "SMTP_USE_TLS": settings.SMTP_USE_TLS,
         "SMTP_FROM_EMAIL": settings.SMTP_FROM_EMAIL,
         "CONTACT_NOTIFICATION_EMAIL": settings.CONTACT_NOTIFICATION_EMAIL,
     }
 
+    # 1. Probar vía Resend API si está configurado
+    if settings.RESEND_API_KEY and settings.RESEND_API_KEY.strip():
+        from_header = f"{settings.SMTP_FROM_NAME or 'DonApp'} <{settings.RESEND_FROM_EMAIL or 'onboarding@resend.dev'}>"
+        try:
+            res = httpx.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {settings.RESEND_API_KEY.strip()}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": from_header,
+                    "to": [settings.CONTACT_NOTIFICATION_EMAIL],
+                    "subject": "[DonApp] Diagnóstico Directo Resend API (Render)",
+                    "html": "<h2>Prueba Exitosa con Resend API</h2><p>Este correo confirma que Render puede enviar correos mediante la API HTTP (puerto 443) sin bloqueos de firewall.</p>",
+                },
+                timeout=15.0,
+            )
+            if res.status_code in (200, 201):
+                return {
+                    "status": "success",
+                    "provider": "Resend API",
+                    "message": f"Correo enviado exitosamente a {settings.CONTACT_NOTIFICATION_EMAIL}",
+                    "response": res.json(),
+                    "info": info,
+                }
+            else:
+                return {
+                    "status": "error",
+                    "provider": "Resend API",
+                    "error_detail": f"HTTP {res.status_code}: {res.text}",
+                    "info": info,
+                }
+        except Exception as exc:
+            return {
+                "status": "error",
+                "provider": "Resend API",
+                "error_type": type(exc).__name__,
+                "error_detail": str(exc),
+                "info": info,
+            }
+
+    # 2. Probar vía SMTP tradicional si no hay Resend
     if not settings.SMTP_HOST:
         return {
             "status": "error",
-            "message": "SMTP_HOST no está configurado.",
+            "message": "Ni RESEND_API_KEY ni SMTP_HOST están configurados.",
             "info": info,
         }
 
@@ -179,6 +224,7 @@ async def test_smtp_diagnostic() -> dict:
 
         return {
             "status": "success",
+            "provider": "SMTP",
             "message": f"Correo de prueba enviado exitosamente a {settings.CONTACT_NOTIFICATION_EMAIL}",
             "refused": refused,
             "info": info,
@@ -186,6 +232,7 @@ async def test_smtp_diagnostic() -> dict:
     except Exception as exc:
         return {
             "status": "error",
+            "provider": "SMTP",
             "error_type": type(exc).__name__,
             "error_detail": str(exc),
             "info": info,

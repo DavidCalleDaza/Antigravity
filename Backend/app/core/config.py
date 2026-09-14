@@ -162,7 +162,9 @@ class Settings(BaseSettings):
 
     PUBLIC_VERIFY_BASE_URL: str = "https://tudominio.com/verify"
 
-    # --- Email / SMTP ---
+    # --- Email / SMTP & Resend API ---
+    RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""

@@ -42,12 +42,15 @@ def send_email(to: str, subject: str, template_name: str, context: dict) -> bool
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=20) as server:
             if settings.SMTP_USE_TLS:
                 server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            clean_pwd = (settings.SMTP_PASSWORD or "").strip()
+            if "gmail" in (settings.SMTP_HOST or "").lower():
+                clean_pwd = clean_pwd.replace(" ", "")
+            server.login(settings.SMTP_USER, clean_pwd)
             server.sendmail(settings.SMTP_FROM_EMAIL, [to], msg.as_string())
         
         logger.info("Email '%s' sent successfully to %s", subject, to)
         return True
 
     except Exception as e:
-        logger.error("Error al enviar email '%s' a %s: %s", subject, to, e)
+        logger.error("Error al enviar email '%s' a %s: %s", subject, to, e, exc_info=True)
         return False

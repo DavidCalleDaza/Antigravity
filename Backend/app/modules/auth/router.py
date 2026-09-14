@@ -132,6 +132,66 @@ async def register_user(
     return new_user
 
 
+@router.get(
+    "/test-smtp",
+    summary="Diagnóstico directo de SMTP",
+    description="Intenta enviar un correo de prueba y retorna el resultado detallado o la excepción exacta capturada.",
+)
+async def test_smtp_diagnostic() -> dict:
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    info = {
+        "SMTP_HOST": settings.SMTP_HOST,
+        "SMTP_PORT": settings.SMTP_PORT,
+        "SMTP_USER": settings.SMTP_USER,
+        "SMTP_PASSWORD_SET": bool(settings.SMTP_PASSWORD),
+        "SMTP_PASSWORD_LEN": len(settings.SMTP_PASSWORD or ""),
+        "SMTP_USE_TLS": settings.SMTP_USE_TLS,
+        "SMTP_FROM_EMAIL": settings.SMTP_FROM_EMAIL,
+        "CONTACT_NOTIFICATION_EMAIL": settings.CONTACT_NOTIFICATION_EMAIL,
+    }
+
+    if not settings.SMTP_HOST:
+        return {
+            "status": "error",
+            "message": "SMTP_HOST no está configurado.",
+            "info": info,
+        }
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "[DonApp] Diagnóstico Directo SMTP Render"
+        msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+        msg["To"] = settings.CONTACT_NOTIFICATION_EMAIL
+        msg.attach(MIMEText("<h2>Prueba de Conexión SMTP</h2><p>Este correo confirma que el servidor en Render se comunica correctamente con el servidor de correo.</p>", "html", "utf-8"))
+
+        clean_pwd = (settings.SMTP_PASSWORD or "").strip()
+        if "gmail" in (settings.SMTP_HOST or "").lower():
+            clean_pwd = clean_pwd.replace(" ", "")
+
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
+            if settings.SMTP_USE_TLS:
+                server.starttls()
+            server.login(settings.SMTP_USER, clean_pwd)
+            refused = server.sendmail(settings.SMTP_FROM_EMAIL, [settings.CONTACT_NOTIFICATION_EMAIL], msg.as_string())
+
+        return {
+            "status": "success",
+            "message": f"Correo de prueba enviado exitosamente a {settings.CONTACT_NOTIFICATION_EMAIL}",
+            "refused": refused,
+            "info": info,
+        }
+    except Exception as exc:
+        return {
+            "status": "error",
+            "error_type": type(exc).__name__,
+            "error_detail": str(exc),
+            "info": info,
+        }
+
+
 @router.post(
     "/login",
     response_model=TokenResponse,

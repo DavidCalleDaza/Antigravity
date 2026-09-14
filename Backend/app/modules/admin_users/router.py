@@ -223,7 +223,7 @@ async def send_activation_code_by_admin(
     login_url = f"{frontend_url}/login"
 
     try:
-        send_email(
+        sent = send_email(
             to=user.email,
             subject="[DonApp] ¡Tu solicitud de registro ha sido aprobada! Código de activación",
             template_name="user_activation_code.html",
@@ -234,7 +234,13 @@ async def send_activation_code_by_admin(
                 "login_url": login_url,
             },
         )
+        if not sent:
+            raise BadRequestException(
+                detail="No se pudo enviar el correo de activación. El servidor SMTP no está configurado o no responde."
+            )
         logger.info("Admin %s envió código de activación %s a %s", current_staff.email, activation_code, user.email)
+    except BadRequestException:
+        raise
     except Exception as exc:
         logger.error("Error al enviar código de activación a %s: %s", user.email, exc)
         raise BadRequestException(detail=f"No se pudo enviar el correo de activación: {exc}")

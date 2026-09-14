@@ -942,9 +942,9 @@ async def forward_activation_code_to_user(
 
     activation_code = user.activation_code or token_code or "DON-000000"
 
-    # Send activation email to the registered user
+    email_sent = False
     try:
-        send_email(
+        email_sent = send_email(
             to=user.email,
             subject="[DonApp] ¡Tu solicitud de registro ha sido aprobada! Código de activación",
             template_name="user_activation_code.html",
@@ -955,12 +955,15 @@ async def forward_activation_code_to_user(
                 "login_url": login_url,
             },
         )
-        logger.info(
-            "Código de activación %s enviado exitosamente al usuario %s (%s)",
-            activation_code,
-            user.full_name,
-            user.email,
-        )
+        if email_sent:
+            logger.info(
+                "Código de activación %s enviado exitosamente al usuario %s (%s)",
+                activation_code,
+                user.full_name,
+                user.email,
+            )
+        else:
+            logger.warning("No se pudo enviar el correo de activación a %s (SMTP no disponible).", user.email)
     except Exception as exc:
         logger.error("Error al enviar correo de activación al usuario %s: %s", user.email, exc)
 
@@ -972,6 +975,15 @@ async def forward_activation_code_to_user(
     role_name = role_labels.get(str(user.role), str(user.role))
     sent_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
+    card_header = "¡Código de Activación Enviado!" if email_sent else "¡Código de Activación Generado!"
+    card_desc = (
+        f"Se ha enviado exitosamente el correo de bienvenida con el código de activación a <strong style=\"color: #2563eb;\">{user.email}</strong>."
+        if email_sent
+        else f"El servidor de correo no está configurado para envío automático. Puedes suministrar el siguiente código directamente al usuario <strong style=\"color: #2563eb;\">{user.email}</strong>:"
+    )
+    delivery_status = "Enviado por correo" if email_sent else "Pendiente entrega manual"
+    delivery_status_color = "#166534" if email_sent else "#b45309"
+
     return HTMLResponse(
         content=f"""
         <!DOCTYPE html>
@@ -979,7 +991,7 @@ async def forward_activation_code_to_user(
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Código de Activación Enviado — DonApp</title>
+            <title>{card_header} — DonApp</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 40px 20px; display: flex; align-items: center; justify-content: center; min-height: 80vh;">
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 36px 32px; max-width: 520px; width: 100%; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06); text-align: center;">
@@ -994,11 +1006,11 @@ async def forward_activation_code_to_user(
                 </div>
 
                 <h2 style="color: #0f172a; font-size: 20px; font-weight: 700; margin: 0 0 10px 0;">
-                    ¡Código de Activación Enviado!
+                    {card_header}
                 </h2>
                 
                 <p style="color: #475569; font-size: 15px; margin: 0 0 24px 0; line-height: 1.5;">
-                    Se ha enviado exitosamente el correo de bienvenida con el código de activación a <strong style="color: #2563eb;">{user.email}</strong>.
+                    {card_desc}
                 </p>
 
                 <!-- Details Card -->
@@ -1016,11 +1028,15 @@ async def forward_activation_code_to_user(
                         <span style="color: #0f172a; font-weight: 600;">{role_name}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
-                        <span style="color: #64748b; font-weight: 600;">Código enviado:</span>
-                        <span style="color: #15803d; font-weight: 800; font-family: monospace; font-size: 15px;">{activation_code}</span>
+                        <span style="color: #64748b; font-weight: 600;">Código de Activación:</span>
+                        <span style="color: #15803d; font-weight: 800; font-family: monospace; font-size: 16px;">{activation_code}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7;">
+                        <span style="color: #64748b; font-weight: 600;">Estado de entrega:</span>
+                        <span style="color: {delivery_status_color}; font-weight: 700;">{delivery_status}</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 6px 0;">
-                        <span style="color: #64748b; font-weight: 600;">Fecha de envío:</span>
+                        <span style="color: #64748b; font-weight: 600;">Fecha:</span>
                         <span style="color: #64748b;">{sent_time}</span>
                     </div>
                 </div>

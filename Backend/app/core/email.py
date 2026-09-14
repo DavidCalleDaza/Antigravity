@@ -25,8 +25,8 @@ def send_email(to: str, subject: str, template_name: str, context: dict) -> bool
     Catches SMTP exceptions to not break caller flow.
     """
     if not settings.SMTP_HOST:
-        logger.error("Configuración SMTP incompleta. Email no enviado (subject: %s, to: %s)", subject, to)
-        raise ValueError("El servidor de correo (SMTP) no está configurado correctamente en las variables de entorno.")
+        logger.warning("Configuración SMTP incompleta (SMTP_HOST vacío). Email no enviado (subject: %s, to: %s)", subject, to)
+        return False
 
     try:
         template = _jinja_env.get_template(template_name)

@@ -5,16 +5,18 @@ description: Arquitectura, stack técnico y convenciones de código de DonApp (F
 
 # Arquitectura de DonApp
 
-Estado del proyecto: MVP avanzado, UI/UX pulida (~9.0/10). Última actualización de contexto: julio 2026 (V9).
+Estado del proyecto: MVP avanzado, UI/UX pulida (~9.3/10). Última actualización de contexto: septiembre 2026 (V12).
 
 ## Stack
 
 **Backend**
 - FastAPI 0.110.0 (async) + SQLAlchemy 2.0+ (`Mapped`/`DeclarativeBase`)
 - PostgreSQL vía driver `asyncpg` — todo controlador y módulo usa `AsyncSessionMaker`, nunca sesiones síncronas
-- Migraciones: Alembic
-- Facturación DIAN: `lxml 5.4.0`, `signxml 4.5.1`, `cryptography 48.0.0`
-- PDFs: `reportlab 4.5.1` — Emails: `Jinja2 3.1.6`
+- Migraciones: Alembic (38 revisiones)
+- Tareas en segundo plano: Celery + Redis
+- Facturación DIAN: `lxml 5.4.0`, `signxml 4.5.1`, `cryptography 48.0.0`, `reportlab 4.5.1`
+- Emails: `Jinja2 3.1.6`
+- IA: Google GenAI SDK (Cascada Gemini + Veo)
 
 **Frontend**
 - React 18.3.1 + Vite 5.4.21, gestor de paquetes `pnpm` (monorepo workspace)
@@ -25,20 +27,21 @@ Estado del proyecto: MVP avanzado, UI/UX pulida (~9.0/10). Última actualizació
 
 ## Routing (`App.jsx`)
 
-Públicas: `/`, `/login`, `/register`, `/unauthorized`.
-Protegidas (dentro de `MainLayout`): `/dashboard`, `/products`, `/services`, `/categories`, `/billing`, `/agenda`, `/wall`, `/statistics`, `/market`, `/profile`.
+Públicas: `/`, `/login`, `/register`, `/forgot-password`, `/unauthorized`, `/auth/callback`, `/verify/:cufe`, `/confirmar-mencion/:token`.
+Protegidas (dentro de `MainLayout`): `/categories`, `/products`, `/services`, `/customers`, `/billing`, `/agenda`, `/wall`, `/statistics`, `/market`, `/profile`.
+Administración Staff: `/admin/users`, `/admin/social`, `/admin/tokens`.
 
 ## API Layer (`apiClient.js`)
 
-Todas las llamadas HTTP pasan por clientes centralizados: `authClient`, `productClient`, `serviceClient`, `socialClient`, `categoryClient`, `billingClient`. **No escribas `fetch`/`axios` directo dentro de componentes** — es un antipatrón ya corregido una vez, no lo repitas.
+Todas las llamadas HTTP pasan por clientes centralizados: `authClient`, `productClient`, `serviceClient`, `socialClient`, `categoryClient`, `billingClient`, `agendaClient`, `adminClient`. **No escribas `fetch`/`axios` directo dentro de componentes** — es un antipatrón ya corregido una vez, no lo repitas.
 
 ## Modelo multi-tenant
 
 No existe una entidad `Business`/`Negocio` explícita. El tenant es implícito: el `user_id` del propietario actúa como owner directo de sus recursos.
 
 - `Product.user_id` y `Service.user_id` → FK a `users.id`
-- `SocialAccount.user_id` → FK a `users.id`
-- Relación: `User (propietario)` 1—N `Products / Services / SocialAccounts / Invoices`
+- `SocialAccount.user_id` y `SocialPost.user_id` → FK a `users.id`
+- Relación: `User (propietario)` 1—N `Products / Services / SocialAccounts / Invoices / Appointments`
 
 Si en algún momento se solicita agregar una capa de `Business` real, es un cambio de arquitectura mayor (migración de datos existentes) — señala esto explícitamente antes de implementarlo.
 
@@ -46,29 +49,32 @@ Si en algún momento se solicita agregar una capa de `Business` real, es un camb
 
 Campo `role` en `users` (`Backend/app/modules/auth/models.py`):
 - `admin`: acceso total
-- `seller`: gestiona inventario, factura, publica en el muro, gestiona clientes
-- `client`: consumidor final (vistas públicas / agenda)
+- `seller`: gestiona inventario, factura, publica en el muro, gestiona clientes y agenda
+- `client`: consumidor final (vistas públicas / agendamiento de citas)
+- `is_staff`: bandera booleana para acceso a rutas administrativas (`/admin/*`)
 
-El backend valida identidad vía `get_current_user`, pero la distinción fuerte de permisos de CRUD ocurre en frontend (`canManage = userRole === ADMIN || userRole === SELLER`). Si se toca autorización sensible, no asumas que el frontend es la única barrera.
+El backend valida identidad vía `get_current_user` y `get_current_staff_user`, pero la distinción fuerte de permisos de CRUD ocurre en frontend (`canManage = userRole === ADMIN || userRole === SELLER`). Si se toca autorización sensible, no asumas que el frontend es la única barrera.
 
-## Estado de módulos (V9)
+## Estado de módulos (V12)
 
 | Módulo | Frontend | Backend | Notas |
 |---|---|---|---|
-| Auth | ✅ | ✅ | JWT |
-| Products | ✅ | ✅ | Anchos fijos, lista por defecto |
-| Services | ✅ | ✅ | Mismo diseño que Products |
-| Categories | ✅ | ✅ | Filtro por tipo de entidad |
-| Billing | ✅ | ✅ | DIAN, PDFs, notas crédito, email |
-| Social/OAuth | ✅ | ✅ | Ver skill `donapp-social-oauth` |
-| Wall | ✅ | ✅ | WebSockets |
-| Profile | ✅ | ✅ | Incluye conexión de redes |
-| Dashboard | ⚠️ parcial | ❌ | Mock, sin queries agregadas reales |
-| Statistics | ⚠️ parcial | ❌ | Mock |
-| Agenda | ⚠️ parcial | ❌ | Sin tabla `appointments`, backend vacío/STUB |
-| Market | — | ❌ | Mock |
-
-**Antes de dar por hecho que un módulo tiene backend real, verifica esta tabla** — Dashboard, Statistics, Agenda y Market siguen simulados pese a que la UI ya luce terminada.
+| Auth & Google OAuth | ✅ | ✅ | JWT HS256, Google PKCE, recuperación password |
+| Products | ✅ | ✅ | Anchos fijos, galerías JSONB, importación Excel |
+| Services | ✅ | ✅ | Tarifas, duración, galerías JSONB |
+| Categories | ✅ | ✅ | Árbol jerárquico y filtro de entidad |
+| Billing & DIAN | ✅ | ✅ | CUFE, XML, QR, PDFs, notas crédito, email |
+| Verificación CUFE | ✅ | ✅ | Ruta pública `/verify/:cufe` |
+| Social / OAuth | ✅ | ✅ | Meta Graph v20 + TikTok API + Cifrado Fernet |
+| Wall & Mentions | ✅ | ✅ | WebSockets live + confirmación pública de mención |
+| Agenda & Citas | ✅ | ✅ | Templates semanales, Overrides y booking real |
+| WhatsApp Bot | ✅ | ✅ | Webhook HMAC-SHA256, NLU Gemini intents, OTP |
+| AI Generation | ✅ | ✅ | Cascada Gemini, Veo en Celery, control de tokens |
+| Admin Panels | ✅ | ✅ | Users, Social Accounts y Tokens/Pricing |
+| Global Search | ✅ | ✅ | Endpoint `/api/v1/search` unificado |
+| Profile | ✅ | ✅ | Incluye conexión de redes y datos personales |
+| Statistics | ✅ | ✅ | Conectado a agregaciones reales de billingClient |
+| Market | ⚠️ parcial | ❌ | Mock en frontend (pendiente motor de scraping/API) |
 
 ## Decisiones arquitectónicas ya tomadas (no reabrir sin pedirlo explícitamente)
 

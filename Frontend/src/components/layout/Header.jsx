@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Menu, Search, Bell, Moon, Sun, Package, Wrench, Store, User, Loader2, X, ShoppingBag, ArrowLeftRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { apiClient, searchClient } from '../../utils/apiClient';
 import { connectNotifications, disconnectNotifications } from '../../utils/notificationsSocket';
 import Helpers from '../../utils/helpers';
+import DonAppLogo from '../ui/DonAppLogo';
 
 export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) {
-  const { theme, toggleTheme, isAuthenticated, currentUser, activeViewMode, toggleActiveViewMode, notifications, unreadCount, setNotifications, markAsRead } = useStore();
+  const { theme, toggleTheme, isAuthenticated, currentUser, activeViewMode, toggleActiveViewMode, notifications, unreadCount, setNotifications, markAsRead, sidebarCollapsed } = useStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const dropdownRef = useRef(null);
@@ -178,6 +179,20 @@ export default function Header({ title, breadcrumb = [], toggleMobileSidebar }) 
           )}
         </div>
       </div>
+
+      {/* ── Logo Flotante Central (se despliega en el centro superior justo abajo del header cuando el menú está colapsado) ── */}
+      {sidebarCollapsed && (
+        <div className={`floating-center-logo ${scrolled ? 'is-scrolled' : ''}`}>
+          <Link
+            to="/wall"
+            className="floating-center-logo-link"
+            title="DonApp — Inicio"
+            aria-label="DonApp Inicio"
+          >
+            <DonAppLogo width={40} height={40} variant="auto" />
+          </Link>
+        </div>
+      )}
 
       <div className="navbar-right">
         {/* ── Switch de Modo Dual (Solo para Vendedores con perfil comercial activo) ── */}

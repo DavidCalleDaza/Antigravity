@@ -89,7 +89,27 @@ export default function Sidebar({ isOpen, closeMobile }) {
   return (
     <>
       <aside className={`sidebar`} id="sidebar">
-        <div className="sidebar-header" style={{ display: 'flex', justifyContent: sidebarCollapsed ? 'center' : 'flex-end', alignItems: 'center', width: '100%' }}>
+        <div
+          className="sidebar-header"
+          style={{
+            display: 'flex',
+            justifyContent: sidebarCollapsed ? 'center' : 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            padding: sidebarCollapsed ? 'var(--space-4)' : '0 var(--space-4)',
+          }}
+        >
+          {!sidebarCollapsed && (
+            <Link
+              to="/wall"
+              className="sidebar-logo-link"
+              title="DonApp — Inicio"
+              style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}
+              onClick={closeMobile}
+            >
+              <DonAppLogo width={36} height={36} variant="auto" className="sidebar-logo-mark" />
+            </Link>
+          )}
           <button className="btn btn-ghost btn-icon-only sidebar-toggle-btn" onClick={toggleSidebar} aria-label="Alternar menú">
             {sidebarCollapsed ? (
               <LucideIcons.ChevronRight width="20" height="20" />
